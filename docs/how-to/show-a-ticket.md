@@ -1,6 +1,7 @@
 # Show a ticket
 
-1. In **Current**, find the booking and click **Ticket** on its card.
+1. In **Current**, click **Show ticket** at the top for the next booking, or **Ticket** on
+   any booking's card.
 2. The ticket opens full screen: the code to scan, the ticket number below it, and
    what the ticket is for. The screen brightness goes up where the device allows it.
 3. **Back** (the arrow) returns to the trip.

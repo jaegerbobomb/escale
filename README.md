@@ -55,6 +55,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S015 | Full-screen ticket, offline | timeline | done |
 | S016 | Share a flight to follow it live | timeline | todo |
 | S020 | Current trip looks like the mockup | timeline | todo |
+| S021 | Shortcut to the current ticket | timeline | done |
 
 ## Licence
 
