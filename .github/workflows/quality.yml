@@ -1,0 +1,46 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - name: Install the workspace
+        run: uv sync --all-packages --locked
+      - name: Ruff (lint)
+        run: uv run ruff check
+      - name: Ruff (format)
+        run: uv run ruff format --check
+      - name: Mypy
+        run: uv run mypy
+      - name: Pytest
+        run: uv run pytest
+      - name: Lint stories (story-lint)
+        run: python3 scripts/lint_stories.py --stories-dir=stories --strict
+
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - name: Install the workspace
+        run: uv sync --all-packages --locked
+      - name: Install Chromium for Playwright
+        run: uv run playwright install --with-deps chromium
+      - name: Capture every view (visual-review)
+        run: uv run python tools/screenshots.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: build/screenshots/
+          if-no-files-found: error

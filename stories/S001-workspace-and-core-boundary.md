@@ -3,10 +3,11 @@ id: S001
 title: "Workspace and core boundary"
 epic: foundation
 depends_on: []
-status: proposed
+status: done
 estimate: S
 bdd: false
 updated: "2026-11-24"
+released_in: "0.1.0"
 adr: [1, 2]
 ---
 
@@ -56,3 +57,12 @@ adr: [1, 2]
 
 - `bdd: false`: this story is infrastructure; its criteria are checked by unit tests and
   by CI itself.
+- 2026-11-24: validated by the maintainer (`proposed` → `todo`), delivered in 0.1.0.
+- The boundary test runs two checks: a runtime probe in a fresh interpreter (imports
+  every module, names the one that loads Flet) and an AST scan of the sources (catches
+  lazy imports in function bodies and `importlib.import_module("flet")`). Both are
+  themselves tested against a throw-away package that imports Flet.
+- `scripts/` is vendored from the StorySpec kit and excluded from ruff, so it stays
+  identical to upstream.
+- The existing `Stories` workflow is kept; the new `Quality` workflow also lints the
+  stories, on every pull request.

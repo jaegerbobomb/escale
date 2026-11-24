@@ -16,6 +16,29 @@ read `CLAUDE.md` (it holds the working rules for humans and agents alike), `SPEC
 Something to check before a decision can be made (does a library work on Android, does a
 server keep a property…) is a GitHub issue labelled `investigation`, not a story.
 
+## Development setup
+
+Requires [uv](https://docs.astral.sh/uv/) and Python ≥ 3.12.
+
+```bash
+uv sync --all-packages
+uv run ruff check && uv run ruff format --check && uv run mypy && uv run pytest
+python3 scripts/lint_stories.py --stories-dir=stories --strict
+```
+
+Run the app:
+
+```bash
+uv run escale --web --port 8550           # then open http://127.0.0.1:8550
+uv sync --all-packages --all-extras       # once, for the desktop window (flet-desktop)
+uv run escale
+```
+
+Screens are reviewed from screenshots: `docs/how-to/capture-screenshots.md`.
+
+`packages/escale-core` must never import Flet: `test_boundary.py` fails and names the
+offending module if it does (ADR-0002).
+
 ## Licence of contributions
 
 Escale is GPL-3.0-or-later, with the App Store notice in `COPYING.iOS`. By contributing,

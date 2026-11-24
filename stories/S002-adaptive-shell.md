@@ -3,10 +3,11 @@ id: S002
 title: "Adaptive shell with Adwaita theme"
 epic: foundation
 depends_on: [S001]
-status: proposed
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-24"
+released_in: "0.2.0"
 adr: [1, 7]
 ---
 
@@ -65,4 +66,20 @@ flowchart LR
 
 ## Notes
 
+- 2026-11-24: validated by the maintainer (`proposed` → `todo`), delivered in 0.2.0.
+- Screenshots (issue #11): Flet's web client served on localhost and driven by
+  Playwright, `tools/screenshots.py`, every view at 1000/500/380 px, light and dark;
+  also run by CI as an artifact. Flet's own `flet.testing` needs the Flutter SDK: kept
+  for later. See `docs/how-to/capture-screenshots.md`.
+- UI tests drive the shell through a stand-in for `ft.Page` (same attributes, same
+  resize event): the real page needs a connected Flutter client.
+- Choices to confirm on the screenshots: "Add" menu entries "Import a ticket…", "New
+  trip…", "Search a train…" (the mockup is not in the repository yet); the main "Add"
+  button is disabled like its menu entries; empty views in the style of libadwaita's
+  status page.
+- Each view opens from a route (`/trips`, `/statistics`), so the screenshot tool does not
+  have to click through a canvas.
+- Font: Adwaita Sans 49.0, latin subset only (the GNOME servers are not reachable from
+  the build environment; taken from `@fontsource/adwaita-sans`). Flet maps one file per
+  family, so the bold weight is the family `Adwaita Sans Bold`.
 - The 400 px breakpoint only matters once a trip and a segment detail exist (S011).

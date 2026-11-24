@@ -12,7 +12,7 @@ modules:
   - release-versioning  # CHANGELOG + version + README kept in sync
   - claude-code         # agents & skills for Claude Code sessions
   - docs-diataxis       # user docs along the four Diátaxis modes
-  # - visual-review     # once a screenshot tool for Flet is chosen (see issues)
+  - visual-review       # screenshots of every view: tools/screenshots.py (issue #11)
   # - epics             # once jaegerbobomb/story-spec#9 is merged; until then see
   #                     # docs/explanation/roadmap.md
 
@@ -26,4 +26,4 @@ skills:
 project:
   name: "escale"
   language: python
-  quality_check: "uv run ruff check && uv run ruff format --check && uv run mypy packages && uv run pytest"
+  quality_check: "uv run ruff check && uv run ruff format --check && uv run mypy && uv run pytest"
