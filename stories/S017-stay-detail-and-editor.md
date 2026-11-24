@@ -29,6 +29,10 @@ updated: "2026-11-24"
 - Saving updates the raw JSON-LD (schema.org `LodgingReservation` / `LodgingBusiness`)
   in the local store; the sync stories send it later.
 - Telephone, e-mail and website are actionable (call, write, open), through the system.
+- **Manage the booking.** When the JSON-LD carries a link to the booking — schema.org
+  `potentialAction` / `modifyReservationUrl` or the reservation's `url`, as KItinerary
+  extracts from Booking.com or Airbnb confirmations — the detail shows "Manage booking
+  on <site>", which opens it in the browser. Escale never logs into those sites.
 - The navigation to the detail reuses S011's when it exists; until then the detail
   opens as a page with a back button.
 
@@ -45,6 +49,12 @@ updated: "2026-11-24"
 * **Given** the detail of a stay with check-out at 11:00
 * **When** the user edits the check-out to 12:00 and saves
 * **Then** the detail shows check-out at 12:00
+
+### Scenario: The booking can be managed on its site
+
+* **Given** a stay imported from a Booking.com confirmation with a link to manage the booking
+* **When** the user opens its detail
+* **Then** a "Manage booking on Booking.com" action is shown
 
 ### Scenario: A check-out before the check-in is refused
 

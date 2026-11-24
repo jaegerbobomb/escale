@@ -34,7 +34,8 @@ window that already adapts to its width.
 - [ ] The same ticket imported twice does not duplicate; a second traveller joins the batch
 - [ ] Documents are stored by SHA-256 and linked with `subjectOf`
 - [ ] A stay can be added and corrected by hand (S017, S018)
-- [ ] A place shared from Google Maps becomes a pre-filled stay, with at most one opt-in request to Google to resolve a short link (S019)
+- [ ] A place shared from Google Maps or CoMaps becomes a pre-filled stay, with at most one opt-in request to Google to resolve a short link (S019)
+- [ ] Booking.com and Airbnb confirmations (e-mail saved as `.eml`, PDF) import as stays with their "manage booking" link
 
 ## 3. `timeline` — the current trip
 
@@ -44,6 +45,7 @@ window that already adapts to its width.
 - [ ] Timeline with the three card densities (compact, detailed, disruption)
 - [ ] Jump index, segment detail, train editor with KDE Itinerary's fields
 - [ ] "Back" returns to the same scroll position with the card highlighted
+- [ ] Any place opens in the user's map app (S022)
 - [ ] A ticket opens full screen with its barcode, offline (S015)
 - [ ] A flight can be shared so that someone follows it live (S016)
 
@@ -91,6 +93,7 @@ KDE Itinerary. Done before the rich screens because it carries the most risk.
 
 - [ ] Country change card (currency, time zone, plugs, driving side)
 - [ ] Weather at arrival, full-screen offline ticket, watched folder on Linux, `.itinerary` export
+- [ ] A map of the trip inside Escale (flet-map), its places and segments, tiles from an opt-in source with an offline cache
 
 ## 9. `packaging`
 

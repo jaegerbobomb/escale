@@ -1,6 +1,6 @@
 ---
 id: S019
-title: "Import a place shared from Google Maps"
+title: "Import a shared place (Google Maps, CoMaps, OpenStreetMap)"
 epic: import
 depends_on: [S018]
 status: proposed
@@ -11,8 +11,8 @@ updated: "2026-11-24"
 
 ## User story
 
-> **As a** traveller who found where to sleep on Google Maps, **I want** to share the
-> place to Escale, **so that** it becomes a stay without typing its address.
+> **As a** traveller who found where to sleep on Google Maps or CoMaps, **I want** to
+> share the place to Escale, **so that** it becomes a stay without typing its address.
 
 ## Diagram
 
@@ -58,6 +58,12 @@ flowchart LR
   apps, the website), the same fields from the lines. An
   `openstreetmap.org/node|way|relation/<id>` link is accepted too, as KDE Itinerary
   does. The parser is pure and tested against the fixtures of the investigation issue.
+- **CoMaps (and OsmAnd).** According to the OpenStreetMap wiki, CoMaps shares a location
+  as a `geo:` URI plus a `comaps.app` link. A `geo:lat,lng` URI gives the coordinates
+  with no network at all; the label, when present (`?q=lat,lng(Name)`, Android's
+  convention), gives the name. The address then comes from Nominatim if "Address
+  lookup" is enabled, else the user types it. The exact CoMaps share text is to be
+  collected in the investigation issue, like Google's.
 - **Not used.** Google's Maps "Resolution API" (needs a key, experimental); scraping the
   Maps page.
 - **Geocoding, optional.** With the "Address lookup" network source enabled (off by
@@ -99,6 +105,13 @@ flowchart LR
 * **When** Escale receives a `maps.app.goo.gl` link
 * **Then** no network request is made
 * **And** the sheet explains how to enable the source or share the address as text
+
+### Scenario: A place shared from CoMaps
+
+* **Given** a shared text containing `geo:48.8721,2.3651?q=48.8721,2.3651(Hôtel du Nord)`
+* **When** Escale receives it
+* **Then** the place is named "Hôtel du Nord" with the coordinates 48.8721, 2.3651
+* **And** no network request is made
 
 ### Scenario: Text that is not a place
 

@@ -55,7 +55,8 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S016 | Share a flight to follow it live | timeline | todo |
 | S017 | Stay detail and editor | timeline | proposed |
 | S018 | Add a stay by hand | import | proposed |
-| S019 | Import a place shared from Google Maps | import | proposed |
+| S019 | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | proposed |
+| S022 | Open a place in a map app | timeline | proposed |
 
 ## Licence
 
