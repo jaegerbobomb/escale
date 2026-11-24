@@ -37,8 +37,15 @@ VIEWS: dict[str, str] = {
     "import-found": "/import-found",
     "import-nothing": "/import-nothing",
     "import-phone": "/import-phone",
+    # The "Add" menu, opened by a click (see CLICKS).
+    "add-menu": "/",
 }
 """View name -> route. Add a view here when a story adds or changes one."""
+
+CLICKS: dict[str, tuple[int, int]] = {
+    "add-menu": (28, 28),
+}
+"""View name -> point to click, in px from the top-RIGHT corner, before each capture."""
 
 WIDTHS = (1000, 500, 380)
 HEIGHT = 720
@@ -103,6 +110,12 @@ def capture(out: Path, views: list[str], chromium: str | None, scale: float) -> 
                     for width in WIDTHS:
                         page.set_viewport_size({"width": width, "height": HEIGHT})
                         time.sleep(SETTLE_S)
+                        if view in CLICKS:
+                            page.keyboard.press("Escape")
+                            time.sleep(SETTLE_S / 2)
+                            dx, dy = CLICKS[view]
+                            page.mouse.click(width - dx, dy)
+                            time.sleep(SETTLE_S)
                         path = out / f"{view}-{width}-{scheme}.png"
                         page.screenshot(path=str(path))
                         written.append(path)
