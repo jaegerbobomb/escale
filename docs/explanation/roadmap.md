@@ -34,7 +34,7 @@ window that already adapts to its width.
 - [ ] The same ticket imported twice does not duplicate; a second traveller joins the batch
 - [ ] Documents are stored by SHA-256 and linked with `subjectOf`
 - [ ] A stay can be added and corrected by hand (S017, S018)
-- [ ] A place shared from Google Maps becomes a pre-filled stay, without any request to Google (S019)
+- [ ] A place shared from Google Maps becomes a pre-filled stay, with at most one opt-in request to Google to resolve a short link (S019)
 
 ## 3. `timeline` — the current trip
 
