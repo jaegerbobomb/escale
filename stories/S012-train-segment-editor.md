@@ -3,7 +3,7 @@ id: S012
 title: "Train segment editor"
 epic: timeline
 depends_on: [S011, S008]
-status: proposed
+status: todo
 estimate: M
 bdd: true
 updated: "2026-11-24"
@@ -44,3 +44,7 @@ updated: "2026-11-24"
 * **Given** the detail of a train with a delay of 12 minutes
 * **When** the user opens the editor
 * **Then** the delay is not an editable field
+
+## Notes
+
+- 2026-11-24: validated by the maintainer (`todo`).

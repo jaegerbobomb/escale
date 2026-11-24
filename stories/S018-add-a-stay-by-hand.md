@@ -3,7 +3,7 @@ id: S018
 title: "Add a stay by hand"
 epic: import
 depends_on: [S017]
-status: proposed
+status: todo
 estimate: S
 bdd: true
 updated: "2026-11-24"
@@ -44,3 +44,7 @@ updated: "2026-11-24"
 * **Given** a file with no reservation was imported
 * **When** the user chooses "Add manually" then "Stay"
 * **Then** the editor of a new stay is shown
+
+## Notes
+
+- 2026-11-24: validated by the maintainer (`todo`).
