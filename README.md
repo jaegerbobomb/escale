@@ -44,7 +44,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S008 | Two-way calendar sync | sync | proposed |
 | S009 | Sync ticket documents | sync | proposed |
 | S010 | Trip grouping and timeline | timeline | split |
-| S010a | Group reservations into trips | timeline | todo |
+| S010a | Group reservations into trips | timeline | done |
 | S010b | Current trip timeline | timeline | todo |
 | S010c | Segment card densities | timeline | proposed |
 | S011 | Jump index and segment detail | timeline | proposed |

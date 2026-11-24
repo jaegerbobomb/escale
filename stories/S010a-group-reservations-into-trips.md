@@ -3,10 +3,11 @@ id: S010a
 title: "Group reservations into trips"
 epic: timeline
 depends_on: [S014]
-status: todo
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-24"
+released_in: "0.6.0"
 adr: [7]
 ---
 
@@ -62,3 +63,8 @@ adr: [7]
 - Child of S010 (split validated by the maintainer, 2026-11-24).
 - A named or forced grouping (`X-ESCALE-TRIP`) comes with the calendar sync (S007).
 - Simpler than KDE Itinerary's `TripGroupManager`: no home location yet (Settings).
+- Delivered in 0.6.0 (`escale_core.trips`). "Back where it started" compares towns
+  (`address.addressLocality`, else the place's name): Paris Gare de Lyon and Paris Nord
+  match when kitinerary gives their town, not otherwise. A trip waiting for its way back
+  gives up after 30 days.
+- Not shown anywhere yet: S010b puts the active trip in "Current".

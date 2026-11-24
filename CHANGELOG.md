@@ -6,6 +6,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-24
+
+### Added
+- S010a: reservations are grouped into trips and outings (core): a trip goes on while
+  bookings follow within a day or until the way back; an outing is one day with no
+  lodging and no long-distance transport. The active trip is the one in progress, else
+  the next.
+- Stories S010a, S010b, S010c (S010 split) and S016 ready.
+
+### Changed
+- "Add" is a split button as in the mockup (7 px radius, no shadow, 1 px separator), and
+  its menu has the mockup's six entries; only "Import a file…" works yet.
+
 ## [0.5.0] - 2026-11-24
 
 ### Added
@@ -66,7 +79,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/jaegerbobomb/escale/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/jaegerbobomb/escale/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jaegerbobomb/escale/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jaegerbobomb/escale/compare/v0.2.0...v0.3.0
