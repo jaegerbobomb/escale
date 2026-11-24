@@ -1,0 +1,20 @@
+Escale — additional notice for Apple App Store distribution
+============================================================
+
+Escale is free software, licensed under the GNU General Public License,
+version 3 or (at your option) any later version. See LICENSE.
+
+The terms under which Apple distributes applications through its App Store
+may be considered to conflict with some terms of the GPL.
+
+The copyright holders of Escale commit not to pursue any licence violation
+that results solely from that conflict, when Escale, or a work based on it,
+is distributed through the Apple App Store.
+
+This commitment holds only if every other obligation of the GPL is met, in
+particular making the complete corresponding source code available and
+providing the licence text to the recipients.
+
+It covers the code contributed to this repository under the terms of
+CONTRIBUTING.md. It does not cover third-party code whose authors made no
+such commitment.

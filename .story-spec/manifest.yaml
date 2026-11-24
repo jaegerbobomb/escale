@@ -1,0 +1,29 @@
+# .story-spec/manifest.yaml — modules enabled for Escale.
+# Kit vendored from jaegerbobomb/story-spec@8f0ae8d (main, 0.4.0 unreleased).
+
+version: 1
+
+# pytest-bdd reads the .feature files generated from the stories.
+test_adapter: bdd-pytest
+
+modules:
+  - adr                 # Architecture Decision Records (+ adr-new skill)
+  - story-lint          # CI gate: lint_stories.py validates every story file
+  - release-versioning  # CHANGELOG + version + README kept in sync
+  - claude-code         # agents & skills for Claude Code sessions
+  - docs-diataxis       # user docs along the four Diátaxis modes
+  # - visual-review     # once a screenshot tool for Flet is chosen (see issues)
+  # - epics             # once jaegerbobomb/story-spec#9 is merged; until then see
+  #                     # docs/explanation/roadmap.md
+
+agents:
+  - story-author
+  - story-implementer
+  - spec-guardian
+skills:
+  - release-bump
+
+project:
+  name: "escale"
+  language: python
+  quality_check: "uv run ruff check && uv run ruff format --check && uv run mypy packages && uv run pytest"
