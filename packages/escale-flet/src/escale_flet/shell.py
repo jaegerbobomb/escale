@@ -75,8 +75,18 @@ TABS: tuple[TabSpec, ...] = (
 )
 
 IMPORT_ENTRY = "Import a file…"
-ADD_MENU_ENTRIES: tuple[str, ...] = (IMPORT_ENTRY, "New trip…", "Search a train…")
-"""Entries of the "Add" menu; those other than import wait for their stories."""
+ADD_MENU_ENTRIES: tuple[str, ...] = (
+    "Search a train…",
+    IMPORT_ENTRY,
+    "Scan or paste…",
+    "New trip…",
+    "New outing…",
+    "Add manually…",
+)
+"""The mockup's "Add" menu; entries other than import wait for their stories."""
+
+SPLIT_RADIUS = 7
+"""libadwaita's standard control radius, used by the "Add" split button."""
 
 IMPORT_EXTENSIONS = ["pdf", "pkpass", "ics", "itinerary", "html", "eml", "png", "jpg", "jpeg"]
 """What kitinerary-extractor reads (ADR-0003)."""
@@ -161,13 +171,40 @@ class Shell:
             on_change=self._on_bottom_bar_change,
         )
         # libadwaita's split button: the main action and its menu side by side.
+        # libadwaita's AdwSplitButton (.suggested-action): the main action and its menu as
+        # two joined buttons, standard 7 px radius, no shadow, a 1 px separator between.
         self.add_button = ft.Row(
             [
                 ft.FilledButton(
-                    "Add", icon=ft.Icons.ADD, tooltip="Import a file", on_click=self._on_import
+                    "Add",
+                    icon=ft.Icons.ADD,
+                    tooltip="Import a file",
+                    on_click=self._on_import,
+                    height=36,
+                    style=ft.ButtonStyle(
+                        elevation=0,
+                        shape=ft.RoundedRectangleBorder(
+                            radius=ft.BorderRadius.only(
+                                top_left=SPLIT_RADIUS, bottom_left=SPLIT_RADIUS
+                            )
+                        ),
+                    ),
+                ),
+                ft.Container(
+                    width=1,
+                    height=36,
+                    bgcolor=ft.Colors.with_opacity(0.35, ft.Colors.ON_PRIMARY),
                 ),
                 ft.PopupMenuButton(
-                    icon=ft.Icons.ARROW_DROP_DOWN,
+                    content=ft.Container(
+                        ft.Icon(ft.Icons.ARROW_DROP_DOWN, color=ft.Colors.ON_PRIMARY),
+                        bgcolor=ft.Colors.PRIMARY,
+                        height=36,
+                        padding=ft.Padding.symmetric(horizontal=6),
+                        border_radius=ft.BorderRadius.only(
+                            top_right=SPLIT_RADIUS, bottom_right=SPLIT_RADIUS
+                        ),
+                    ),
                     tooltip="Add…",
                     items=_add_menu_items(self._on_import),
                 ),

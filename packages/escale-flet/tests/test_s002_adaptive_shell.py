@@ -180,14 +180,26 @@ def test_light_system_theme_uses_the_light_variant() -> None:
 def test_add_menu_entries_are_present_and_only_import_is_enabled() -> None:
     world = World(page=FakePage(width=1000))
     world.start()
-    menu = world.shell.add_button.controls[1]
-    assert isinstance(menu, ft.PopupMenuButton)
+    [menu] = [c for c in world.shell.add_button.controls if isinstance(c, ft.PopupMenuButton)]
+    # The mockup's "Add" menu (page "My trips — trips & outings").
     assert [cast(ft.Text, item.content).value for item in menu.items] == [
-        "Import a file…",
-        "New trip…",
         "Search a train…",
+        "Import a file…",
+        "Scan or paste…",
+        "New trip…",
+        "New outing…",
+        "Add manually…",
     ]
-    assert [bool(item.disabled) for item in menu.items] == [False, True, True]
+    assert [bool(item.disabled) for item in menu.items] == [True, False, True, True, True, True]
+
+
+def test_add_is_a_split_button_without_shadow() -> None:
+    world = World(page=FakePage(width=1000))
+    world.start()
+    main, separator, menu = world.shell.add_button.controls
+    assert isinstance(main, ft.FilledButton) and isinstance(menu, ft.PopupMenuButton)
+    assert main.style is not None and main.style.elevation == 0
+    assert isinstance(separator, ft.Container) and separator.width == 1
 
 
 def test_state_colours_are_tokens_per_variant() -> None:
