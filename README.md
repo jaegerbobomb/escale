@@ -7,7 +7,8 @@ your devices through your own Nextcloud. A GNOME-styled cousin of
 
 **Status: early development.** On Linux, a ticket file can be imported, confirmed and
 kept on the device ([S004](stories/S004-import-confirmation.md),
-[S014](stories/S014-local-store-sqlite.md)); there are no trips to show it in yet.
+[S014](stories/S014-local-store-sqlite.md)); "Current" shows the trip in progress or the
+next one as a timeline ([S010b](stories/S010b-current-trip-timeline.md)).
 
 | Read | For |
 |---|---|
@@ -45,17 +46,18 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S009 | Sync ticket documents | sync | proposed |
 | S010 | Trip grouping and timeline | timeline | split |
 | S010a | Group reservations into trips | timeline | done |
-| S010b | Current trip timeline | timeline | todo |
+| S010b | Current trip timeline | timeline | done |
 | S010c | Segment card densities | timeline | proposed |
 | S011 | Jump index and segment detail | timeline | proposed |
 | S012 | Train segment editor | timeline | proposed |
 | S013 | Android build listing synced reservations | sync | proposed |
 | S014 | Local store in SQLite | import | done |
-| S015 | Full-screen ticket, offline | timeline | todo |
+| S015 | Full-screen ticket, offline | timeline | done |
 | S016 | Share a flight to follow it live | timeline | todo |
 | S017 | Stay detail and editor | timeline | proposed |
 | S018 | Add a stay by hand | import | proposed |
 | S019 | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | proposed |
+| S020 | Current trip looks like the mockup | timeline | todo |
 | S022 | Open a place in a map app | timeline | proposed |
 
 ## Licence

@@ -37,6 +37,10 @@ VIEWS: dict[str, str] = {
     "import-found": "/import-found",
     "import-nothing": "/import-nothing",
     "import-phone": "/import-phone",
+    # The current trip, 40 minutes before its first train (S010b).
+    "trip": "/trip",
+    # The first train's ticket, full screen (S015).
+    "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).
     "add-menu": "/",
 }

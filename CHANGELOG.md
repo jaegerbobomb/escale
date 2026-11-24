@@ -6,6 +6,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-24
+
+### Added
+- S015: "Ticket" on a timeline card opens the ticket full screen: number, route, date,
+  coach and seat, travellers, the barcode on white (QR, Aztec, PDF417, Code 128, drawn
+  on the device, no network) and the ticket number; screen brightness up where the
+  platform allows. Without a barcode, it opens the original document.
+- Story S020: the current trip as in the mockup (after S015).
+
+## [0.7.0] - 2026-11-24
+
+### Added
+- S010b: "Current" shows the active trip: name, dates, travellers, and a timeline of
+  cards (train or flight with times, stations, platform, seat and duration; hotel with
+  nights and check-in/out; events with time and place). The next segment is outlined
+  with "Next · leaves in …". It reloads after an import.
+
 ## [0.6.0] - 2026-11-24
 
 ### Added
@@ -79,7 +96,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/jaegerbobomb/escale/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/jaegerbobomb/escale/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/jaegerbobomb/escale/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/jaegerbobomb/escale/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jaegerbobomb/escale/compare/v0.3.0...v0.4.0
