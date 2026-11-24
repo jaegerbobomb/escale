@@ -13,3 +13,7 @@ The layout changes as soon as the window is resized; the selected view stays sel
 The theme follows the system's light or dark preference.
 
 A view can be opened directly by its path in the web version: `/trips`, `/statistics`.
+
+**Current** shows the trip in progress, or else the next one: its name, dates and
+travellers, then one card per booking in time order. The next one is outlined and says
+how long until it leaves. With no trip ahead, the view says so.

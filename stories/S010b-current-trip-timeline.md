@@ -3,10 +3,11 @@ id: S010b
 title: "Current trip timeline"
 epic: timeline
 depends_on: [S010a, S002]
-status: todo
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-24"
+released_in: "0.7.0"
 adr: [7]
 ---
 
@@ -40,3 +41,10 @@ adr: [7]
 ## Notes
 
 - Child of S010 (split validated by the maintainer, 2026-11-24).
+- Delivered in 0.7.0 (`escale_flet/timeline.py`). Cards: transport (number, times,
+  stations, platform, coach and seat, duration), lodging (name, street, nights,
+  check-in/out), others (time, place). Times in the place's time zone, as on tickets.
+- Not in this story (mockup elements for later stories): strike banner, avatars,
+  "Ticket" and "Alternatives" actions, stops, weather, local route to the hotel, the
+  warning when no return transport exists.
+- "Current" reloads after an import is confirmed. Demo route `/trip` for screenshots.

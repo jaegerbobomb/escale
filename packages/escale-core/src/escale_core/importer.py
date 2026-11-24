@@ -127,6 +127,10 @@ class Importer:
         self._extractor = extractor
         self._store = store
 
+    @property
+    def store(self) -> ReservationStore:
+        return self._store
+
     async def preview(self, path: Path) -> ExtractionResult:
         return await extract(path, self._extractor)
 
