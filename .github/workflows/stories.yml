@@ -1,0 +1,19 @@
+name: Stories
+
+on:
+  pull_request:
+    paths:
+      - 'stories/**'
+      - 'scripts/lint_stories.py'
+  push:
+    branches: [main]
+    paths:
+      - 'stories/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint stories (story-lint)
+        run: python3 scripts/lint_stories.py --stories-dir=stories --strict --verbose
