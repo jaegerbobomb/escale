@@ -1,0 +1,15 @@
+# Window layout
+
+Escale has three top-level views: **Current** (the trip you are on), **My trips** and
+**Statistics**. It opens on **Current**.
+
+| Window width | Where the views are | "Add" |
+|---|---|---|
+| 550 px and more | a switcher in the middle of the header | button with a menu, right of the header |
+| under 550 px | a bar at the bottom of the window | "+" menu, right of the header |
+
+The layout changes as soon as the window is resized; the selected view stays selected.
+
+The theme follows the system's light or dark preference.
+
+A view can be opened directly by its path in the web version: `/trips`, `/statistics`.

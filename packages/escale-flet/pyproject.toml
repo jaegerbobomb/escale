@@ -1,6 +1,6 @@
 [project]
 name = "escale-flet"
-version = "0.1.0"
+version = "0.2.0"
 description = "Escale user interface built with Flet."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
@@ -8,6 +8,13 @@ dependencies = [
     "escale-core",
     "flet>=1.1",
 ]
+
+[project.optional-dependencies]
+desktop = ["flet[desktop]>=1.1"]
+web = ["flet[web]>=1.1"]
+
+[project.scripts]
+escale = "escale_flet.app:run"
 
 [tool.uv.sources]
 escale-core = { workspace = true }

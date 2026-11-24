@@ -17,6 +17,7 @@
 @.story-spec/modules/release-versioning/CLAUDE.md
 @.story-spec/modules/claude-code/CLAUDE.md
 @.story-spec/modules/docs-diataxis/CLAUDE.md
+@.story-spec/modules/visual-review/CLAUDE.md
 <!-- END story-spec:modules -->
 
 ## Project-specific
@@ -33,10 +34,10 @@
 - **Tooling**: `uv` (workspace), `ruff` (lint + format), `mypy` (strict on the core),
   `pytest` + `pytest-bdd`.
 - **Commands** (after `uv sync --all-packages`):
-  `uv run ruff check`, `uv run ruff format --check`, `uv run mypy packages`,
+  `uv run ruff check`, `uv run ruff format --check`, `uv run mypy`,
   `uv run pytest`.
 - **Quality check before commit**:
-  `uv run ruff check && uv run ruff format --check && uv run mypy packages && uv run pytest`.
+  `uv run ruff check && uv run ruff format --check && uv run mypy && uv run pytest`.
 - **Stories**: `python3 scripts/lint_stories.py --stories-dir=stories --strict`.
   Generated features go to `tests/features/` (gitignored).
 - **Language**: everything in the repository is written in English.
@@ -50,6 +51,6 @@
   validated by the maintainer from screenshots **shown in the Claude Code session**, not
   only attached to the PR. Capture every new or changed view at 1000, 500 and 380 px,
   light and dark, from the PR's head, and show them before asking for validation. No
-  screenshots, no validation request. The capture tool is settled by issue #11
-  (`visual-review` module) before the first UI story is delivered.
+  screenshots, no validation request. Capture with `uv run python tools/screenshots.py`
+  (see `docs/how-to/capture-screenshots.md`); add any new view to its `VIEWS`.
 - **Never** put a chat or session link in a commit, PR or issue.

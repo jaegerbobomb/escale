@@ -6,6 +6,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-24
+
+### Added
+- S002: adaptive shell with three views (Current, My trips, Statistics); tabs in the
+  header from 550 px, in a bottom bar below; "Add" split button; Adwaita-like theme,
+  light and dark following the system, state colours as tokens; Adwaita Sans font.
+- `escale` command (`python -m escale_flet`), `--web` to serve the app locally.
+- Screenshot tool for visual review (`tools/screenshots.py`), run by CI as an artifact;
+  `visual-review` module enabled.
+
+### Changed
+- The quality check runs `uv run mypy`, which also checks `tools/`.
+
 ## [0.1.0] - 2026-11-24
 
 ### Added
@@ -18,5 +31,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/jaegerbobomb/escale/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jaegerbobomb/escale/releases/tag/v0.1.0
