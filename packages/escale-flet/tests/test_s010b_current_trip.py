@@ -82,7 +82,7 @@ def next_highlighted(world: World) -> None:
     assert world.shell is not None
     found = cards(world.shell)
     assert [c.data["next"] for c in found] == [True, False, False]
-    assert "Next · leaves in 40 min" in texts(found[0])
+    assert "NEXT · leaves in 40 min" in texts(found[0])
 
 
 # --- details ---
@@ -96,8 +96,15 @@ def test_no_trip_keeps_the_empty_view(world: World) -> None:
 def test_header_shows_dates_and_travellers(world: World) -> None:
     world.store_all(LONDON_TRIP)
     shown = texts(world.show_current().body)
-    assert "8–10 Jul 2026" in shown
-    assert "Jane Doe, John Doe" in shown
+    assert "8–10 Jul 2026 · 2 travellers" in shown
+    shell = world.shell
+    assert shell is not None
+    avatars = [
+        c.data["avatar"]
+        for c in walk(shell.body)
+        if isinstance(c.data, dict) and "avatar" in c.data
+    ]
+    assert avatars == ["Jane Doe", "Alex Martin"]
 
 
 def test_train_card_shows_times_platform_seat_and_duration(world: World) -> None:

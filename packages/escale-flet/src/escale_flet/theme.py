@@ -106,6 +106,8 @@ def build_theme(t: Tokens) -> ft.Theme:
             primary=t.accent_bg,
             on_primary=t.on_accent_bg,
             secondary=t.accent,
+            tertiary=t.success,
+            on_tertiary=t.on_accent_bg,
             error=t.error,
             surface=t.window_bg,
             on_surface=t.fg,
