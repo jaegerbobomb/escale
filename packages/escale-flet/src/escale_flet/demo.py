@@ -48,7 +48,7 @@ def _place(kind: str, name: str, town: str, street: str | None = None) -> dict[s
     return {"@type": kind, "name": name, "address": address}
 
 
-_TRAVELLERS = [{"@type": "Person", "name": "Jane Doe"}, {"@type": "Person", "name": "John Doe"}]
+_TRAVELLERS = [{"@type": "Person", "name": "Jane Doe"}, {"@type": "Person", "name": "Alex Martin"}]
 
 LONDON_TRIP: list[dict[str, Any]] = [
     {
@@ -74,6 +74,7 @@ LONDON_TRIP: list[dict[str, Any]] = [
     {
         "@type": "LodgingReservation",
         "reservationNumber": "ESC-H1",
+        "reservationStatus": "http://schema.org/ReservationConfirmed",
         "underName": _TRAVELLERS,
         "reservationFor": _place(
             "LodgingBusiness", "The Hoxton, Holborn", "London", "199-206 High Holborn"
