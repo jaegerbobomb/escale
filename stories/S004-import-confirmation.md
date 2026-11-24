@@ -3,10 +3,11 @@ id: S004
 title: "Import with confirmation"
 epic: import
 depends_on: [S002, S003]
-status: proposed
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-24"
+released_in: "0.4.0"
 adr: [3]
 ---
 
@@ -53,3 +54,24 @@ adr: [3]
 * **Given** the app runs on Android
 * **When** the user opens "Import a file"
 * **Then** the app explains that tickets are read on Linux and arrive through the sync
+
+## Notes
+
+- 2026-11-24: validated by the maintainer (`proposed` → `todo`), delivered in 0.4.0.
+- Maintainer's answers before coding:
+  - **Saving**: a `ReservationStore` port in the core with an in-memory implementation;
+    an import is lost when the app closes. Persistence is S014 (SQLite).
+  - **Trip**: the sheet shows "Add to: New trip" until trip grouping (S010).
+  - **Add manually**: present and disabled until manual entry exists (S012).
+- Look taken from the mockup ("Import PDF & offline ticket", step 2): a bottom sheet
+  sized to its content, at most 640 px wide, the reservation in a card, "Cancel" and
+  "Add to trip". Texts in English, like the rest of the app.
+- Drag and drop onto the window (mockup step 1) is not in this story: "Add" and
+  "Add → Import a file…" open the system file chooser. In a browser the chosen file is
+  copied to a temporary folder before extraction.
+- On Android and iOS (not in a browser) "Import a file" explains that tickets are read
+  on Linux; the extractor is not called.
+- Screenshots: `ESCALE_DEMO=1` makes `/import-found`, `/import-nothing` and
+  `/import-phone` open the sheets on a synthetic ticket; only `tools/screenshots.py`
+  sets it.
+

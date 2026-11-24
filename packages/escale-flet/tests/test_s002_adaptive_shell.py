@@ -8,57 +8,17 @@ What the page looks like is checked from screenshots (`tools/screenshots.py`).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import cast
 
 import flet as ft
 import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
 
 from escale_flet.shell import NARROW_BELOW, Layout, Shell, Tab, layout_for, tab_for_route
+from escale_flet.testing import FakePage
 from escale_flet.theme import DARK, DARK_THEME, LIGHT, LIGHT_THEME, tokens
 
 scenarios("S002.feature")
-
-
-@dataclass
-class FakePage:
-    """The part of `ft.Page` the shell uses."""
-
-    width: float | None = None
-    route: str = "/"
-    platform_brightness: ft.Brightness = ft.Brightness.LIGHT
-    title: str | None = None
-    fonts: dict[str, str] | None = None
-    theme: ft.Theme | None = None
-    dark_theme: ft.Theme | None = None
-    theme_mode: ft.ThemeMode | None = None
-    padding: Any = None
-    appbar: ft.AppBar | None = None
-    navigation_bar: ft.NavigationBar | None = None
-    on_resize: Any = None
-    controls: list[ft.Control] = field(default_factory=list)
-    updates: int = 0
-
-    def add(self, *controls: ft.Control) -> None:
-        self.controls.extend(controls)
-
-    def update(self) -> None:
-        self.updates += 1
-
-    def resize(self, width: float) -> None:
-        self.width = width
-        event = ft.PageResizeEvent(
-            name="resize", control=cast(ft.Page, self), width=width, height=800
-        )
-        self.on_resize(event)
-
-    def effective_theme(self) -> ft.Theme | None:
-        """The theme Flutter applies for this page's mode and platform brightness."""
-        dark = self.theme_mode == ft.ThemeMode.DARK or (
-            self.theme_mode == ft.ThemeMode.SYSTEM
-            and self.platform_brightness == ft.Brightness.DARK
-        )
-        return self.dark_theme if dark else self.theme
 
 
 def header_tabs(page: FakePage) -> list[str]:
@@ -217,17 +177,17 @@ def test_light_system_theme_uses_the_light_variant() -> None:
     assert world.page.effective_theme() is LIGHT_THEME
 
 
-def test_add_menu_entries_are_present_and_disabled() -> None:
+def test_add_menu_entries_are_present_and_only_import_is_enabled() -> None:
     world = World(page=FakePage(width=1000))
     world.start()
     menu = world.shell.add_button.controls[1]
     assert isinstance(menu, ft.PopupMenuButton)
     assert [cast(ft.Text, item.content).value for item in menu.items] == [
-        "Import a ticket…",
+        "Import a file…",
         "New trip…",
         "Search a train…",
     ]
-    assert all(item.disabled for item in menu.items)
+    assert [bool(item.disabled) for item in menu.items] == [False, True, True]
 
 
 def test_state_colours_are_tokens_per_variant() -> None:

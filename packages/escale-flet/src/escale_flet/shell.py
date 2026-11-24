@@ -7,11 +7,19 @@ keeps the selected tab across layouts.
 
 from __future__ import annotations
 
+import tempfile
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum, StrEnum
+from pathlib import Path
+from typing import Any
 
 import flet as ft
 
+from escale_core.adapters.kitinerary_cli import KitineraryCli
+from escale_core.importer import Importer
+from escale_core.store import InMemoryReservationStore
+from escale_flet.import_sheet import confirmation_sheet, phone_sheet
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
 
 NARROW_BELOW = 550
@@ -66,8 +74,16 @@ TABS: tuple[TabSpec, ...] = (
     ),
 )
 
-ADD_MENU_ENTRIES: tuple[str, ...] = ("Import a ticket…", "New trip…", "Search a train…")
-"""Entries of the "Add" menu, disabled until the stories that implement them land."""
+IMPORT_ENTRY = "Import a file…"
+ADD_MENU_ENTRIES: tuple[str, ...] = (IMPORT_ENTRY, "New trip…", "Search a train…")
+"""Entries of the "Add" menu; those other than import wait for their stories."""
+
+IMPORT_EXTENSIONS = ["pdf", "pkpass", "ics", "itinerary", "html", "eml", "png", "jpg", "jpeg"]
+"""What kitinerary-extractor reads (ADR-0003)."""
+
+PHONES = {ft.PagePlatform.ANDROID, ft.PagePlatform.IOS, ft.PagePlatform.ANDROID_TV}
+
+FileChooser = Callable[[], Awaitable[Path | None]]
 
 
 def layout_for(width: float | None) -> Layout:
@@ -102,14 +118,23 @@ def _empty_view(spec: TabSpec) -> ft.Control:
     )
 
 
-def _add_menu_items() -> list[ft.PopupMenuItem]:
-    return [ft.PopupMenuItem(content=ft.Text(entry), disabled=True) for entry in ADD_MENU_ENTRIES]
+def _add_menu_items(on_import: Callable[[Any], Awaitable[None]]) -> list[ft.PopupMenuItem]:
+    return [
+        ft.PopupMenuItem(content=ft.Text(entry), on_click=on_import)
+        if entry == IMPORT_ENTRY
+        else ft.PopupMenuItem(content=ft.Text(entry), disabled=True)
+        for entry in ADD_MENU_ENTRIES
+    ]
 
 
 class Shell:
     """The window's top-level structure; ``mount`` attaches it to a Flet page."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, importer: Importer | None = None, choose_file: FileChooser | None = None
+    ) -> None:
+        self.importer = importer or Importer(KitineraryCli(), InMemoryReservationStore())
+        self.choose_file: FileChooser = choose_file or self._pick_file
         self.selected = Tab.CURRENT
         self.layout = Layout.WIDE
         self._page: ft.Page | None = None
@@ -139,19 +164,18 @@ class Shell:
         self.add_button = ft.Row(
             [
                 ft.FilledButton(
-                    "Add",
-                    icon=ft.Icons.ADD,
-                    disabled=True,
-                    tooltip="Coming with ticket import",
+                    "Add", icon=ft.Icons.ADD, tooltip="Import a file", on_click=self._on_import
                 ),
                 ft.PopupMenuButton(
-                    icon=ft.Icons.ARROW_DROP_DOWN, tooltip="Add…", items=_add_menu_items()
+                    icon=ft.Icons.ARROW_DROP_DOWN,
+                    tooltip="Add…",
+                    items=_add_menu_items(self._on_import),
                 ),
             ],
             spacing=0,
         )
         self.add_menu_compact = ft.PopupMenuButton(
-            icon=ft.Icons.ADD, tooltip="Add…", items=_add_menu_items()
+            icon=ft.Icons.ADD, tooltip="Add…", items=_add_menu_items(self._on_import)
         )
         self.appbar = ft.AppBar(center_title=True, actions_padding=ft.Padding.only(right=8))
         self.body = ft.Container(
@@ -193,6 +217,46 @@ class Shell:
             self._apply()
             self._update()
 
+    async def start_import(self) -> None:
+        """Choose a file, show what it holds, save it only if the user confirms (S004)."""
+        page = self._page
+        if page is None:
+            return
+        if page.platform in PHONES and not page.web:
+            page.show_dialog(phone_sheet(self._close_sheet))
+            return
+        path = await self.choose_file()
+        if path is None:
+            return
+        result = await self.importer.preview(path)
+
+        async def confirm(_: Any) -> None:
+            await self.importer.confirm(result)
+            self._close_sheet(None)
+
+        page.show_dialog(confirmation_sheet(result, confirm, self._close_sheet))
+
+    def _close_sheet(self, _: Any) -> None:
+        if self._page is not None:
+            self._page.pop_dialog()
+
+    async def _pick_file(self) -> Path | None:
+        """The system file chooser; in a browser the file is copied to a temporary folder."""
+        web = self._page is not None and self._page.web
+        files = await ft.FilePicker().pick_files(
+            dialog_title="Import a file", allowed_extensions=IMPORT_EXTENSIONS, with_data=web
+        )
+        if not files:
+            return None
+        picked = files[0]
+        if picked.path:
+            return Path(picked.path)
+        if picked.bytes is None:
+            return None
+        target = Path(tempfile.mkdtemp(prefix="escale-import-")) / Path(picked.name).name
+        target.write_bytes(picked.bytes)
+        return target
+
     # --- rendering ---
 
     def _apply(self) -> None:
@@ -216,6 +280,9 @@ class Shell:
             self._page.update()
 
     # --- event handlers ---
+
+    async def _on_import(self, _: Any) -> None:
+        await self.start_import()
 
     def _on_resize(self, e: ft.PageResizeEvent) -> None:
         self.resize(e.width)
