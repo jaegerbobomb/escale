@@ -3,7 +3,7 @@ id: S019
 title: "Import a shared place (Google Maps, CoMaps, OpenStreetMap)"
 epic: import
 depends_on: [S018]
-status: proposed
+status: todo
 estimate: M
 bdd: true
 updated: "2026-11-24"
@@ -127,3 +127,4 @@ flowchart LR
   draft ("no request to Google, parse the shared text") could not work: resolving the
   link is the only way, so it became an opt-in source with a single, non-followed
   request.
+- 2026-11-24: validated by the maintainer (`todo`).

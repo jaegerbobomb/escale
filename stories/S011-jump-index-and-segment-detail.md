@@ -3,7 +3,7 @@ id: S011
 title: "Jump index and segment detail"
 epic: timeline
 depends_on: [S010]
-status: proposed
+status: todo
 estimate: M
 bdd: true
 updated: "2026-11-24"
@@ -52,3 +52,7 @@ adr: [7]
 * **Given** a trip is open in a window 380 px wide
 * **When** the user opens a segment's detail
 * **Then** the bottom navigation bar is hidden
+
+## Notes
+
+- 2026-11-24: validated by the maintainer (`todo`).

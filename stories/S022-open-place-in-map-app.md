@@ -3,7 +3,7 @@ id: S022
 title: "Open a place in a map app"
 epic: timeline
 depends_on: [S017]
-status: proposed
+status: todo
 estimate: S
 bdd: true
 updated: "2026-11-24"
@@ -56,3 +56,4 @@ updated: "2026-11-24"
 
 - Agreed with the maintainer (2026-11-24): open in the user's map app now; an embedded
   map comes later in the `comfort` epic.
+- 2026-11-24: validated by the maintainer (`todo`).

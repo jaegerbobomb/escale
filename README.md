@@ -40,26 +40,26 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S003 | Extract a ticket with kitinerary | import | done |
 | S004 | Import with confirmation | import | done |
 | S005 | Merge reservations into traveller batches | import | deferred |
-| S006 | Connect a Nextcloud account | sync | proposed |
-| S007 | Map reservations to calendar events | sync | proposed |
-| S008 | Two-way calendar sync | sync | proposed |
-| S009 | Sync ticket documents | sync | proposed |
+| S006 | Connect a Nextcloud account | sync | todo |
+| S007 | Map reservations to calendar events | sync | todo |
+| S008 | Two-way calendar sync | sync | todo |
+| S009 | Sync ticket documents | sync | todo |
 | S010 | Trip grouping and timeline | timeline | split |
 | S010a | Group reservations into trips | timeline | done |
 | S010b | Current trip timeline | timeline | done |
-| S010c | Segment card densities | timeline | proposed |
-| S011 | Jump index and segment detail | timeline | proposed |
-| S012 | Train segment editor | timeline | proposed |
-| S013 | Android build listing synced reservations | sync | proposed |
+| S010c | Segment card densities | timeline | todo |
+| S011 | Jump index and segment detail | timeline | todo |
+| S012 | Train segment editor | timeline | todo |
+| S013 | Android build listing synced reservations | sync | todo |
 | S014 | Local store in SQLite | import | done |
 | S015 | Full-screen ticket, offline | timeline | done |
 | S016 | Share a flight to follow it live | timeline | todo |
-| S017 | Stay detail and editor | timeline | proposed |
-| S018 | Add a stay by hand | import | proposed |
-| S019 | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | proposed |
+| S017 | Stay detail and editor | timeline | todo |
+| S018 | Add a stay by hand | import | todo |
+| S019 | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | todo |
 | S020 | Current trip looks like the mockup | timeline | todo |
-| S022 | Open a place in a map app | timeline | proposed |
-| S023 | Find a stay in OpenStreetMap | import | proposed |
+| S022 | Open a place in a map app | timeline | todo |
+| S023 | Find a stay in OpenStreetMap | import | todo |
 
 ## Licence
 

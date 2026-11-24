@@ -3,7 +3,7 @@ id: S008
 title: "Two-way calendar sync"
 epic: sync
 depends_on: [S006, S007]
-status: proposed
+status: todo
 estimate: L
 bdd: true
 updated: "2026-11-24"
@@ -70,3 +70,7 @@ sequenceDiagram
 * **When** it is deleted on the first device
 * **And** the second device syncs
 * **Then** the second device no longer shows it
+
+## Notes
+
+- 2026-11-24: validated by the maintainer (`todo`).
