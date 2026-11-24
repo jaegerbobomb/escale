@@ -3,7 +3,7 @@ id: S005
 title: "Merge reservations into traveller batches"
 epic: import
 depends_on: [S003]
-status: proposed
+status: deferred
 estimate: M
 bdd: true
 updated: "2026-11-24"
@@ -50,3 +50,6 @@ updated: "2026-11-24"
 
 - KItinerary's exact rules live in its C++ `MergeUtil`; this port is deliberately
   smaller. Cases it gets wrong are fixed by completing this story (bug doctrine).
+
+- 2026-11-24: deferred by the maintainer: low value next to showing trips and tickets.
+  Importing the same ticket twice is handled in S014 (no duplicate).

@@ -2,8 +2,8 @@
 id: S010
 title: "Trip grouping and timeline"
 epic: timeline
-depends_on: [S002, S005]
-status: proposed
+depends_on: [S002, S014]
+status: todo
 estimate: L
 bdd: true
 updated: "2026-11-24"
@@ -19,7 +19,8 @@ adr: [7]
 
 - Core domain `grouping`: reservations close in time and forming a journey away from
   home and back become one trip; same-day local events with no overnight stay become
-  an outing. A named or forced grouping (`X-ESCALE-TRIP`) always wins.
+  an outing. A named or forced grouping (`X-ESCALE-TRIP`) always wins. The rest of
+  outings (event cards, walks between places, "New outing") is the `outings` epic.
 - "Current" shows the active trip (the one in progress, else the next one): header
   with name, dates, travellers; stacked timeline of segment cards (detailed density),
   country-change rows between segments, the next segment highlighted.

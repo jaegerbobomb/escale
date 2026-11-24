@@ -6,6 +6,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-24
+
+### Added
+- S014: imports are kept on the device, in SQLite under `~/.local/share/escale`, with a
+  copy of each ticket file (`documents/<sha256>/`, KDE Itinerary's layout). Importing
+  the same booking twice saves it once.
+- Stories S015 (full-screen offline ticket) and S016 (share a flight on Flightradar24).
+
+### Changed
+- Roadmap: the `timeline` epic (trips, tickets) comes before `sync`. S005 deferred.
+- CI uses `actions/checkout@v7` (Node 24).
+
 ## [0.4.0] - 2026-11-24
 
 ### Added
@@ -54,7 +66,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/jaegerbobomb/escale/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jaegerbobomb/escale/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jaegerbobomb/escale/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jaegerbobomb/escale/compare/v0.1.0...v0.2.0

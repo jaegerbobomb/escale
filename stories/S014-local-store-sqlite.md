@@ -3,10 +3,11 @@ id: S014
 title: "Local store in SQLite"
 epic: import
 depends_on: [S004]
-status: proposed
+status: done
 estimate: S
 bdd: true
 updated: "2026-11-24"
+released_in: "0.5.0"
 adr: [4]
 ---
 
@@ -27,6 +28,10 @@ adr: [4]
 - The imported file itself is copied to `documents/<sha256>/` with its `meta.json`
   (ADR-0004 layout), so the document is still there once the original is deleted.
 
+- Importing a ticket already stored adds nothing: same document (SHA-256), or same
+  reservation (type, reference and departure time), replaces nothing and duplicates
+  nothing (S005 is deferred; this is the part that matters now).
+
 ## Acceptance Criteria
 
 ### Scenario: An import survives a restart
@@ -41,6 +46,26 @@ adr: [4]
 * **When** the original file is deleted
 * **Then** the document is still available under its SHA-256
 
+### Scenario: The same ticket imported twice
+
+* **Given** a confirmed import of a train ticket
+* **When** the same file is imported and confirmed again
+* **Then** the reservation is saved once
+
 ## Notes
 
 - Split out of S004 by the maintainer (2026-11-24): S004 saves in memory only.
+- 2026-11-24: validated (`todo`), with the no-duplicate rule taken from S005.
+- Delivered in 0.5.0. `escale.sqlite` and `documents/` under `$XDG_DATA_HOME/escale`
+  (`~/.local/share/escale`); Android and iOS will need their app storage folder, to
+  set when the Android build exists (S013).
+- Identity of a reservation: type + reference + departure time; when it has neither
+  reference nor time, its whole JSON-LD. Not the whole JSON-LD in every case:
+  kitinerary stamps each run with a new `modifiedTime`, so the same booking read twice
+  would not match. The same reservation found in another file gains that document in
+  its `subject_of`.
+- Nothing is created on disk before the first read or write; schema version 1 is
+  recorded in a `meta` table for later migrations.
+- Checked end to end with the real `kitinerary-extractor` (import, new store on the
+  same folder, import again, original deleted): one reservation, document kept.
+

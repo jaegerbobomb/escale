@@ -7,6 +7,9 @@ from pathlib import Path
 
 import flet as ft
 
+from escale_core.adapters.kitinerary_cli import KitineraryCli
+from escale_core.importer import Importer
+from escale_core.sqlite_store import SqliteReservationStore, default_data_dir
 from escale_flet import demo
 from escale_flet.shell import Shell
 
@@ -17,7 +20,8 @@ async def main(page: ft.Page) -> None:
     if demo.enabled():
         await demo.run(page)
         return
-    Shell().mount(page)
+    store = SqliteReservationStore(default_data_dir())
+    Shell(importer=Importer(KitineraryCli(), store)).mount(page)
 
 
 def run(argv: list[str] | None = None) -> None:
