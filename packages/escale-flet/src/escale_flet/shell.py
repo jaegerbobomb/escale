@@ -18,11 +18,14 @@ from typing import Any
 import flet as ft
 
 from escale_core.adapters.kitinerary_cli import KitineraryCli
+from escale_core.extraction import ExtractedReservation
 from escale_core.importer import Importer
 from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.trips import Trip, active_trip, group
 from escale_flet.import_sheet import confirmation_sheet, phone_sheet
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
+from escale_flet.ticket_view import MAX_WIDTH as TICKET_WIDTH
+from escale_flet.ticket_view import ticket_view
 from escale_flet.timeline import MAX_WIDTH, trip_view
 
 NARROW_BELOW = 550
@@ -156,6 +159,7 @@ class Shell:
         self.store: ReservationStore = store or importer.store
         self.clock: Callable[[], datetime] = clock or (lambda: datetime.now().astimezone())
         self.trip: Trip | None = None
+        self.ticket: ExtractedReservation | None = None
         self.choose_file: FileChooser = choose_file or self._pick_file
         self.selected = Tab.CURRENT
         self.layout = Layout.WIDE
@@ -273,6 +277,48 @@ class Shell:
         self._apply()
         self._update()
 
+    async def show_ticket(self, reservation: ExtractedReservation) -> None:
+        """The ticket full screen, screen brightness up while it is shown (S015)."""
+        self.ticket = reservation
+        await self._brightness(full=True)
+        self._apply()
+        self._update()
+
+    async def close_ticket(self) -> None:
+        self.ticket = None
+        await self._brightness(full=False)
+        self._apply()
+        self._update()
+
+    async def _brightness(self, full: bool) -> None:
+        if not isinstance(self._page, ft.Page):
+            return  # a test page, or not mounted
+        try:
+            service = ft.ScreenBrightness()
+            if full:
+                await service.set_application_screen_brightness(1.0)
+            else:
+                await service.reset_application_screen_brightness()  # type: ignore[no-untyped-call]
+        except Exception:
+            return
+
+    def _open_document(
+        self, reservation: ExtractedReservation
+    ) -> Callable[[Any], Awaitable[None]] | None:
+        locate = getattr(self.store, "document_path", None)
+        if locate is None or self._page is None:
+            return None
+        for document_id in reservation.subject_of:
+            path = locate(document_id)
+            if path is not None:
+                url = path.as_uri()
+
+                async def open_it(_: Any, url: str = url) -> None:
+                    await ft.UrlLauncher().launch_url(url)
+
+                return open_it
+        return None
+
     async def start_import(self) -> None:
         """Choose a file, show what it holds, save it only if the user confirms (S004)."""
         page = self._page
@@ -320,9 +366,27 @@ class Shell:
         index = [spec.tab for spec in TABS].index(self.selected)
         self.switcher.selected = [self.selected.value]
         self.bottom_bar.selected_index = index
+        if self.ticket is not None:
+            self.body.content = ft.Container(
+                ticket_view(self.ticket, self._open_document(self.ticket)),
+                max_width=TICKET_WIDTH,
+                expand=True,
+            )
+            self.body.alignment = ft.Alignment.TOP_CENTER
+            self.appbar.leading = ft.IconButton(
+                ft.Icons.ARROW_BACK, tooltip="Back", on_click=self._on_close_ticket
+            )
+            self.appbar.title = ft.Text("Ticket")
+            self.appbar.actions = []
+            if self._page is not None:
+                self._page.navigation_bar = None
+            return
+        self.appbar.leading = None
         if self.selected == Tab.CURRENT and self.trip is not None:
             self.body.content = ft.Container(
-                trip_view(self.trip, self.clock()), max_width=MAX_WIDTH, expand=True
+                trip_view(self.trip, self.clock(), self._on_ticket),
+                max_width=MAX_WIDTH,
+                expand=True,
             )
             self.body.alignment = ft.Alignment.TOP_CENTER
         else:
@@ -344,6 +408,16 @@ class Shell:
             self._page.update()
 
     # --- event handlers ---
+
+    def _on_ticket(self, reservation: ExtractedReservation) -> None:
+        if self._page is not None and isinstance(self._page, ft.Page):
+            self._page.run_task(self.show_ticket, reservation)
+        else:
+            self.ticket = reservation
+            self._apply()
+
+    async def _on_close_ticket(self, _: Any) -> None:
+        await self.close_ticket()
 
     async def _on_import(self, _: Any) -> None:
         await self.start_import()

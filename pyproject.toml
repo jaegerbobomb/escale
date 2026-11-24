@@ -1,6 +1,6 @@
 [project]
 name = "escale-workspace"
-version = "0.7.0"
+version = "0.8.0"
 description = "Escale workspace root (not published)."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
@@ -45,6 +45,11 @@ explicit_package_bases = true
 [[tool.mypy.overrides]]
 module = ["escale_core", "escale_core.*"]
 strict = true
+
+[[tool.mypy.overrides]]
+# Barcode libraries without type information.
+module = ["aztec_code_generator", "barcode", "barcode.*", "pdf417gen"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages/escale-core/tests", "packages/escale-flet/tests"]

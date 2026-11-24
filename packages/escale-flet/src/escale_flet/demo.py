@@ -58,6 +58,8 @@ LONDON_TRIP: list[dict[str, Any]] = [
         "reservedTicket": {
             "@type": "Ticket",
             "ticketedSeat": {"@type": "Seat", "seatSection": "12", "seatNumber": "41"},
+            "ticketToken": "qrCode:ESCALE-DEMO-IC9014-JANE-DOE",
+            "ticketNumber": "8542 1176 9033",
         },
         "reservationFor": {
             "@type": "TrainTrip",
@@ -100,10 +102,12 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/import-nothing": [],
     "/import-phone": None,
     "/trip": None,
+    "/ticket": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
-``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts.
+``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts;
+``/ticket`` opens its first train's ticket.
 """
 
 
@@ -123,7 +127,7 @@ async def run(page: ft.Page) -> None:
     route = page.route.rstrip("/")
     store = InMemoryReservationStore()
     clock = None
-    if route == "/trip":
+    if route in ("/trip", "/ticket"):
         found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP]
         await store.add(Document("demo", "ticket.pdf", "application/pdf"), [r for r in found if r])
         # 40 minutes before the first train leaves.
@@ -138,5 +142,7 @@ async def run(page: ft.Page) -> None:
     await shell.refresh()
     if route == "/import-phone":
         page.show_dialog(phone_sheet(shell._close_sheet))
-    elif elements is not None and route != "/trip":
+    elif route == "/ticket" and shell.trip is not None:
+        await shell.show_ticket(shell.trip.reservations[0])
+    elif elements is not None and route not in ("/trip", "/ticket"):
         await shell.start_import()
