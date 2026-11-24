@@ -43,13 +43,16 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S007 | Map reservations to calendar events | sync | proposed |
 | S008 | Two-way calendar sync | sync | proposed |
 | S009 | Sync ticket documents | sync | proposed |
-| S010 | Trip grouping and timeline | timeline | todo |
+| S010 | Trip grouping and timeline | timeline | split |
+| S010a | Group reservations into trips | timeline | todo |
+| S010b | Current trip timeline | timeline | todo |
+| S010c | Segment card densities | timeline | proposed |
 | S011 | Jump index and segment detail | timeline | proposed |
 | S012 | Train segment editor | timeline | proposed |
 | S013 | Android build listing synced reservations | sync | proposed |
 | S014 | Local store in SQLite | import | done |
 | S015 | Full-screen ticket, offline | timeline | todo |
-| S016 | Share a flight to follow it live | timeline | proposed |
+| S016 | Share a flight to follow it live | timeline | todo |
 
 ## Licence
 

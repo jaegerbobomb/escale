@@ -3,7 +3,7 @@ id: S016
 title: "Share a flight to follow it live"
 epic: timeline
 depends_on: [S010]
-status: proposed
+status: todo
 estimate: S
 bdd: true
 updated: "2026-11-24"
@@ -25,9 +25,10 @@ updated: "2026-11-24"
 - URL format, from a working link given by the maintainer (2026-11-24):
   `https://www.flightradar24.com/AFR718/42b64dc4`, i.e. `/<ICAO callsign>/<flight id>`.
   The flight id is Flightradar24's own id for one flight on one day: Escale cannot know
-  it from the ticket. **To verify before coding**: does `/<ICAO callsign>` alone (e.g.
-  `https://www.flightradar24.com/AFR718`) open that flight when it is in the air or
-  about to leave? Flightradar24 cannot be reached from the build environment.
+  it from the ticket. Without it, `/<ICAO callsign>` (e.g.
+  `https://www.flightradar24.com/AFR718`) shows the flight while it is in the air and
+  otherwise the list of its next flights (maintainer, 2026-11-24, from memory: to
+  confirm on a real flight). Escale shares `/<ICAO callsign>`.
 - ICAO code: kitinerary often gives only the airline's IATA code; Escale needs an IATA
   → ICAO table (source and licence to choose; must be GPL-compatible). A callsign is
   not always ICAO code + flight number: when unsure, share no link rather than a wrong
@@ -48,4 +49,5 @@ updated: "2026-11-24"
 
 ## Notes
 
-- Asked by the maintainer (2026-11-24). `proposed` until the URL format is confirmed.
+- Asked by the maintainer (2026-11-24); validated (`todo`) once the link behaviour was
+  known.

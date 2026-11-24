@@ -3,7 +3,7 @@ id: S010
 title: "Trip grouping and timeline"
 epic: timeline
 depends_on: [S002, S014]
-status: todo
+status: split
 estimate: L
 bdd: true
 updated: "2026-11-24"
@@ -52,3 +52,9 @@ adr: [7]
 * **Given** a current trip with a cancelled train
 * **When** the "Current" tab is shown
 * **Then** that train's card shows the cancellation and a "See alternatives" action
+
+## Notes
+
+- 2026-11-24: split (validated by the maintainer) into S010a (grouping, core),
+  S010b ("Current" timeline) and S010c (card densities). This file keeps the framing;
+  the children carry the work and the scenarios.
