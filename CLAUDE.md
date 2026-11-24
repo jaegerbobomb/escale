@@ -32,7 +32,7 @@
   `packages/escale-flet` (the UI). See ADR-0002.
 - **Tooling**: `uv` (workspace), `ruff` (lint + format), `mypy` (strict on the core),
   `pytest` + `pytest-bdd`.
-- **Commands** (once the workspace exists, story S001):
+- **Commands** (after `uv sync --all-packages`):
   `uv run ruff check`, `uv run ruff format --check`, `uv run mypy packages`,
   `uv run pytest`.
 - **Quality check before commit**:

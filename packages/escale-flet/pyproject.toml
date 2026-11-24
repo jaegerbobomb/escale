@@ -1,0 +1,20 @@
+[project]
+name = "escale-flet"
+version = "0.1.0"
+description = "Escale user interface built with Flet."
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+dependencies = [
+    "escale-core",
+    "flet>=1.1",
+]
+
+[tool.uv.sources]
+escale-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/escale_flet"]

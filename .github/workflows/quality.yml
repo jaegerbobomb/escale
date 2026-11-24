@@ -1,0 +1,27 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - name: Install the workspace
+        run: uv sync --all-packages --locked
+      - name: Ruff (lint)
+        run: uv run ruff check
+      - name: Ruff (format)
+        run: uv run ruff format --check
+      - name: Mypy
+        run: uv run mypy packages
+      - name: Pytest
+        run: uv run pytest
+      - name: Lint stories (story-lint)
+        run: python3 scripts/lint_stories.py --stories-dir=stories --strict

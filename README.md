@@ -5,9 +5,8 @@ event tickets in one timeline per trip, with real-time updates, kept in step acr
 your devices through your own Nextcloud. A GNOME-styled cousin of
 [KDE Itinerary](https://apps.kde.org/itinerary/).
 
-**Status: planning.** No application code yet — the decisions, the target
-architecture and the first stories are written; implementation starts with
-[S001](stories/S001-workspace-and-core-boundary.md).
+**Status: early development.** The workspace and the core/UI boundary are in place
+([S001](stories/S001-workspace-and-core-boundary.md)); no user-facing feature yet.
 
 | Read | For |
 |---|---|
@@ -34,7 +33,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 
 | Story | Title | Epic | Status |
 |---|---|---|---|
-| S001 | Workspace and core boundary | foundation | proposed |
+| S001 | Workspace and core boundary | foundation | done |
 | S002 | Adaptive shell with Adwaita theme | foundation | proposed |
 | S003 | Extract a ticket with kitinerary | import | proposed |
 | S004 | Import with confirmation | import | proposed |

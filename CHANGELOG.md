@@ -6,9 +6,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-24
+
 ### Added
+- S001: `uv` workspace with `escale-core` and `escale-flet`; a boundary test that fails
+  and names the module when the core imports Flet; ruff, mypy (strict on the core),
+  pytest and pytest-bdd; a `Quality` CI workflow on every pull request.
 - Project plan: vision, roadmap, project spec (`SPEC.md`), ADRs 0001–0007, design notes.
 - First thirteen stories (S001–S013), status `proposed`.
 - StorySpec kit (vendored from jaegerbobomb/story-spec@8f0ae8d) with the `adr`,
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
+
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/jaegerbobomb/escale/releases/tag/v0.1.0
