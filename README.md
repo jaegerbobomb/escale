@@ -53,6 +53,9 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S014 | Local store in SQLite | import | done |
 | S015 | Full-screen ticket, offline | timeline | todo |
 | S016 | Share a flight to follow it live | timeline | todo |
+| S017 | Stay detail and editor | timeline | proposed |
+| S018 | Add a stay by hand | import | proposed |
+| S019 | Import a place shared from Google Maps | import | proposed |
 
 ## Licence
 
