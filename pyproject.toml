@@ -1,6 +1,6 @@
 [project]
 name = "escale-workspace"
-version = "0.6.0"
+version = "0.7.0"
 description = "Escale workspace root (not published)."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
@@ -29,6 +29,9 @@ extend-exclude = ["scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+# Typography used on purpose in UI strings: en dash for ranges, arrow, middle dot.
+allowed-confusables = ["–", "→", "·"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["escale_core", "escale_flet"]

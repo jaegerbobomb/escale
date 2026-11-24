@@ -10,6 +10,7 @@ from __future__ import annotations
 import tempfile
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum, StrEnum
 from pathlib import Path
 from typing import Any
@@ -18,9 +19,11 @@ import flet as ft
 
 from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.importer import Importer
-from escale_core.store import InMemoryReservationStore
+from escale_core.store import InMemoryReservationStore, ReservationStore
+from escale_core.trips import Trip, active_trip, group
 from escale_flet.import_sheet import confirmation_sheet, phone_sheet
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
+from escale_flet.timeline import MAX_WIDTH, trip_view
 
 NARROW_BELOW = 550
 """Window width (logical px) under which the tabs move to a bottom bar (ADR-0007)."""
@@ -141,9 +144,18 @@ class Shell:
     """The window's top-level structure; ``mount`` attaches it to a Flet page."""
 
     def __init__(
-        self, importer: Importer | None = None, choose_file: FileChooser | None = None
+        self,
+        importer: Importer | None = None,
+        choose_file: FileChooser | None = None,
+        store: ReservationStore | None = None,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
-        self.importer = importer or Importer(KitineraryCli(), InMemoryReservationStore())
+        if importer is None:
+            importer = Importer(KitineraryCli(), store or InMemoryReservationStore())
+        self.importer = importer
+        self.store: ReservationStore = store or importer.store
+        self.clock: Callable[[], datetime] = clock or (lambda: datetime.now().astimezone())
+        self.trip: Trip | None = None
         self.choose_file: FileChooser = choose_file or self._pick_file
         self.selected = Tab.CURRENT
         self.layout = Layout.WIDE
@@ -254,6 +266,13 @@ class Shell:
             self._apply()
             self._update()
 
+    async def refresh(self) -> None:
+        """Reload the stored reservations and show the active trip in "Current"."""
+        trips = group(await self.store.reservations())
+        self.trip = active_trip(trips, self.clock())
+        self._apply()
+        self._update()
+
     async def start_import(self) -> None:
         """Choose a file, show what it holds, save it only if the user confirms (S004)."""
         page = self._page
@@ -269,6 +288,7 @@ class Shell:
 
         async def confirm(_: Any) -> None:
             await self.importer.confirm(result)
+            await self.refresh()
             self._close_sheet(None)
 
         page.show_dialog(confirmation_sheet(result, confirm, self._close_sheet))
@@ -300,7 +320,14 @@ class Shell:
         index = [spec.tab for spec in TABS].index(self.selected)
         self.switcher.selected = [self.selected.value]
         self.bottom_bar.selected_index = index
-        self.body.content = _empty_view(_spec(self.selected))
+        if self.selected == Tab.CURRENT and self.trip is not None:
+            self.body.content = ft.Container(
+                trip_view(self.trip, self.clock()), max_width=MAX_WIDTH, expand=True
+            )
+            self.body.alignment = ft.Alignment.TOP_CENTER
+        else:
+            self.body.content = _empty_view(_spec(self.selected))
+            self.body.alignment = ft.Alignment.CENTER
         if self.layout == Layout.WIDE:
             self.appbar.title = self.switcher
             self.appbar.actions = [self.add_button]

@@ -21,7 +21,9 @@ async def main(page: ft.Page) -> None:
         await demo.run(page)
         return
     store = SqliteReservationStore(default_data_dir())
-    Shell(importer=Importer(KitineraryCli(), store)).mount(page)
+    shell = Shell(importer=Importer(KitineraryCli(), store))
+    shell.mount(page)
+    await shell.refresh()
 
 
 def run(argv: list[str] | None = None) -> None:
