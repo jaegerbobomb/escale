@@ -15,7 +15,7 @@ from escale_core.extraction import Document
 from escale_core.importer import reservation_from_jsonld
 from escale_core.store import InMemoryReservationStore
 from escale_flet.demo import LONDON_TRIP
-from escale_flet.shell import Shell
+from escale_flet.shell import Shell, Tab
 from escale_flet.testing import FakePage, button, click
 
 scenarios("S021.feature")
@@ -61,9 +61,26 @@ def next_has_none(world: World) -> None:
     world.keep([without_ticket(e) for e in LONDON_TRIP], ())
 
 
-@when('the user presses "Show ticket"')
+def header_ticket(page: FakePage) -> Any:
+    """The "Ticket" action of the header bar, as a button (wide) or an icon (narrow)."""
+    assert page.appbar is not None
+    for control in page.appbar.actions or []:
+        if getattr(control, "tooltip", None) == "Show the current ticket":
+            return control
+    raise LookupError("no Ticket action in the header bar")
+
+
+@when('the user presses "Ticket" in the header bar')
 def press(world: World) -> None:
-    click(button(world.show().body, "Show ticket"))
+    world.show()
+    click(header_ticket(world.page))
+
+
+@when('the "My trips" tab is shown')
+def my_trips(world: World) -> None:
+    world.show()
+    assert world.shell is not None
+    world.shell.select(Tab.TRIPS)
 
 
 @when('the "Current" tab is shown')
@@ -78,8 +95,26 @@ def ticket_shown(world: World) -> None:
     assert world.page.navigation_bar is None
 
 
-@then('there is no "Show ticket" button')
+@then('the header bar has the "Ticket" button')
+def has_button(world: World) -> None:
+    assert header_ticket(world.page) is not None
+
+
+@then('the header bar has no "Ticket" button')
 def no_button(world: World) -> None:
-    assert world.shell is not None
     with pytest.raises(LookupError):
-        button(world.shell.body, "Show ticket")
+        header_ticket(world.page)
+
+
+def test_narrow_window_shows_a_ticket_icon(world: World) -> None:
+    world.keep(LONDON_TRIP, ("d",))
+    world.page = FakePage(width=380)
+    world.show()
+    assert isinstance(header_ticket(world.page), ft.IconButton)
+
+
+def test_no_button_in_the_trip_header_any_more(world: World) -> None:
+    world.keep(LONDON_TRIP, ("d",))
+    shell = world.show()
+    with pytest.raises(LookupError):
+        button(shell.body, "Show ticket")

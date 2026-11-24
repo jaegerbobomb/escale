@@ -17,8 +17,9 @@ released_in: "0.9.0"
 
 ## Technical description
 
-- In "Current", the trip header has a "Show ticket" button when the next segment (the
-  one outlined, S010b) has a ticket: a barcode or a kept document (S015).
+- In the header bar, on every tab, a "Ticket" button when the active trip's next
+  segment (the one outlined, S010b) has a ticket: a barcode or a kept document (S015).
+  Wide window: "Ticket" button left of "Add"; narrow: a ticket icon next to "+".
 - It opens that segment's ticket full screen, as "Ticket" on its card does.
 - No next segment with a ticket: no button.
 
@@ -27,17 +28,24 @@ released_in: "0.9.0"
 ### Scenario: The button opens the next segment's ticket
 
 * **Given** a current trip whose next train has a ticket
-* **When** the user presses "Show ticket"
+* **When** the user presses "Ticket" in the header bar
 * **Then** that train's ticket is shown full screen
+
+### Scenario: The button is there on every tab
+
+* **Given** a current trip whose next train has a ticket
+* **When** the "My trips" tab is shown
+* **Then** the header bar has the "Ticket" button
 
 ### Scenario: No ticket, no button
 
 * **Given** a current trip whose next segment has no ticket
 * **When** the "Current" tab is shown
-* **Then** there is no "Show ticket" button
+* **Then** the header bar has no "Ticket" button
 
 ## Notes
 
 - Asked by the maintainer when validating S015 (2026-11-24); validated on that request.
-- Delivered in 0.9.0: "Show ticket" (filled button) at the right of the trip header.
-  Its place may move with S020 (the mockup's header).
+- First placed in the trip header; moved to the header bar at the maintainer's request
+  (2026-11-24), so that it is reachable from every tab. A dedicated "Ticket(s)" tab was
+  mentioned as an option, not decided (the mockup's mobile bar once had "Tickets").

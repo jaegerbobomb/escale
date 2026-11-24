@@ -196,18 +196,6 @@ def trip_view(trip: Trip, now: datetime, on_ticket: OnTicket | None = None) -> f
     if names:
         header.append(_dim(", ".join(names)))
     top: ft.Control = ft.Column(header, spacing=2)
-    if on_ticket is not None and upcoming is not None and has_ticket(upcoming):
-        top = ft.Row(
-            [
-                ft.Column(header, spacing=2, expand=True),
-                ft.FilledButton(
-                    "Show ticket",
-                    icon=ft.Icons.CONFIRMATION_NUMBER_OUTLINED,
-                    on_click=lambda _: on_ticket(upcoming),
-                ),
-            ],
-            vertical_alignment=ft.CrossAxisAlignment.START,
-        )
     return ft.ListView(
         [
             top,

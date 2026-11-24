@@ -9,8 +9,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 ## [0.9.0] - 2026-11-24
 
 ### Added
-- S021: "Show ticket" in the trip header of "Current" opens the next segment's ticket
-  full screen, when it has one.
+- S021: "Ticket" in the header bar, on every tab, opens the active trip's next ticket
+  full screen, when it has one (an icon next to "+" on a narrow window).
 
 ## [0.8.0] - 2026-11-24
 
