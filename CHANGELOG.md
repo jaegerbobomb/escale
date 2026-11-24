@@ -6,6 +6,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-24
+
+### Added
+- S003: ticket extraction in the core through `kitinerary-extractor` (subprocess with a
+  timeout, found on `PATH`, at a configured path or where Linux distributions install
+  it); reservations keep their raw JSON-LD and link the file by its SHA-256. A missing
+  extractor or an unreadable file is an error result, not a crash.
+
+### Changed
+- CI installs `kitinerary-extractor` and requires the adapter tests to run against it.
+
 ## [0.2.0] - 2026-11-24
 
 ### Added
@@ -31,6 +42,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/jaegerbobomb/escale/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jaegerbobomb/escale/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jaegerbobomb/escale/releases/tag/v0.1.0

@@ -8,11 +8,16 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      # The adapter tests run the real ticket extractor; a missing one fails them.
+      ESCALE_REQUIRE_KITINERARY: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.12"
+      - name: Install kitinerary-extractor
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libkpim5itinerary5
       - name: Install the workspace
         run: uv sync --all-packages --locked
       - name: Ruff (lint)
