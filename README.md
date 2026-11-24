@@ -54,6 +54,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S014 | Local store in SQLite | import | done |
 | S015 | Full-screen ticket, offline | timeline | todo |
 | S016 | Share a flight to follow it live | timeline | todo |
+| S020 | Current trip looks like the mockup | timeline | todo |
 
 ## Licence
 
