@@ -54,8 +54,13 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S014 | Local store in SQLite | import | done |
 | S015 | Full-screen ticket, offline | timeline | done |
 | S016 | Share a flight to follow it live | timeline | todo |
+| S017 | Stay detail and editor | timeline | proposed |
+| S018 | Add a stay by hand | import | proposed |
+| S019 | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | proposed |
 | S020 | Current trip looks like the mockup | timeline | todo |
 | S021 | Shortcut to the current ticket | timeline | done |
+| S022 | Open a place in a map app | timeline | proposed |
+| S023 | Find a stay in OpenStreetMap | import | proposed |
 
 ## Licence
 
