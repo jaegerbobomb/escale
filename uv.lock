@@ -137,12 +137,12 @@ wheels = [
 
 [[package]]
 name = "escale-core"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/escale-core" }
 
 [[package]]
 name = "escale-flet"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/escale-flet" }
 dependencies = [
     { name = "escale-core" },
@@ -168,7 +168,7 @@ provides-extras = ["desktop", "web"]
 
 [[package]]
 name = "escale-workspace"
-version = "0.2.0"
+version = "0.3.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]

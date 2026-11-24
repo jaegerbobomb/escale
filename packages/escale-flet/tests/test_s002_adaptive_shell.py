@@ -12,9 +12,10 @@ from typing import Any, cast
 
 import flet as ft
 import pytest
+from pytest_bdd import given, parsers, scenarios, then, when
+
 from escale_flet.shell import NARROW_BELOW, Layout, Shell, Tab, layout_for, tab_for_route
 from escale_flet.theme import DARK, DARK_THEME, LIGHT, LIGHT_THEME, tokens
-from pytest_bdd import given, parsers, scenarios, then, when
 
 scenarios("S002.feature")
 

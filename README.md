@@ -35,7 +35,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 |---|---|---|---|
 | S001 | Workspace and core boundary | foundation | done |
 | S002 | Adaptive shell with Adwaita theme | foundation | done |
-| S003 | Extract a ticket with kitinerary | import | proposed |
+| S003 | Extract a ticket with kitinerary | import | done |
 | S004 | Import with confirmation | import | proposed |
 | S005 | Merge reservations into traveller batches | import | proposed |
 | S006 | Connect a Nextcloud account | sync | proposed |

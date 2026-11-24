@@ -26,6 +26,9 @@ uv run ruff check && uv run ruff format --check && uv run mypy && uv run pytest
 python3 scripts/lint_stories.py --stories-dir=stories --strict
 ```
 
+The ticket extractor tests need KDE's `kitinerary-extractor` (skipped without it,
+required in CI). On Debian or Ubuntu: `sudo apt install libkpim5itinerary5`.
+
 Run the app:
 
 ```bash

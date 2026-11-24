@@ -7,12 +7,19 @@ on:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    # kitinerary-extractor comes from Ubuntu 24.04's KF5 package (kitinerary 23.08);
+    # ubuntu-latest moved to 26.04, which does not have it.
+    runs-on: ubuntu-24.04
+    env:
+      # The adapter tests run the real ticket extractor; a missing one fails them.
+      ESCALE_REQUIRE_KITINERARY: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.12"
+      - name: Install kitinerary-extractor
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libkpim5itinerary5
       - name: Install the workspace
         run: uv sync --all-packages --locked
       - name: Ruff (lint)

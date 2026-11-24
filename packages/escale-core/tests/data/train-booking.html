@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Synthetic booking confirmation (test data, not valid for travel)</title>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "TrainReservation",
+  "reservationNumber": "ESCTEST1",
+  "underName": {"@type": "Person", "name": "Jane Doe"},
+  "reservationFor": {
+    "@type": "TrainTrip",
+    "trainNumber": "IC 123",
+    "departureStation": {"@type": "TrainStation", "name": "Lyon Part-Dieu"},
+    "departureTime": "2027-03-14T08:04:00+01:00",
+    "arrivalStation": {"@type": "TrainStation", "name": "Paris Gare de Lyon"},
+    "arrivalTime": "2027-03-14T10:00:00+01:00"
+  }
+}
+</script>
+</head>
+<body><p>Synthetic booking confirmation for Escale's tests. Not valid for travel.</p></body>
+</html>

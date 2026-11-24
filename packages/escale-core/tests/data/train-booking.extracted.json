@@ -1,0 +1,29 @@
+[
+    {
+        "@context": "http://schema.org",
+        "@type": "TrainReservation",
+        "modifiedTime": "2027-03-01T00:00:00",
+        "reservationFor": {
+            "@type": "TrainTrip",
+            "arrivalStation": {
+                "@type": "TrainStation",
+                "name": "Paris Gare de Lyon"
+            },
+            "arrivalTime": "2027-03-14T10:00:00+01:00",
+            "departureDay": "2027-03-14",
+            "departureStation": {
+                "@type": "TrainStation",
+                "name": "Lyon Part-Dieu"
+            },
+            "departureTime": "2027-03-14T08:04:00+01:00",
+            "trainNumber": "IC 123"
+        },
+        "reservationNumber": "ESCTEST1",
+        "reservationStatus": "http://schema.org/ReservationConfirmed",
+        "underName": {
+            "@type": "Person",
+            "name": "Jane Doe"
+        }
+    }
+]
+
