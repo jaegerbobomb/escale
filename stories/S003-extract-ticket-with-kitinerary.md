@@ -71,7 +71,8 @@ adr: [3]
   (`/usr/lib/<arch>/libexec/kf5|kf6`, `/usr/libexec/kf5|kf6`): Debian and Ubuntu install
   it there, outside `PATH`. The configured path is a parameter of the adapter; no
   setting exposes it yet. Shipping the static binary stays in issue #5.
-- CI installs `libkpim5itinerary5` (Ubuntu 24.04, kitinerary 23.08) and runs the
+- CI installs `libkpim5itinerary5` on an `ubuntu-24.04` runner (kitinerary 23.08; the
+  package is gone from 26.04, which `ubuntu-latest` now is) and runs the
   adapter tests with `ESCALE_REQUIRE_KITINERARY=1`, so a missing binary fails them.
 - kitinerary prints date-times either as strings or as `{"@type": "QDateTime",
   "@value": …, "timezone": …}` objects; both are read.
