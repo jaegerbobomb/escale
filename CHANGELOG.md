@@ -6,6 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-24
+
+### Added
+- S011: jump index and segment detail. A "Jump to" panel left of the timeline (a menu
+  on a medium window, a bottom sheet on a narrow one) scrolls to a booking and
+  highlights it. Clicking a booking opens its detail; "‹ <trip>" goes back to the same
+  place with the card highlighted. On a narrow window the detail hides the bottom bar.
+
 ## [0.10.0] - 2026-11-24
 
 ### Changed
@@ -110,7 +118,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/jaegerbobomb/escale/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/jaegerbobomb/escale/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/jaegerbobomb/escale/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/jaegerbobomb/escale/compare/v0.7.0...v0.8.0

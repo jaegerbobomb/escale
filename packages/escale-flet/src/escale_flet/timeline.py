@@ -256,15 +256,33 @@ def _segment_body(r: ExtractedReservation, now: datetime, on_ticket: OnTicket | 
     return ft.Column(lines, spacing=4, tight=True)
 
 
+def segment_ref(r: ExtractedReservation) -> str:
+    return r.reference or headline(r)
+
+
 def segment_card(
-    r: ExtractedReservation, now: datetime, is_next: bool, on_ticket: OnTicket | None = None
+    r: ExtractedReservation,
+    now: datetime,
+    is_next: bool,
+    on_ticket: OnTicket | None = None,
+    on_open: OnTicket | None = None,
+    highlighted: bool = False,
 ) -> ft.Control:
-    """One segment: the accented "next" card, or a row of a boxed list."""
+    """One segment: the accented "next" card, or a row of a boxed list. A click opens its
+    detail (S011); ``highlighted`` marks the card the user jumped or came back to."""
     body = _segment_body(r, now, on_ticket)
-    data = {"segment": r.reference or headline(r), "next": is_next}
+    ref = segment_ref(r)
+    data = {"segment": ref, "next": is_next, "highlighted": highlighted}
+    click = (lambda _: on_open(r)) if on_open is not None else None
+    tint = ft.Colors.with_opacity(0.10, ft.Colors.PRIMARY) if highlighted else None
     if not is_next:
         return ft.Container(
-            body, padding=ft.Padding.symmetric(horizontal=16, vertical=14), data=data
+            body,
+            padding=ft.Padding.symmetric(horizontal=16, vertical=14),
+            bgcolor=tint,
+            key=ft.ScrollKey(ref),  # type: ignore[call-arg]  # dataclass field, stubs disagree
+            on_click=click,
+            data=data,
         )
     start, _ = span(r) or (now, now)
     wait = start - now
@@ -277,7 +295,7 @@ def segment_card(
                     bgcolor=ft.Colors.PRIMARY,
                     padding=ft.Padding.symmetric(horizontal=16, vertical=7),
                 ),
-                ft.Container(body, padding=16),
+                ft.Container(body, padding=16, bgcolor=tint),
             ],
             spacing=0,
             tight=True,
@@ -292,6 +310,8 @@ def segment_card(
             offset=ft.Offset(0, 6),
             color=ft.Colors.with_opacity(0.18, ft.Colors.PRIMARY),
         ),
+        key=ft.ScrollKey(ref),  # type: ignore[call-arg]  # dataclass field, stubs disagree
+        on_click=click,
         data=data,
     )
 
@@ -356,7 +376,7 @@ def next_segment(trip: Trip, now: datetime) -> ExtractedReservation | None:
     return None
 
 
-def _header(trip: Trip) -> ft.Control:
+def _header(trip: Trip, trailing: ft.Control | None = None) -> ft.Control:
     names: list[str] = []
     for r in trip.reservations:
         for name in travellers(r):
@@ -371,12 +391,71 @@ def _header(trip: Trip) -> ft.Control:
         expand=True,
     )
     avatars = ft.Row([_avatar(n, i) for i, n in enumerate(names[:4])], spacing=0)
-    return ft.Row([texts, avatars], vertical_alignment=ft.CrossAxisAlignment.CENTER)
+    return ft.Row(
+        [texts, avatars, *([trailing] if trailing else [])],
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    )
 
 
-def trip_view(trip: Trip, now: datetime, on_ticket: OnTicket | None = None) -> ft.Control:
+def jump_entries(trip: Trip, on_jump: OnTicket) -> list[ft.Control]:
+    """One entry per segment: time and title; a click jumps to its card (S011)."""
+    entries: list[ft.Control] = []
+    for r in trip.reservations:
+        start, _ = span(r) or (trip.start, trip.start)
+        entries.append(
+            ft.Container(
+                ft.Row(
+                    [
+                        ft.Icon(
+                            _ICONS.get(r.type, ft.Icons.EVENT_NOTE_OUTLINED),
+                            size=18,
+                            color=ft.Colors.ON_SURFACE_VARIANT,
+                        ),
+                        ft.Column(
+                            [
+                                ft.Text(_title(r), size=14, weight=ft.FontWeight.W_600),
+                                _dim(f"{_day(start)} · {start:%H:%M}", 12),
+                            ],
+                            spacing=0,
+                            tight=True,
+                            expand=True,
+                        ),
+                    ],
+                    spacing=10,
+                ),
+                padding=ft.Padding.symmetric(horizontal=12, vertical=8),
+                border_radius=8,
+                on_click=lambda _, r=r: on_jump(r),
+                data={"jump": segment_ref(r)},
+            )
+        )
+    return entries
+
+
+def jump_panel(trip: Trip, on_jump: OnTicket) -> ft.Control:
+    """The wide window's left index: it only jumps, it never changes the view (ADR-0007)."""
+    return ft.Container(
+        ft.Column(
+            [_dim("Jump to", 12.5), *jump_entries(trip, on_jump)],
+            spacing=2,
+            scroll=ft.ScrollMode.AUTO,
+        ),
+        width=240,
+        padding=ft.Padding.only(right=12, top=8),
+        data={"jump_panel": True},
+    )
+
+
+def trip_view(
+    trip: Trip,
+    now: datetime,
+    on_ticket: OnTicket | None = None,
+    on_open: OnTicket | None = None,
+    highlight: str | None = None,
+    trailing: ft.Control | None = None,
+) -> ft.Column:
     upcoming = next_segment(trip, now)
-    blocks: list[ft.Control] = [_header(trip)]
+    blocks: list[ft.Control] = [_header(trip, trailing)]
     pending: list[ft.Control] = []
 
     def flush() -> None:
@@ -387,16 +466,18 @@ def trip_view(trip: Trip, now: datetime, on_ticket: OnTicket | None = None) -> f
     previous: ExtractedReservation | None = None
     for r in trip.reservations:
         link = connection(previous, r) if previous is not None else None
+        card = segment_card(r, now, r is upcoming, on_ticket, on_open, segment_ref(r) == highlight)
         if r is upcoming:
             flush()
             if link:
                 blocks.append(_connection_row(link))
-            blocks.append(segment_card(r, now, True, on_ticket))
+            blocks.append(card)
         else:
             if link:
                 flush()
                 blocks.append(_connection_row(link))
-            pending.append(segment_card(r, now, False, on_ticket))
+            pending.append(card)
         previous = r
     flush()
-    return ft.ListView(blocks, spacing=12, padding=ft.Padding.symmetric(vertical=8), expand=True)
+    # A Column, not a ListView: scroll_to(scroll_key=...) only works when every item is built.
+    return ft.Column(blocks, spacing=12, scroll=ft.ScrollMode.AUTO, expand=True)

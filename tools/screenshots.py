@@ -39,6 +39,9 @@ VIEWS: dict[str, str] = {
     "import-phone": "/import-phone",
     # The current trip, 40 minutes before its first train (S010b).
     "trip": "/trip",
+    # Jump index: jumped to the museum (S011); a segment's detail (S011).
+    "trip-jump": "/trip-jump",
+    "trip-detail": "/trip-detail",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).
