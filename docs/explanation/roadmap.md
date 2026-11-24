@@ -15,10 +15,10 @@ The MVP is epics 1 to 4.
 **Goal.** A repository where every story can be built and tested, and an empty app
 window that already adapts to its width.
 
-- [ ] `uv` workspace with `escale-core` and `escale-flet`; a test fails if the core imports Flet
-- [ ] CI runs ruff, mypy, pytest and the story linter on every PR
-- [ ] The app window shows the three tabs, and moves them to a bottom bar under 550 px
-- [ ] Adwaita-like theme, light and dark, with the state colours as tokens
+- [x] `uv` workspace with `escale-core` and `escale-flet`; a test fails if the core imports Flet
+- [x] CI runs ruff, mypy, pytest and the story linter on every PR
+- [x] The app window shows the three tabs, and moves them to a bottom bar under 550 px
+- [x] Adwaita-like theme, light and dark, with the state colours as tokens
 
 ## 2. `import` — tickets in, on Linux
 
@@ -38,6 +38,8 @@ KDE Itinerary. Done before the rich screens because it carries the most risk.
 - [ ] An edit made on Android comes back to Linux
 - [ ] KDE Itinerary imports an event written by Escale
 - [ ] A minimal Android build lists the synced reservations and opens their documents
+- [ ] CI builds the APK on every pull request and keeps it as an artifact (S013); from then
+  on, every PR that touches the app is also checked on Android
 
 ## 4. `timeline` — the current trip
 
@@ -69,5 +71,7 @@ KDE Itinerary. Done before the rich screens because it carries the most risk.
 ## 8. `packaging`
 
 - [ ] Linux package with the static `kitinerary-extractor`; Android package
+- [ ] CI builds the signed release APK from a version tag (signing key in the repository's
+  secrets, never in the repository)
 - [ ] First-run screen to connect the Nextcloud account
 - [ ] iOS (v2): build on macOS, Apple developer account, pkpass handed to Apple Wallet
