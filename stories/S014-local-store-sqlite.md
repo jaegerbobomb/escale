@@ -3,7 +3,7 @@ id: S014
 title: "Local store in SQLite"
 epic: import
 depends_on: [S004]
-status: proposed
+status: todo
 estimate: S
 bdd: true
 updated: "2026-11-24"
@@ -27,6 +27,10 @@ adr: [4]
 - The imported file itself is copied to `documents/<sha256>/` with its `meta.json`
   (ADR-0004 layout), so the document is still there once the original is deleted.
 
+- Importing a ticket already stored adds nothing: same document (SHA-256), or same
+  reservation (type, reference and departure time), replaces nothing and duplicates
+  nothing (S005 is deferred; this is the part that matters now).
+
 ## Acceptance Criteria
 
 ### Scenario: An import survives a restart
@@ -41,6 +45,13 @@ adr: [4]
 * **When** the original file is deleted
 * **Then** the document is still available under its SHA-256
 
+### Scenario: The same ticket imported twice
+
+* **Given** a confirmed import of a train ticket
+* **When** the same file is imported and confirmed again
+* **Then** the reservation is saved once
+
 ## Notes
 
 - Split out of S004 by the maintainer (2026-11-24): S004 saves in memory only.
+- 2026-11-24: validated (`todo`), with the no-duplicate rule taken from S005.

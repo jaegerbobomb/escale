@@ -10,6 +10,10 @@ files in `stories/` whose `epic:` field names it.
 
 The MVP is epics 1 to 4.
 
+**Priority (maintainer, 2026-11-24):** be close to KDE Itinerary on Android, and first
+in what it shows: trips, timeline, tickets. So `timeline` comes before `sync`; imports
+are kept locally (S014) until the sync exists.
+
 ## 1. `foundation` — the workspace and the shell
 
 **Goal.** A repository where every story can be built and tested, and an empty app
@@ -29,7 +33,18 @@ window that already adapts to its width.
 - [ ] The same ticket imported twice does not duplicate; a second traveller joins the batch
 - [ ] Documents are stored by SHA-256 and linked with `subjectOf`
 
-## 3. `sync` — every device sees the same trips
+## 3. `timeline` — the current trip
+
+**Goal.** The hi-fi synthesis screen of the mockup, at the three widths.
+
+- [ ] Automatic grouping of reservations into trips
+- [ ] Timeline with the three card densities (compact, detailed, disruption)
+- [ ] Jump index, segment detail, train editor with KDE Itinerary's fields
+- [ ] "Back" returns to the same scroll position with the card highlighted
+- [ ] A ticket opens full screen with its barcode, offline (S015)
+- [ ] A flight can be shared so that someone follows it live (S016)
+
+## 4. `sync` — every device sees the same trips
 
 **Goal.** A Nextcloud account keeps Linux and Android in step, and stays readable by
 KDE Itinerary. Done before the rich screens because it carries the most risk.
@@ -40,15 +55,6 @@ KDE Itinerary. Done before the rich screens because it carries the most risk.
 - [ ] A minimal Android build lists the synced reservations and opens their documents
 - [ ] CI builds the APK on every pull request and keeps it as an artifact (S013); from then
   on, every PR that touches the app is also checked on Android
-
-## 4. `timeline` — the current trip
-
-**Goal.** The hi-fi synthesis screen of the mockup, at the three widths.
-
-- [ ] Automatic grouping of reservations into trips
-- [ ] Timeline with the three card densities (compact, detailed, disruption)
-- [ ] Jump index, segment detail, train editor with KDE Itinerary's fields
-- [ ] "Back" returns to the same scroll position with the card highlighted
 
 ## 5. `browse` — trips, outings, statistics
 

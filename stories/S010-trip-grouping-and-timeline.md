@@ -2,8 +2,8 @@
 id: S010
 title: "Trip grouping and timeline"
 epic: timeline
-depends_on: [S002, S005]
-status: proposed
+depends_on: [S002, S014]
+status: todo
 estimate: L
 bdd: true
 updated: "2026-11-24"
