@@ -124,6 +124,11 @@ def _title(r: ExtractedReservation) -> str:
 OnTicket = Callable[[ExtractedReservation], Any]
 
 
+def has_ticket(r: ExtractedReservation) -> bool:
+    """Something to show full screen: a barcode, or a kept document (S015)."""
+    return ticket_of(r).barcode is not None or bool(r.subject_of)
+
+
 def segment_card(
     r: ExtractedReservation, now: datetime, is_next: bool, on_ticket: OnTicket | None = None
 ) -> ft.Control:
@@ -145,7 +150,7 @@ def segment_card(
         lines += _lodging_lines(r, start, end)
     else:
         lines += _other_lines(r, start)
-    if on_ticket is not None and (ticket_of(r).barcode is not None or r.subject_of):
+    if on_ticket is not None and has_ticket(r):
         lines.append(
             ft.Row(
                 [
@@ -190,9 +195,10 @@ def trip_view(trip: Trip, now: datetime, on_ticket: OnTicket | None = None) -> f
     ]
     if names:
         header.append(_dim(", ".join(names)))
+    top: ft.Control = ft.Column(header, spacing=2)
     return ft.ListView(
         [
-            ft.Column(header, spacing=2),
+            top,
             *(segment_card(r, now, r is upcoming, on_ticket) for r in trip.reservations),
         ],
         spacing=12,

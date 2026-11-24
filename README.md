@@ -58,6 +58,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S018 | Add a stay by hand | import | todo |
 | S019 | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | todo |
 | S020 | Current trip looks like the mockup | timeline | todo |
+| S021 | Shortcut to the current ticket | timeline | done |
 | S022 | Open a place in a map app | timeline | todo |
 | S023 | Find a stay in OpenStreetMap | import | todo |
 

@@ -26,7 +26,7 @@ from escale_flet.import_sheet import confirmation_sheet, phone_sheet
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
 from escale_flet.ticket_view import MAX_WIDTH as TICKET_WIDTH
 from escale_flet.ticket_view import ticket_view
-from escale_flet.timeline import MAX_WIDTH, trip_view
+from escale_flet.timeline import MAX_WIDTH, has_ticket, next_segment, trip_view
 
 NARROW_BELOW = 550
 """Window width (logical px) under which the tabs move to a bottom bar (ADR-0007)."""
@@ -394,11 +394,11 @@ class Shell:
             self.body.alignment = ft.Alignment.CENTER
         if self.layout == Layout.WIDE:
             self.appbar.title = self.switcher
-            self.appbar.actions = [self.add_button]
+            self.appbar.actions = [*self._ticket_action(wide=True), self.add_button]
             navigation_bar = None
         else:
             self.appbar.title = ft.Text(_spec(self.selected).label)
-            self.appbar.actions = [self.add_menu_compact]
+            self.appbar.actions = [*self._ticket_action(wide=False), self.add_menu_compact]
             navigation_bar = self.bottom_bar
         if self._page is not None:
             self._page.navigation_bar = navigation_bar
@@ -408,6 +408,33 @@ class Shell:
             self._page.update()
 
     # --- event handlers ---
+
+    def current_ticket(self) -> ExtractedReservation | None:
+        """The next segment of the active trip, if it has a ticket to show (S021)."""
+        if self.trip is None:
+            return None
+        upcoming = next_segment(self.trip, self.clock())
+        return upcoming if upcoming is not None and has_ticket(upcoming) else None
+
+    def _ticket_action(self, wide: bool) -> list[ft.Control]:
+        """The header bar's shortcut to the current ticket, on every tab."""
+        if self.current_ticket() is None:
+            return []
+        tooltip = "Show the current ticket"
+        icon = ft.Icons.CONFIRMATION_NUMBER_OUTLINED
+        if wide:
+            return [
+                ft.FilledTonalButton(
+                    "Ticket", icon=icon, tooltip=tooltip, on_click=self._on_current_ticket
+                ),
+                ft.Container(width=8),
+            ]
+        return [ft.IconButton(icon, tooltip=tooltip, on_click=self._on_current_ticket)]
+
+    def _on_current_ticket(self, _: Any) -> None:
+        reservation = self.current_ticket()
+        if reservation is not None:
+            self._on_ticket(reservation)
 
     def _on_ticket(self, reservation: ExtractedReservation) -> None:
         if self._page is not None and isinstance(self._page, ft.Page):
