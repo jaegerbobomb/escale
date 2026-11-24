@@ -3,7 +3,7 @@ id: S007
 title: "Map reservations to calendar events"
 epic: sync
 depends_on: [S005]
-status: proposed
+status: todo
 estimate: S
 bdd: false
 updated: "2026-11-24"
@@ -48,3 +48,4 @@ adr: [4]
 ## Notes
 
 - `bdd: false`: a pure mapping, covered by unit tests; the scenarios above name them.
+- 2026-11-24: validated by the maintainer (`todo`).

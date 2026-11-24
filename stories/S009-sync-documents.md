@@ -3,7 +3,7 @@ id: S009
 title: "Sync ticket documents"
 epic: sync
 depends_on: [S006, S003]
-status: proposed
+status: todo
 estimate: M
 bdd: true
 updated: "2026-11-24"
@@ -45,3 +45,7 @@ adr: [4]
 * **Given** a PDF already present on the server
 * **When** the same PDF is imported again
 * **Then** no file is uploaded
+
+## Notes
+
+- 2026-11-24: validated by the maintainer (`todo`).

@@ -3,7 +3,7 @@ id: S010c
 title: "Segment card densities"
 epic: timeline
 depends_on: [S010b]
-status: proposed
+status: todo
 estimate: S
 bdd: true
 updated: "2026-11-24"
@@ -33,3 +33,4 @@ adr: [7]
 
 - Child of S010 (split validated by the maintainer, 2026-11-24). Cancellations come
   from real-time data (`live` epic); until then only from the ticket's own status.
+- 2026-11-24: validated by the maintainer (`todo`).

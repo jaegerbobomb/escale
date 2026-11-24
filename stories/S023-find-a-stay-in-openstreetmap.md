@@ -3,7 +3,7 @@ id: S023
 title: "Find a stay in OpenStreetMap"
 epic: import
 depends_on: [S018]
-status: proposed
+status: todo
 estimate: M
 bdd: true
 updated: "2026-11-24"
@@ -77,3 +77,4 @@ updated: "2026-11-24"
 - Proposed 2026-11-24, after the maintainer noted that CoMaps and Organic Maps show
   hotels: CoMaps shows only OpenStreetMap's (its FAQ); Organic Maps' Booking.com data
   came from MAPS.ME's partnership, which needs an affiliate account — not for Escale.
+- 2026-11-24: validated by the maintainer (`todo`).

@@ -3,7 +3,7 @@ id: S006
 title: "Connect a Nextcloud account"
 epic: sync
 depends_on: [S002]
-status: proposed
+status: todo
 estimate: M
 bdd: true
 updated: "2026-11-24"
@@ -53,3 +53,7 @@ adr: [4]
 * **Given** a connected account without an "Escale" folder
 * **When** the connection completes
 * **Then** the folder "Escale" exists in the user's files
+
+## Notes
+
+- 2026-11-24: validated by the maintainer (`todo`).
