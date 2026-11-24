@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from escale_core.adapters.kitinerary_cli import ExtractorError, ExtractorNotFoundError
 from escale_core.extraction import Document, ExtractedReservation, ExtractionResult, Stop
+from escale_core.store import ReservationStore
 
 
 class Extractor(Protocol):
@@ -109,3 +110,21 @@ async def extract(path: Path, extractor: Extractor) -> ExtractionResult:
         r for r in (_reservation(element, document.id) for element in elements) if r is not None
     )
     return ExtractionResult(document=document, reservations=reservations)
+
+
+class Importer:
+    """Import in two steps: ``preview`` reads the file, ``confirm`` saves it (S004).
+
+    Nothing is written before ``confirm``; a result with no reservation saves nothing.
+    """
+
+    def __init__(self, extractor: Extractor, store: ReservationStore) -> None:
+        self._extractor = extractor
+        self._store = store
+
+    async def preview(self, path: Path) -> ExtractionResult:
+        return await extract(path, self._extractor)
+
+    async def confirm(self, result: ExtractionResult) -> None:
+        if result.document is not None and result.reservations:
+            await self._store.add(result.document, result.reservations)

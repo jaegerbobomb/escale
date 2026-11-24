@@ -33,6 +33,10 @@ VIEWS: dict[str, str] = {
     "current": "/",
     "trips": "/trips",
     "statistics": "/statistics",
+    # Demo routes (ESCALE_DEMO=1): the import sheets on a synthetic ticket.
+    "import-found": "/import-found",
+    "import-nothing": "/import-nothing",
+    "import-phone": "/import-phone",
 }
 """View name -> route. Add a view here when a story adds or changes one."""
 
@@ -56,6 +60,7 @@ def serve_app(port: int, timeout_s: float = 60) -> Iterator[str]:
     proc = subprocess.Popen(
         [sys.executable, "-m", "escale_flet", "--web", "--port", str(port)],
         cwd=ROOT,
+        env={**os.environ, "ESCALE_DEMO": "1"},
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
     )

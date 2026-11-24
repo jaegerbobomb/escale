@@ -7,12 +7,16 @@ from pathlib import Path
 
 import flet as ft
 
+from escale_flet import demo
 from escale_flet.shell import Shell
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 
 
-def main(page: ft.Page) -> None:
+async def main(page: ft.Page) -> None:
+    if demo.enabled():
+        await demo.run(page)
+        return
     Shell().mount(page)
 
 

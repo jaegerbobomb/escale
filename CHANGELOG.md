@@ -6,6 +6,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-24
+
+### Added
+- S004: import with confirmation. "Add" and "Add → Import a file…" open the file
+  chooser; a bottom sheet shows what was found (train or flight number, route, date,
+  travellers, "New trip") and saves only on "Add to trip". Nothing recognised or an
+  unreadable file offers "Add manually" (disabled until manual entry exists). On
+  Android and iOS the entry explains that tickets are read on Linux.
+- `ReservationStore` port in the core, with an in-memory store (persistence: S014).
+- Story S014 (local store in SQLite), proposed.
+- Demo mode for screenshots of the import sheets (`ESCALE_DEMO=1`).
+
 ## [0.3.0] - 2026-11-24
 
 ### Added
@@ -42,7 +54,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/jaegerbobomb/escale/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jaegerbobomb/escale/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jaegerbobomb/escale/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jaegerbobomb/escale/releases/tag/v0.1.0
