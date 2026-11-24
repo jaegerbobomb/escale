@@ -6,13 +6,14 @@ later stories (jump index, detail) can find it.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from typing import Any
 
 import flet as ft
 
 from escale_core.extraction import ExtractedReservation
+from escale_core.tickets import ticket_of
 from escale_core.trips import Trip, span
 from escale_flet.import_sheet import headline, travellers
 
@@ -120,7 +121,12 @@ def _title(r: ExtractedReservation) -> str:
     return headline(r)
 
 
-def segment_card(r: ExtractedReservation, now: datetime, is_next: bool) -> ft.Control:
+OnTicket = Callable[[ExtractedReservation], Any]
+
+
+def segment_card(
+    r: ExtractedReservation, now: datetime, is_next: bool, on_ticket: OnTicket | None = None
+) -> ft.Control:
     start, end = span(r) or (now, now)
     lines: list[ft.Control] = []
     if is_next:
@@ -139,6 +145,19 @@ def segment_card(r: ExtractedReservation, now: datetime, is_next: bool) -> ft.Co
         lines += _lodging_lines(r, start, end)
     else:
         lines += _other_lines(r, start)
+    if on_ticket is not None and (ticket_of(r).barcode is not None or r.subject_of):
+        lines.append(
+            ft.Row(
+                [
+                    ft.TextButton(
+                        "Ticket",
+                        icon=ft.Icons.CONFIRMATION_NUMBER_OUTLINED,
+                        on_click=lambda _: on_ticket(r),
+                    )
+                ],
+                alignment=ft.MainAxisAlignment.END,
+            )
+        )
     return ft.Container(
         ft.Column(lines, spacing=6, tight=True),
         padding=16,
@@ -158,7 +177,7 @@ def next_segment(trip: Trip, now: datetime) -> ExtractedReservation | None:
     return None
 
 
-def trip_view(trip: Trip, now: datetime) -> ft.Control:
+def trip_view(trip: Trip, now: datetime, on_ticket: OnTicket | None = None) -> ft.Control:
     names: list[str] = []
     for r in trip.reservations:
         for name in travellers(r):
@@ -174,7 +193,7 @@ def trip_view(trip: Trip, now: datetime) -> ft.Control:
     return ft.ListView(
         [
             ft.Column(header, spacing=2),
-            *(segment_card(r, now, r is upcoming) for r in trip.reservations),
+            *(segment_card(r, now, r is upcoming, on_ticket) for r in trip.reservations),
         ],
         spacing=12,
         padding=ft.Padding.symmetric(vertical=8),

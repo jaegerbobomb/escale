@@ -1,12 +1,18 @@
 [project]
 name = "escale-flet"
-version = "0.7.0"
+version = "0.8.0"
 description = "Escale user interface built with Flet."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
 dependencies = [
     "escale-core",
     "flet>=1.1",
+    # Ticket barcodes, drawn on the device (S015); all under permissive licences.
+    "aztec-code-generator>=0.12",
+    "pdf417gen>=0.8",
+    "pillow>=11",
+    "python-barcode>=0.16",
+    "segno>=1.6",
 ]
 
 [project.optional-dependencies]

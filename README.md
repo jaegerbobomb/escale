@@ -52,8 +52,9 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S012 | Train segment editor | timeline | proposed |
 | S013 | Android build listing synced reservations | sync | proposed |
 | S014 | Local store in SQLite | import | done |
-| S015 | Full-screen ticket, offline | timeline | todo |
+| S015 | Full-screen ticket, offline | timeline | done |
 | S016 | Share a flight to follow it live | timeline | todo |
+| S020 | Current trip looks like the mockup | timeline | todo |
 
 ## Licence
 

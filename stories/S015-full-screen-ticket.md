@@ -3,10 +3,11 @@ id: S015
 title: "Full-screen ticket, offline"
 epic: timeline
 depends_on: [S014]
-status: todo
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-24"
+released_in: "0.8.0"
 adr: [3]
 ---
 
@@ -55,3 +56,18 @@ adr: [3]
 
 - Asked by the maintainer (2026-11-24): showing tickets and trips comes first, close to
   KDE Itinerary on Android. Validated (`todo`) on that request.
+- Delivered in 0.8.0. Token prefixes from KItinerary 23.08 (`datatypes/token.cpp`):
+  `qrcode:`, `qrcodebin:`, `azteccode:`, `aztecbin:`, `pdf417:`, `pdf417bin:`,
+  `barcode128:`, `datamatrix:` (case-insensitive, `bin` = base64).
+- Drawn locally to PNG: QR (`segno`, BSD), Aztec (`aztec-code-generator`, MIT), PDF417
+  (`pdf417gen`, MIT), Code 128 (`python-barcode`, MIT), with Pillow (MIT-CMU). Data
+  Matrix: no pure-Python library found; the view says so and offers the document.
+  Whether these libraries build for Android is to check with S013.
+- The barcode sits on white in both themes, for scanners. Brightness goes to maximum
+  through `ft.ScreenBrightness` where the platform allows it (not in a browser), and is
+  reset on "Back".
+- One page per traveller (`AdwCarousel`) is not done: each traveller's ticket is its
+  own reservation, opened from its own card. To revisit with S005 (batches).
+- "Ticket" on a timeline card opens it; "Open the original document" uses the copy
+  kept by S014.
+
