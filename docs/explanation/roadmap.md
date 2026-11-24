@@ -1,6 +1,6 @@
 # Roadmap
 
-Eight epics, in order. Each has a goal and **exit criteria**: the epic is finished when
+Nine epics, in order. Each has a goal and **exit criteria**: the epic is finished when
 every box is ticked, not when its last story is merged. The stories of an epic are the
 files in `stories/` whose `epic:` field names it.
 
@@ -8,7 +8,8 @@ files in `stories/` whose `epic:` field names it.
 > [jaegerbobomb/story-spec#9](https://github.com/jaegerbobomb/story-spec/pull/9). Once it
 > is merged, each section moves to `epics/<epic>.md`.
 
-The MVP is epics 1 to 4.
+The MVP is `foundation`, `import`, `timeline` and `sync` (whether `outings` joins it is
+the maintainer's call).
 
 **Priority (maintainer, 2026-11-24):** be close to KDE Itinerary on Android, and first
 in what it shows: trips, timeline, tickets. So `timeline` comes before `sync`; imports
@@ -44,7 +45,21 @@ window that already adapts to its width.
 - [ ] A ticket opens full screen with its barcode, offline (S015)
 - [ ] A flight can be shared so that someone follows it live (S016)
 
-## 4. `sync` — every device sees the same trips
+## 4. `outings` — evenings and days out, not only trips
+
+**Goal.** The same engine for a dinner and a concert as for a week abroad (mockup
+"Sorties — au-delà des voyages"): one or more linked events on the same evening or day,
+no overnight stay, local places.
+
+- [ ] Event, restaurant, museum and match tickets are imported and shown like transport
+  (cards with time, place, ticket)
+- [ ] Bookings close in time and place on the same day group into an outing (purple
+  `#9141ac`), named after its events ("Concert + dinner")
+- [ ] An outing's timeline shows the walk or local transport between its places, and the
+  last metro or bus home
+- [ ] "Add → New outing" creates one by hand
+- [ ] "My trips" lists outings with trips, with an All / Trips / Outings filter
+## 5. `sync` — every device sees the same trips
 
 **Goal.** A Nextcloud account keeps Linux and Android in step, and stays readable by
 KDE Itinerary. Done before the rich screens because it carries the most risk.
@@ -56,12 +71,13 @@ KDE Itinerary. Done before the rich screens because it carries the most risk.
 - [ ] CI builds the APK on every pull request and keeps it as an artifact (S013); from then
   on, every PR that touches the app is also checked on Android
 
-## 5. `browse` — trips, outings, statistics
+## 6. `browse` — trips, outings, statistics
 
 - [ ] "My trips" lists upcoming and past trips and outings, filterable and searchable
+  (outings themselves: epic `outings`)
 - [ ] Statistics computed locally (distance by mode, CO₂ estimate, destinations)
 
-## 6. `live` — online data
+## 7. `live` — online data
 
 - [ ] Train search (four-screen flow, pre-filled), added as "planned"
 - [ ] Real time and alternatives through Transitous
@@ -69,12 +85,12 @@ KDE Itinerary. Done before the rich screens because it carries the most risk.
 - [ ] Pass updates for pkpass that support them
 - [ ] One switch per network source; local notifications
 
-## 7. `comfort`
+## 8. `comfort`
 
 - [ ] Country change card (currency, time zone, plugs, driving side)
 - [ ] Weather at arrival, full-screen offline ticket, watched folder on Linux, `.itinerary` export
 
-## 8. `packaging`
+## 9. `packaging`
 
 - [ ] Linux package with the static `kitinerary-extractor`; Android package
 - [ ] CI builds the signed release APK from a version tag (signing key in the repository's
