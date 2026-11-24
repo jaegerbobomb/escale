@@ -36,6 +36,7 @@ window that already adapts to its width.
 - [ ] A stay can be added and corrected by hand (S017, S018)
 - [ ] A place shared from Google Maps or CoMaps becomes a pre-filled stay, with at most one opt-in request to Google to resolve a short link (S019)
 - [ ] Booking.com and Airbnb confirmations (e-mail saved as `.eml`, PDF) import as stays with their "manage booking" link
+- [ ] A stay can be completed from, or picked in, OpenStreetMap (S023)
 
 ## 3. `timeline` — the current trip
 

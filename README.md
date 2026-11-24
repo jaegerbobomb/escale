@@ -59,6 +59,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S019 | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | proposed |
 | S020 | Current trip looks like the mockup | timeline | todo |
 | S022 | Open a place in a map app | timeline | proposed |
+| S023 | Find a stay in OpenStreetMap | import | proposed |
 
 ## Licence
 
