@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 
@@ -46,6 +47,8 @@ class ExtractionResult:
     reservations: tuple[ExtractedReservation, ...] = ()
     error: str | None = None
     """Why the file could not be read; ``None`` when extraction ran."""
+    source: Path | None = None
+    """The file that was read, so that a store can keep a copy of it."""
 
     @property
     def nothing_recognised(self) -> bool:

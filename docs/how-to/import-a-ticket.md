@@ -19,4 +19,5 @@ reservation by hand will come later: the **Add manually** button is not active y
 On a phone, importing is not available: import the file on your Linux computer, and the
 reservation reaches the phone through the sync.
 
-> For now, imported reservations are kept until Escale closes.
+Imported reservations, and a copy of each ticket file, are kept on this device under
+`~/.local/share/escale`. Importing the same booking again does not duplicate it.

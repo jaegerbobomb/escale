@@ -5,9 +5,9 @@ event tickets in one timeline per trip, with real-time updates, kept in step acr
 your devices through your own Nextcloud. A GNOME-styled cousin of
 [KDE Itinerary](https://apps.kde.org/itinerary/).
 
-**Status: early development.** On Linux, a ticket file can be imported and confirmed
-([S004](stories/S004-import-confirmation.md)); it is not kept after the app closes yet,
-and there are no trips to show it in.
+**Status: early development.** On Linux, a ticket file can be imported, confirmed and
+kept on the device ([S004](stories/S004-import-confirmation.md),
+[S014](stories/S014-local-store-sqlite.md)); there are no trips to show it in yet.
 
 | Read | For |
 |---|---|
@@ -47,7 +47,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S011 | Jump index and segment detail | timeline | proposed |
 | S012 | Train segment editor | timeline | proposed |
 | S013 | Android build listing synced reservations | sync | proposed |
-| S014 | Local store in SQLite | import | todo |
+| S014 | Local store in SQLite | import | done |
 | S015 | Full-screen ticket, offline | timeline | todo |
 | S016 | Share a flight to follow it live | timeline | proposed |
 

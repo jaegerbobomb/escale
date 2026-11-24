@@ -63,7 +63,10 @@ def _stop(trip: Mapping[str, Any], place_key: str, time_key: str) -> Stop | None
     return Stop(name=_text(place.get("name")), time=time, code=_text(place.get("iataCode")))
 
 
-def _reservation(element: Mapping[str, Any], document_id: str) -> ExtractedReservation | None:
+def reservation_from_jsonld(
+    element: Mapping[str, Any], subject_of: tuple[str, ...]
+) -> ExtractedReservation | None:
+    """An extracted reservation from one JSON-LD element; ``None`` if it is not one."""
     kind = element.get("@type")
     if not isinstance(kind, str) or not kind.endswith("Reservation"):
         return None
@@ -79,7 +82,7 @@ def _reservation(element: Mapping[str, Any], document_id: str) -> ExtractedReser
         reference=_text(element.get("reservationNumber")),
         departure=departure,
         arrival=arrival,
-        subject_of=(document_id,),
+        subject_of=subject_of,
     )
 
 
@@ -107,9 +110,11 @@ async def extract(path: Path, extractor: Extractor) -> ExtractionResult:
     except ExtractorError as e:
         return ExtractionResult(document=document, error=f"The ticket could not be read: {e}")
     reservations = tuple(
-        r for r in (_reservation(element, document.id) for element in elements) if r is not None
+        r
+        for r in (reservation_from_jsonld(element, (document.id,)) for element in elements)
+        if r is not None
     )
-    return ExtractionResult(document=document, reservations=reservations)
+    return ExtractionResult(document=document, reservations=reservations, source=path)
 
 
 class Importer:
@@ -127,4 +132,4 @@ class Importer:
 
     async def confirm(self, result: ExtractionResult) -> None:
         if result.document is not None and result.reservations:
-            await self._store.add(result.document, result.reservations)
+            await self._store.add(result.document, result.reservations, result.source)

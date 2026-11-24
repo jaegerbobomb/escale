@@ -3,10 +3,11 @@ id: S014
 title: "Local store in SQLite"
 epic: import
 depends_on: [S004]
-status: todo
+status: done
 estimate: S
 bdd: true
 updated: "2026-11-24"
+released_in: "0.5.0"
 adr: [4]
 ---
 
@@ -55,3 +56,16 @@ adr: [4]
 
 - Split out of S004 by the maintainer (2026-11-24): S004 saves in memory only.
 - 2026-11-24: validated (`todo`), with the no-duplicate rule taken from S005.
+- Delivered in 0.5.0. `escale.sqlite` and `documents/` under `$XDG_DATA_HOME/escale`
+  (`~/.local/share/escale`); Android and iOS will need their app storage folder, to
+  set when the Android build exists (S013).
+- Identity of a reservation: type + reference + departure time; when it has neither
+  reference nor time, its whole JSON-LD. Not the whole JSON-LD in every case:
+  kitinerary stamps each run with a new `modifiedTime`, so the same booking read twice
+  would not match. The same reservation found in another file gains that document in
+  its `subject_of`.
+- Nothing is created on disk before the first read or write; schema version 1 is
+  recorded in a `meta` table for later migrations.
+- Checked end to end with the real `kitinerary-extractor` (import, new store on the
+  same folder, import again, original deleted): one reservation, document kept.
+

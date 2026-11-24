@@ -7,14 +7,20 @@ later stories. Until then the store is this port, with an in-memory implementati
 from __future__ import annotations
 
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Protocol
 
 from escale_core.extraction import Document, ExtractedReservation
 
 
 class ReservationStore(Protocol):
-    async def add(self, document: Document, reservations: Sequence[ExtractedReservation]) -> None:
-        """Save ``reservations`` and the document they come from."""
+    async def add(
+        self,
+        document: Document,
+        reservations: Sequence[ExtractedReservation],
+        source: Path | None = None,
+    ) -> None:
+        """Save ``reservations`` and the document they come from (``source``: its file)."""
         ...
 
     async def reservations(self) -> tuple[ExtractedReservation, ...]: ...
@@ -29,7 +35,12 @@ class InMemoryReservationStore:
         self._reservations: list[ExtractedReservation] = []
         self._documents: dict[str, Document] = {}
 
-    async def add(self, document: Document, reservations: Sequence[ExtractedReservation]) -> None:
+    async def add(
+        self,
+        document: Document,
+        reservations: Sequence[ExtractedReservation],
+        source: Path | None = None,
+    ) -> None:
         self._documents.setdefault(document.id, document)
         self._reservations.extend(reservations)
 
