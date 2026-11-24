@@ -65,4 +65,6 @@ flowchart LR
 
 ## Notes
 
+- First UI story: needs the screenshot tool from issue #11, and its PR is validated
+  from screenshots shown in the session (see `CLAUDE.md`).
 - The 400 px breakpoint only matters once a trip and a segment detail exist (S011).

@@ -46,4 +46,10 @@
 - **Investigations** (things to check before deciding) are GitHub issues labelled
   `investigation`, not stories. Their outcome is recorded in an ADR or in the
   story they unblock.
+- **Screens are validated from screenshots**: a PR that adds or changes a screen is
+  validated by the maintainer from screenshots **shown in the Claude Code session**, not
+  only attached to the PR. Capture every new or changed view at 1000, 500 and 380 px,
+  light and dark, from the PR's head, and show them before asking for validation. No
+  screenshots, no validation request. The capture tool is settled by issue #11
+  (`visual-review` module) before the first UI story is delivered.
 - **Never** put a chat or session link in a commit, PR or issue.
