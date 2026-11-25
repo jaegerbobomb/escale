@@ -3,10 +3,11 @@ id: S011
 title: "Jump index and segment detail"
 epic: timeline
 depends_on: [S010]
-status: todo
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-24"
+released_in: "0.11.0"
 adr: [7]
 ---
 
@@ -56,3 +57,14 @@ adr: [7]
 ## Notes
 
 - 2026-11-24: validated by the maintainer (`todo`).
+- Delivered in 0.11.0. Wide: a 240 px "Jump to" panel left of the timeline; medium: a
+  "Jump to…" menu in the trip header; narrow (< 400 px): a button opening a bottom
+  sheet. Jumping scrolls (`scroll_to(scroll_key=…)`) and tints the card.
+- The timeline is a scrolling `Column`, not a `ListView`: Flet's `scroll_to` with a key
+  does nothing on lazily built lists (Flet 1.1.3 docs). Checked in a browser: the
+  `/trip-jump` demo route lands on the Tate Modern card.
+- Detail: title, departure/arrival (time, station, platform), seat, place or address,
+  travellers, booking reference, "Ticket"; "‹ <trip>" goes back, scrolled to the card
+  and with it highlighted. Read-only; editing is S012 (train) and S017 (stay).
+- The demo trip has five segments (`LONDON_TRIP_FULL`: museum and dinner added).
+

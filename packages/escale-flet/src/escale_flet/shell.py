@@ -22,14 +22,33 @@ from escale_core.extraction import ExtractedReservation
 from escale_core.importer import Importer
 from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.trips import Trip, active_trip, group
+from escale_flet.detail_view import detail_view
 from escale_flet.import_sheet import confirmation_sheet, phone_sheet
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
 from escale_flet.ticket_view import MAX_WIDTH as TICKET_WIDTH
 from escale_flet.ticket_view import ticket_view
-from escale_flet.timeline import MAX_WIDTH, has_ticket, next_segment, trip_view
+from escale_flet.timeline import (
+    MAX_WIDTH,
+    has_ticket,
+    jump_entries,
+    jump_panel,
+    next_segment,
+    segment_ref,
+    trip_view,
+)
 
 NARROW_BELOW = 550
 """Window width (logical px) under which the tabs move to a bottom bar (ADR-0007)."""
+
+
+COMPACT_BELOW = 400
+"""Window width under which the jump index is a bottom sheet and a detail a pushed page."""
+
+
+def segment_ref_title(reservation: ExtractedReservation) -> str:
+    from escale_flet.timeline import _title
+
+    return _title(reservation)
 
 
 class Tab(StrEnum):
@@ -160,6 +179,11 @@ class Shell:
         self.clock: Callable[[], datetime] = clock or (lambda: datetime.now().astimezone())
         self.trip: Trip | None = None
         self.ticket: ExtractedReservation | None = None
+        self.detail: ExtractedReservation | None = None
+        self.highlight: str | None = None
+        self.scroll_target: str | None = None
+        self.width: float | None = None
+        self._timeline: ft.Column | None = None
         self.choose_file: FileChooser = choose_file or self._pick_file
         self.selected = Tab.CURRENT
         self.layout = Layout.WIDE
@@ -252,17 +276,109 @@ class Shell:
         self._page = page
         self.selected = tab_for_route(page.route)
         self.layout = layout_for(page.width)
+        self.width = page.width
         self._apply()
         page.add(self.body)
 
     # --- state changes ---
 
     def resize(self, width: float | None) -> None:
+        was_compact = self._compact()
+        self.width = width
         layout = layout_for(width)
-        if layout != self.layout:
+        if layout != self.layout or self._compact() != was_compact:
             self.layout = layout
             self._apply()
             self._update()
+
+    def _compact(self) -> bool:
+        """Under 400 px: the index is a bottom sheet, the detail a pushed page (ADR-0007)."""
+        return self.width is not None and self.width < COMPACT_BELOW
+
+    # --- jump index and segment detail (S011) ---
+
+    async def jump(self, ref: str) -> None:
+        """Scroll the timeline to a segment and highlight it, without changing the view."""
+        self.highlight = ref
+        self._apply()
+        self._update()
+        await self._scroll_to(ref)
+
+    async def _scroll_to(self, ref: str) -> None:
+        self.scroll_target = ref
+        if isinstance(self._page, ft.Page) and self._timeline is not None:
+            await self._timeline.scroll_to(scroll_key=ref, duration=300)
+
+    def open_detail(self, reservation: ExtractedReservation) -> None:
+        self.detail = reservation
+        self.highlight = segment_ref(reservation)
+        self._apply()
+        self._update()
+
+    async def close_detail(self) -> None:
+        ref = segment_ref(self.detail) if self.detail is not None else None
+        self.detail = None
+        if ref is None:
+            self._apply()
+            self._update()
+            return
+        await self.jump(ref)
+
+    async def _on_jump(self, reservation: ExtractedReservation) -> None:
+        await self.jump(segment_ref(reservation))
+
+    def _open_jump_sheet(self, _: Any) -> None:
+        if self._page is None or self.trip is None:
+            return
+
+        async def jump_from_sheet(reservation: ExtractedReservation) -> None:
+            if self._page is not None:
+                self._page.pop_dialog()
+            await self.jump(segment_ref(reservation))
+
+        self._page.show_dialog(
+            ft.BottomSheet(
+                ft.Container(
+                    ft.Column(
+                        [
+                            ft.Text("Jump to", size=13, color=ft.Colors.ON_SURFACE_VARIANT),
+                            *jump_entries(self.trip, jump_from_sheet),
+                        ],
+                        tight=True,
+                        spacing=2,
+                    ),
+                    padding=16,
+                ),
+                show_drag_handle=True,
+            )
+        )
+
+    def _jump_control(self) -> ft.Control | None:
+        """Medium window: a "Jump to…" menu; narrow: a button opening a bottom sheet."""
+        if self.trip is None or self.layout == Layout.WIDE:
+            return None
+        if self._compact():
+            return ft.IconButton(
+                ft.Icons.FORMAT_LIST_BULLETED,
+                tooltip="Jump to…",
+                on_click=self._open_jump_sheet,
+                data={"jump_sheet": True},
+            )
+        trip = self.trip
+        return ft.PopupMenuButton(
+            icon=ft.Icons.FORMAT_LIST_BULLETED,
+            tooltip="Jump to…",
+            items=[
+                ft.PopupMenuItem(
+                    content=ft.Text(text),
+                    on_click=lambda _, r=r: self._jump_soon(r),
+                )
+                for r, text in ((r, segment_ref_title(r)) for r in trip.reservations)
+            ],
+        )
+
+    def _jump_soon(self, reservation: ExtractedReservation) -> Any:
+        return self.jump(segment_ref(reservation))
 
     def select(self, tab: Tab) -> None:
         if tab != self.selected:
@@ -382,12 +498,40 @@ class Shell:
                 self._page.navigation_bar = None
             return
         self.appbar.leading = None
-        if self.selected == Tab.CURRENT and self.trip is not None:
+        hide_tabs = False
+        if self.selected == Tab.CURRENT and self.trip is not None and self.detail is not None:
             self.body.content = ft.Container(
-                trip_view(self.trip, self.clock(), self._on_ticket),
+                detail_view(
+                    self.detail,
+                    self.trip.name,
+                    self._on_close_detail,
+                    self._ticket_handler(self.detail) if has_ticket(self.detail) else None,
+                ),
                 max_width=MAX_WIDTH,
                 expand=True,
             )
+            self.body.alignment = ft.Alignment.TOP_CENTER
+            hide_tabs = self._compact()
+        elif self.selected == Tab.CURRENT and self.trip is not None:
+            self._timeline = trip_view(
+                self.trip,
+                self.clock(),
+                self._on_ticket,
+                self.open_detail,
+                self.highlight,
+                self._jump_control(),
+            )
+            content: ft.Control = self._timeline
+            if self.layout == Layout.WIDE:
+                content = ft.Row(
+                    [
+                        jump_panel(self.trip, self._on_jump),
+                        ft.Container(self._timeline, expand=True),
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.START,
+                    expand=True,
+                )
+            self.body.content = ft.Container(content, max_width=MAX_WIDTH + 260, expand=True)
             self.body.alignment = ft.Alignment.TOP_CENTER
         else:
             self.body.content = _empty_view(_spec(self.selected))
@@ -399,7 +543,7 @@ class Shell:
         else:
             self.appbar.title = ft.Text(_spec(self.selected).label)
             self.appbar.actions = [*self._ticket_action(wide=False), self.add_menu_compact]
-            navigation_bar = self.bottom_bar
+            navigation_bar = None if hide_tabs else self.bottom_bar
         if self._page is not None:
             self._page.navigation_bar = navigation_bar
 
@@ -442,6 +586,15 @@ class Shell:
         else:
             self.ticket = reservation
             self._apply()
+
+    def _ticket_handler(self, reservation: ExtractedReservation) -> Callable[[Any], None]:
+        def show(_: Any) -> None:
+            self._on_ticket(reservation)
+
+        return show
+
+    async def _on_close_detail(self, _: Any) -> None:
+        await self.close_detail()
 
     async def _on_close_ticket(self, _: Any) -> None:
         await self.close_ticket()

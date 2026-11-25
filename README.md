@@ -48,7 +48,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S010a | Group reservations into trips | timeline | done |
 | S010b | Current trip timeline | timeline | done |
 | S010c | Segment card densities | timeline | todo |
-| S011 | Jump index and segment detail | timeline | todo |
+| S011 | Jump index and segment detail | timeline | done |
 | S012 | Train segment editor | timeline | todo |
 | S013 | Android build listing synced reservations | sync | todo |
 | S014 | Local store in SQLite | import | done |

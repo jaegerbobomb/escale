@@ -98,12 +98,40 @@ LONDON_TRIP: list[dict[str, Any]] = [
 ]
 """A synthetic trip for screenshots and tests; no real booking."""
 
+LONDON_TRIP_FULL: list[dict[str, Any]] = [
+    *LONDON_TRIP[:2],
+    {
+        "@type": "EventReservation",
+        "reservationNumber": "ESC-E1",
+        "underName": _TRAVELLERS,
+        "reservationFor": {
+            "@type": "Event",
+            "name": "Tate Modern",
+            "startDate": "2026-07-09T11:00:00+01:00",
+            "location": _place("Place", "Tate Modern", "London", "Bankside"),
+        },
+    },
+    {
+        "@type": "FoodEstablishmentReservation",
+        "reservationNumber": "ESC-F1",
+        "underName": _TRAVELLERS,
+        "startTime": "2026-07-09T19:30:00+01:00",
+        "reservationFor": _place(
+            "FoodEstablishment", "Dishoom Covent Garden", "London", "12 Upper St Martin's Lane"
+        ),
+    },
+    LONDON_TRIP[2],
+]
+"""The same trip with a museum and a dinner: five segments (S011)."""
+
 ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/import-found": [SAMPLE],
     "/import-nothing": [],
     "/import-phone": None,
     "/trip": None,
     "/ticket": None,
+    "/trip-jump": None,
+    "/trip-detail": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
@@ -128,8 +156,9 @@ async def run(page: ft.Page) -> None:
     route = page.route.rstrip("/")
     store = InMemoryReservationStore()
     clock = None
-    if route in ("/trip", "/ticket"):
-        found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP]
+    trip_routes = ("/trip", "/ticket", "/trip-jump", "/trip-detail")
+    if route in trip_routes:
+        found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP_FULL]
         await store.add(Document("demo", "ticket.pdf", "application/pdf"), [r for r in found if r])
         # 40 minutes before the first train leaves.
         start = datetime.fromisoformat(LONDON_TRIP[0]["reservationFor"]["departureTime"])
@@ -145,5 +174,9 @@ async def run(page: ft.Page) -> None:
         page.show_dialog(phone_sheet(shell._close_sheet))
     elif route == "/ticket" and shell.trip is not None:
         await shell.show_ticket(shell.trip.reservations[0])
-    elif elements is not None and route not in ("/trip", "/ticket"):
+    elif route == "/trip-jump":
+        await shell.jump("ESC-E1")
+    elif route == "/trip-detail" and shell.trip is not None:
+        shell.open_detail(shell.trip.reservations[-1])
+    elif elements is not None and route not in trip_routes:
         await shell.start_import()

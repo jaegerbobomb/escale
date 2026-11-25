@@ -17,3 +17,8 @@ A view can be opened directly by its path in the web version: `/trips`, `/statis
 **Current** shows the trip in progress, or else the next one: its name, dates and
 travellers, then one card per booking in time order. The next one is outlined and says
 how long until it leaves. With no trip ahead, the view says so.
+
+In a trip, **Jump to** lists its bookings: a panel on the left of a wide window, a menu
+next to the travellers on a medium one, a button opening a sheet on a narrow one. It
+scrolls to the booking and highlights it. Clicking a booking opens its detail;
+**‹ trip name** comes back to the same place.
