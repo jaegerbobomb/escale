@@ -1,7 +1,8 @@
 """A segment's detail, in place of the timeline (S011, ADR-0007).
 
 "‹ <trip>" goes back to the timeline, scrolled to the segment with its card highlighted.
-Editing comes with S012 (train) and S017 (stay).
+A stay has a layout of its own (``stay_view``, S017a). Editing comes with S012 (train)
+and S017b (stay).
 """
 
 from __future__ import annotations
@@ -12,33 +13,42 @@ from typing import Any
 import flet as ft
 
 from escale_core.extraction import ExtractedReservation
+from escale_core.stays import cancelled
 from escale_core.trips import span
 from escale_flet.import_sheet import format_when, headline, travellers
+from escale_flet.stay_view import Opener, opens, stay_body
 
 Action = Callable[[Any], Any]
+Row = tuple[str, str, str | None]
+"""Label, value, and the link the row opens, if any."""
 
 
 def _m(value: object) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
-def _row(label: str, value: str) -> ft.Control:
+def _row(label: str, value: str, on_click: Action | None = None) -> ft.Control:
+    text = ft.Column(
+        [
+            ft.Text(label, size=12.5, color=ft.Colors.ON_SURFACE_VARIANT),
+            ft.Text(value, size=15, color=ft.Colors.PRIMARY if on_click else None),
+        ],
+        spacing=2,
+        tight=True,
+        expand=True,
+    )
+    trailing = [ft.Icon(ft.Icons.OPEN_IN_NEW, size=16, color=ft.Colors.PRIMARY)] if on_click else []
     return ft.Container(
-        ft.Column(
-            [
-                ft.Text(label, size=12.5, color=ft.Colors.ON_SURFACE_VARIANT),
-                ft.Text(value, size=15),
-            ],
-            spacing=2,
-            tight=True,
-        ),
+        ft.Row([text, *trailing], vertical_alignment=ft.CrossAxisAlignment.CENTER),
         padding=ft.Padding.symmetric(horizontal=16, vertical=10),
+        on_click=on_click,
+        data={"row": label},
     )
 
 
-def _rows(r: ExtractedReservation) -> list[tuple[str, str]]:
+def _rows(r: ExtractedReservation) -> list[Row]:
     target = _m(r.raw.get("reservationFor"))
-    rows: list[tuple[str, str]] = []
+    rows: list[Row] = []
     if r.departure is not None or r.arrival is not None:
         for label, stop, key in (
             ("Departure", r.departure, "departurePlatform"),
@@ -50,7 +60,7 @@ def _rows(r: ExtractedReservation) -> list[tuple[str, str]]:
             platform = target.get(key)
             if isinstance(platform, str):
                 parts.append(f"Platform {platform}")
-            rows.append((label, " · ".join(p for p in parts if p)))
+            rows.append((label, " · ".join(p for p in parts if p), None))
         seat = _m(_m(r.raw.get("reservedTicket")).get("ticketedSeat"))
         coach, number = seat.get("seatSection"), seat.get("seatNumber")
         if isinstance(coach, str) or isinstance(number, str):
@@ -65,27 +75,27 @@ def _rows(r: ExtractedReservation) -> list[tuple[str, str]]:
                         )
                         if p
                     ),
+                    None,
                 )
             )
     else:
         timing = span(r)
         if timing is not None:
-            start, end = timing
-            if r.type == "LodgingReservation":
-                rows += [("Check-in", format_when(start)), ("Check-out", format_when(end))]
-            else:
-                rows.append(("When", format_when(start)))
+            start, _ = timing
+            rows.append(("When", format_when(start), None))
         place = _m(target.get("location")) or target
-        address = _m(place.get("address"))
-        where = [place.get("name"), address.get("streetAddress"), address.get("addressLocality")]
+        postal = _m(place.get("address"))
+        where = [place.get("name"), postal.get("streetAddress"), postal.get("addressLocality")]
         text = ", ".join(str(w) for w in dict.fromkeys(where) if isinstance(w, str) and w)
         if text:
-            rows.append(("Address" if r.type == "LodgingReservation" else "Place", text))
+            rows.append(("Place", text, None))
     names = travellers(r)
     if names:
-        rows.append(("Travellers", ", ".join(names)))
+        rows.append(("Travellers", ", ".join(names), None))
     if r.reference:
-        rows.append(("Booking reference", r.reference))
+        rows.append(("Booking reference", r.reference, None))
+    if cancelled(r):
+        rows.append(("Status", "Cancelled", None))
     return rows
 
 
@@ -96,9 +106,26 @@ def detail_view(
     on_ticket: Action | None,
     on_document: Action | None = None,
     on_share: Action | None = None,
+    open_url: Opener | None = None,
 ) -> ft.Control:
-    title = _m(r.raw.get("reservationFor")).get("name") if r.type == "LodgingReservation" else None
-    rows = [_row(label, value) for label, value in _rows(r)]
+    back = ft.TextButton(
+        trip_name,
+        icon=ft.Icons.ARROW_BACK_IOS_NEW,
+        on_click=on_back,
+        data={"back": True},
+    )
+    if r.type == "LodgingReservation":
+        return ft.Column(
+            [back, *stay_body(r, open_url, on_document)],
+            spacing=14,
+            scroll=ft.ScrollMode.AUTO,
+            expand=True,
+            data={"detail": r.reference},
+        )
+    rows = [
+        _row(label, value, opens(open_url, link) if open_url and link else None)
+        for label, value, link in _rows(r)
+    ]
     listed: list[ft.Control] = []
     for i, row in enumerate(rows):
         if i:
@@ -123,14 +150,9 @@ def detail_view(
         )
     return ft.Column(
         [
-            ft.TextButton(
-                trip_name,
-                icon=ft.Icons.ARROW_BACK_IOS_NEW,
-                on_click=on_back,
-                data={"back": True},
-            ),
+            back,
             ft.Text(
-                title if isinstance(title, str) else headline(r),
+                headline(r),
                 size=26,
                 weight=ft.FontWeight.W_700,
             ),
