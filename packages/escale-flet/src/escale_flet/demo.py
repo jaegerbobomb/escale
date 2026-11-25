@@ -124,6 +124,31 @@ LONDON_TRIP_FULL: list[dict[str, Any]] = [
 ]
 """The same trip with a museum and a dinner: five segments (S011)."""
 
+FLIGHT: dict[str, Any] = {
+    "@type": "FlightReservation",
+    "reservationNumber": "ESC-F718",
+    "underName": _TRAVELLERS[:1],
+    "reservedTicket": {
+        "@type": "Ticket",
+        "ticketedSeat": {"@type": "Seat", "seatNumber": "23A"},
+        "ticketToken": "pdf417:ESCALE-DEMO-AF718-JANE-DOE",
+    },
+    "reservationFor": {
+        "@type": "Flight",
+        "airline": {"@type": "Airline", "iataCode": "AF"},
+        "flightNumber": "718",
+        "departureAirport": {
+            "@type": "Airport",
+            "iataCode": "CDG",
+            "name": "Paris Charles de Gaulle",
+        },
+        "departureTime": "2026-09-14T10:25:00+02:00",
+        "arrivalAirport": {"@type": "Airport", "iataCode": "LHR", "name": "London Heathrow"},
+        "arrivalTime": "2026-09-14T10:45:00+01:00",
+    },
+}
+"""A synthetic flight for screenshots and tests (S016); no real booking."""
+
 ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/import-found": [SAMPLE],
     "/import-nothing": [],
@@ -132,11 +157,12 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/ticket": None,
     "/trip-jump": None,
     "/trip-detail": None,
+    "/flight-detail": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
 ``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts;
-``/ticket`` opens its first train's ticket.
+``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail.
 """
 
 
@@ -163,6 +189,11 @@ async def run(page: ft.Page) -> None:
         # 40 minutes before the first train leaves.
         start = datetime.fromisoformat(LONDON_TRIP[0]["reservationFor"]["departureTime"])
         clock = lambda: start - timedelta(minutes=40)  # noqa: E731
+    elif route == "/flight-detail":
+        [flight] = [r for r in [reservation_from_jsonld(FLIGHT, ("demo",))] if r]
+        await store.add(Document("demo", "boarding-pass.pdf", "application/pdf"), [flight])
+        leaves = datetime.fromisoformat(FLIGHT["reservationFor"]["departureTime"])
+        clock = lambda: leaves - timedelta(hours=2)  # noqa: E731
     shell = Shell(
         importer=Importer(FakeExtractor(elements or []), store),
         choose_file=choose_file,
@@ -178,5 +209,7 @@ async def run(page: ft.Page) -> None:
         await shell.jump("ESC-E1")
     elif route == "/trip-detail" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[-1])
+    elif route == "/flight-detail" and shell.trip is not None:
+        shell.open_detail(shell.trip.reservations[0])
     elif elements is not None and route not in trip_routes:
         await shell.start_import()

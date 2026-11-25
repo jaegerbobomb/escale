@@ -48,7 +48,7 @@ window that already adapts to its width.
 - [ ] "Back" returns to the same scroll position with the card highlighted
 - [ ] Any place opens in the user's map app (S022)
 - [ ] A ticket opens full screen with its barcode, offline (S015)
-- [ ] A flight can be shared so that someone follows it live (S016)
+- [x] A flight can be shared so that someone follows it live (S016)
 
 ## 4. `outings` — evenings and days out, not only trips
 

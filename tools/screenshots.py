@@ -42,6 +42,8 @@ VIEWS: dict[str, str] = {
     # Jump index: jumped to the museum (S011); a segment's detail (S011).
     "trip-jump": "/trip-jump",
     "trip-detail": "/trip-detail",
+    # A flight's detail, with "Share flight" (S016).
+    "flight-detail": "/flight-detail",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).

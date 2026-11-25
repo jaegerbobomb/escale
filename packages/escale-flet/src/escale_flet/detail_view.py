@@ -95,6 +95,7 @@ def detail_view(
     on_back: Action,
     on_ticket: Action | None,
     on_document: Action | None = None,
+    on_share: Action | None = None,
 ) -> ft.Control:
     title = _m(r.raw.get("reservationFor")).get("name") if r.type == "LodgingReservation" else None
     rows = [_row(label, value) for label, value in _rows(r)]
@@ -116,6 +117,10 @@ def detail_view(
                 "Booking document", icon=ft.Icons.DESCRIPTION_OUTLINED, on_click=on_document
             )
         )
+    if on_share is not None:
+        actions.append(
+            ft.OutlinedButton("Share flight", icon=ft.Icons.SHARE_OUTLINED, on_click=on_share)
+        )
     return ft.Column(
         [
             ft.TextButton(
@@ -124,18 +129,12 @@ def detail_view(
                 on_click=on_back,
                 data={"back": True},
             ),
-            ft.Row(
-                [
-                    ft.Text(
-                        title if isinstance(title, str) else headline(r),
-                        size=26,
-                        weight=ft.FontWeight.W_700,
-                        expand=True,
-                    ),
-                    *actions,
-                ],
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ft.Text(
+                title if isinstance(title, str) else headline(r),
+                size=26,
+                weight=ft.FontWeight.W_700,
             ),
+            *([ft.Row(actions, wrap=True, spacing=8, run_spacing=8)] if actions else []),
             ft.Container(
                 ft.Column(listed, spacing=0, tight=True),
                 bgcolor=ft.Colors.SURFACE_CONTAINER,
