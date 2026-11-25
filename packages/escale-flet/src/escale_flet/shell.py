@@ -506,6 +506,7 @@ class Shell:
                     self.trip.name,
                     self._on_close_detail,
                     self._ticket_handler(self.detail) if has_ticket(self.detail) else None,
+                    self._open_document(self.detail),
                 ),
                 max_width=MAX_WIDTH,
                 expand=True,

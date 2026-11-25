@@ -7,7 +7,7 @@ import base64
 import io
 import socket
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 
@@ -22,9 +22,10 @@ from escale_core.importer import reservation_from_jsonld
 from escale_core.sqlite_store import SqliteReservationStore
 from escale_core.tickets import Barcode
 from escale_flet.barcode import MODULE_PX
-from escale_flet.demo import LONDON_TRIP
+from escale_flet.demo import LONDON_TRIP, LONDON_TRIP_FULL
 from escale_flet.shell import Shell
 from escale_flet.testing import FakePage, button, texts, walk
+from escale_flet.timeline import has_ticket
 
 scenarios("S015.feature")
 
@@ -192,3 +193,57 @@ def test_timeline_card_has_a_ticket_button(world: World) -> None:
     ticket_button = button(shell.body, "Ticket")
     ticket_button.on_click(None)
     assert shell.ticket is not None
+
+
+# --- a kept document is a ticket only for transport and events (0.11.1) ---
+
+HOTEL, MUSEUM, DINNER = LONDON_TRIP_FULL[1], LONDON_TRIP_FULL[2], LONDON_TRIP_FULL[3]
+CHECK_IN = datetime.fromisoformat(HOTEL["checkinTime"])
+
+
+@given("a stored hotel booking without ticket token but with its PDF")
+def stored_hotel(world: World) -> None:
+    world.keep(HOTEL, with_pdf=True)
+
+
+@when("the current trip is shown")
+def trip_shown(world: World) -> None:
+    world.shell = Shell(store=world.store, clock=lambda: CHECK_IN - timedelta(hours=1))
+    world.shell.mount(cast(ft.Page, world.page))
+    asyncio.run(world.shell.refresh())
+
+
+@then('the booking\'s card has no "Ticket" button')
+def no_ticket_button(world: World) -> None:
+    assert world.shell is not None
+    with pytest.raises(LookupError):
+        button(world.shell.body, "Ticket")
+    assert world.shell.current_ticket() is None
+
+
+@then("its detail offers to open the booking document")
+def detail_offers_document(world: World) -> None:
+    assert world.shell is not None and world.reservation is not None
+    world.shell.open_detail(world.reservation)
+    assert not button(world.shell.body, "Booking document").disabled
+    with pytest.raises(LookupError):
+        button(world.shell.body, "Ticket")
+
+
+@pytest.mark.parametrize(
+    ("element", "expected"),
+    [(train(None), True), (MUSEUM, True), (HOTEL, False), (DINNER, False)],
+    ids=["train", "museum", "hotel", "restaurant"],
+)
+def test_a_kept_document_is_a_ticket_for_transport_and_events_only(
+    element: dict[str, Any], expected: bool
+) -> None:
+    r = reservation_from_jsonld(element, ("pdfdoc",))
+    assert r is not None
+    assert has_ticket(r) is expected
+
+
+def test_a_barcode_is_a_ticket_whatever_the_booking() -> None:
+    r = reservation_from_jsonld({**DINNER, "reservedTicket": {"ticketToken": TOKEN}}, ())
+    assert r is not None
+    assert has_ticket(r)
