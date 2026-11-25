@@ -184,7 +184,10 @@ def _facts(rows: list[ft.Control]) -> ft.Control:
 
 
 def stay_body(
-    r: ExtractedReservation, open_url: Opener | None, on_document: Action | None
+    r: ExtractedReservation,
+    open_url: Opener | None,
+    on_document: Action | None,
+    on_edit: Action | None = None,
 ) -> list[ft.Control]:
     """Everything under the back button of a stay's detail."""
     body: list[ft.Control] = [_identity(r)]
@@ -240,6 +243,8 @@ def stay_body(
                 "Booking document", icon=ft.Icons.DESCRIPTION_OUTLINED, on_click=on_document
             )
         )
+    if on_edit is not None:
+        actions.append(ft.OutlinedButton("Edit", icon=ft.Icons.EDIT_OUTLINED, on_click=on_edit))
     if actions:
         body.append(ft.Row(actions, wrap=True, spacing=10, run_spacing=10))
     return body

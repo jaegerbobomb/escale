@@ -3,10 +3,11 @@ id: S017b
 title: "Stay editor"
 epic: timeline
 depends_on: [S017a]
-status: todo
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-25"
+released_in: "0.14.0"
 ---
 
 ## User story
@@ -50,3 +51,20 @@ updated: "2026-11-25"
 ## Notes
 
 - Split from S017 (2026-11-25, validated by the maintainer). The detail is S017a.
+- Delivered in 0.14.0. "Edit" on the stay's detail opens the editor in its place:
+  groups Hotel, Address, Stay, Contact, Booking. Dates and times are text fields
+  (`YYYY-MM-DD`, `HH:MM`) in the place's own time; a saved time keeps the stored time
+  zone (kitinerary's `QDateTime` with its `timezone`, else the stored offset), so a
+  winter date gets the winter offset.
+- Only the fields the user changed are written back; the rest of the JSON-LD stays as
+  imported (a `Person`'s e-mail, an `addressCountry` object…). An empty field removes
+  its key. "Under the name of" takes several names separated by commas.
+- Validation, as in KDE Itinerary: name, check-in and check-out required, check-out
+  after check-in; plus valid dates and times, and both coordinates or none, in range.
+  "Save" is disabled and the reasons are listed under the form.
+- `ReservationStore.replace(old, new)`, in memory and in SQLite (the row keeps its id;
+  its identity follows a changed booking reference).
+- Not done: "the trip it belongs to". Trips are computed by grouping (S010a); choosing
+  one by hand comes with managing trips (S036, proposed).
+- Size: about 415 lines of production code, over the ~300-line limit. The maintainer
+  chose to keep it as one PR (2026-11-25) rather than split it once written.

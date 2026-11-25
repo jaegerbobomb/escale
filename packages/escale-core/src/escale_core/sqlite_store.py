@@ -191,6 +191,15 @@ class SqliteReservationStore:
             )
         return tuple(Document(id=i, name=n, mime_type=m) for i, n, m in rows)
 
+    def _replace(self, old: ExtractedReservation, new: ExtractedReservation) -> None:
+        with self._lock:
+            db = self._connect()
+            with db:
+                db.execute(
+                    "UPDATE reservations SET identity = ?, raw = ? WHERE identity = ?",
+                    (identity(new), json.dumps(dict(new.raw)), identity(old)),
+                )
+
     async def add(
         self,
         document: Document,
@@ -204,3 +213,6 @@ class SqliteReservationStore:
 
     async def documents(self) -> tuple[Document, ...]:
         return await asyncio.to_thread(self._documents)
+
+    async def replace(self, old: ExtractedReservation, new: ExtractedReservation) -> None:
+        await asyncio.to_thread(self._replace, old, new)

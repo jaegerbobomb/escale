@@ -46,6 +46,8 @@ VIEWS: dict[str, str] = {
     "flight-detail": "/flight-detail",
     # The hotel's detail: address, room, contact, "Manage booking" (S017a).
     "stay-detail": "/stay-detail",
+    # The hotel's editor (S017b).
+    "stay-editor": "/stay-editor",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).
