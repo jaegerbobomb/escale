@@ -6,7 +6,7 @@ depends_on: [S014]
 status: done
 estimate: M
 bdd: true
-updated: "2026-11-24"
+updated: "2026-11-25"
 released_in: "0.8.0"
 adr: [3]
 ---
@@ -52,6 +52,13 @@ adr: [3]
 * **When** the user opens its ticket
 * **Then** the view offers to open the PDF
 
+### Scenario: A hotel booking is not a ticket
+
+* **Given** a stored hotel booking without ticket token but with its PDF
+* **When** the current trip is shown
+* **Then** the booking's card has no "Ticket" button
+* **And** its detail offers to open the booking document
+
 ## Notes
 
 - Asked by the maintainer (2026-11-24): showing tickets and trips comes first, close to
@@ -70,4 +77,8 @@ adr: [3]
   own reservation, opened from its own card. To revisit with S005 (batches).
 - "Ticket" on a timeline card opens it; "Open the original document" uses the copy
   kept by S014.
-
+- Completed in 0.11.1 (defect seen on the S011 screenshots): a kept document made the
+  hotel, the restaurant and the museum show "Ticket". A ticket is now a barcode, or the
+  kept document of a transport or an event (an e-ticket); a stay's or a table's
+  document is not something to show at a gate, so their detail offers "Booking
+  document" instead. The header-bar shortcut (S021) follows the same rule.

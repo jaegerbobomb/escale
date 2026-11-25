@@ -90,7 +90,11 @@ def _rows(r: ExtractedReservation) -> list[tuple[str, str]]:
 
 
 def detail_view(
-    r: ExtractedReservation, trip_name: str, on_back: Action, on_ticket: Action | None
+    r: ExtractedReservation,
+    trip_name: str,
+    on_back: Action,
+    on_ticket: Action | None,
+    on_document: Action | None = None,
 ) -> ft.Control:
     title = _m(r.raw.get("reservationFor")).get("name") if r.type == "LodgingReservation" else None
     rows = [_row(label, value) for label, value in _rows(r)]
@@ -104,6 +108,12 @@ def detail_view(
         actions.append(
             ft.FilledTonalButton(
                 "Ticket", icon=ft.Icons.CONFIRMATION_NUMBER_OUTLINED, on_click=on_ticket
+            )
+        )
+    elif on_document is not None:
+        actions.append(
+            ft.FilledTonalButton(
+                "Booking document", icon=ft.Icons.DESCRIPTION_OUTLINED, on_click=on_document
             )
         )
     return ft.Column(

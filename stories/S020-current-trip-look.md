@@ -6,7 +6,7 @@ depends_on: [S010b]
 status: done
 estimate: M
 bdd: false
-updated: "2026-11-24"
+updated: "2026-11-25"
 released_in: "0.10.0"
 adr: [1]
 ---
@@ -65,4 +65,6 @@ close to it, with what the data already allows:
   the success colour.
 - Not yet: class and status badges need data the import does not give reliably
   (status needs real time); expandable stops; the "Ticket" button stays on each card.
-
+- Completed in 0.11.1 (defect seen on the S011 screenshots): the restaurant's and the
+  museum's rows repeated the place name under the title. An outing's row now shows its
+  time, then the venue only when it differs from the title, and the street.
