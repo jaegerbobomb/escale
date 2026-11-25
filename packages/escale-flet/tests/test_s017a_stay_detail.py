@@ -113,13 +113,18 @@ def taps_telephone(world: World) -> None:
 def detail_shown(world: World) -> None:
     assert world.shell is not None
     shown = " | ".join(texts(world.shell.body))
-    for expected in (
-        "The Hoxton, Holborn",
-        "199-206 High Holborn, London",
-        "Wed 8 Jul 2026 · 15:00",
-        "Fri 10 Jul 2026 · 11:00",
-    ):
+    for expected in ("The Hoxton, Holborn", "199-206 High Holborn, London"):
         assert expected in shown, expected
+    moments = {
+        c.data["moment"]: texts(c)
+        for c in walk(world.shell.body)
+        if isinstance(c.data, dict) and "moment" in c.data
+    }
+    assert moments == {
+        "Check-in": ["CHECK-IN", "15:00", "Wed 8 July"],
+        "Check-out": ["CHECK-OUT", "11:00", "Fri 10 July"],
+    }
+    assert "2" in texts(world.shell.body) and "nights" in texts(world.shell.body)
 
 
 @then('a "Manage booking on Booking.com" action is shown')

@@ -67,3 +67,9 @@ released_in: "0.13.0"
   document of a booking can come with S009.
 - Demo route `/stay-detail` and screenshot view `stay-detail`; the demo hotel's contact
   is made up (`+44 20 7946 0000` is in Ofcom's range for drama, `example.com`).
+- Layout (2026-11-25, after the maintainer found the first version, a flat list of
+  rows, ugly): the mockup's "Nuit d'hôtel" screen — identity (icon tile, name,
+  address), a strip with check-in, check-out (time large, day below) and the number of
+  nights, the booking's facts and the contact as label/value rows with icons, then the
+  actions ("Manage booking on <site>" filled, "Booking document"). The mockup's photo,
+  price, "Itinéraire" (S022) and map need data or stories not there yet.
