@@ -1,6 +1,6 @@
 [project]
 name = "escale-workspace"
-version = "0.13.0"
+version = "0.14.0"
 description = "Escale workspace root (not published)."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"

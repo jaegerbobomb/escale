@@ -27,6 +27,10 @@ class ReservationStore(Protocol):
 
     async def documents(self) -> tuple[Document, ...]: ...
 
+    async def replace(self, old: ExtractedReservation, new: ExtractedReservation) -> None:
+        """Put ``new`` in the place of ``old``, an edited copy of it (S017b)."""
+        ...
+
 
 class InMemoryReservationStore:
     """Keeps everything for the life of the process."""
@@ -49,3 +53,6 @@ class InMemoryReservationStore:
 
     async def documents(self) -> tuple[Document, ...]:
         return tuple(self._documents.values())
+
+    async def replace(self, old: ExtractedReservation, new: ExtractedReservation) -> None:
+        self._reservations = [new if r == old else r for r in self._reservations]

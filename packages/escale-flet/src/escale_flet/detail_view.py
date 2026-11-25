@@ -107,6 +107,7 @@ def detail_view(
     on_document: Action | None = None,
     on_share: Action | None = None,
     open_url: Opener | None = None,
+    on_edit: Action | None = None,
 ) -> ft.Control:
     back = ft.TextButton(
         trip_name,
@@ -116,7 +117,7 @@ def detail_view(
     )
     if r.type == "LodgingReservation":
         return ft.Column(
-            [back, *stay_body(r, open_url, on_document)],
+            [back, *stay_body(r, open_url, on_document, on_edit)],
             spacing=14,
             scroll=ft.ScrollMode.AUTO,
             expand=True,

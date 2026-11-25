@@ -6,6 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-25
+
+### Added
+- S017b: "Edit" on a stay's detail opens its editor (name, address, coordinates,
+  check-in and check-out, room, contact, booking reference, names). "Save" stays
+  disabled while the name or the times are missing, or the check-out is not after the
+  check-in. Saved stays keep their place's time zone.
+
 ## [0.13.0] - 2026-11-25
 
 ### Added
@@ -147,7 +155,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/jaegerbobomb/escale/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/jaegerbobomb/escale/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/jaegerbobomb/escale/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/jaegerbobomb/escale/compare/v0.11.0...v0.11.1

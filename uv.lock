@@ -146,12 +146,12 @@ wheels = [
 
 [[package]]
 name = "escale-core"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/escale-core" }
 
 [[package]]
 name = "escale-flet"
-version = "0.13.0"
+version = "0.14.0"
 source = { editable = "packages/escale-flet" }
 dependencies = [
     { name = "aztec-code-generator" },
@@ -187,7 +187,7 @@ provides-extras = ["desktop", "web"]
 
 [[package]]
 name = "escale-workspace"
-version = "0.13.0"
+version = "0.14.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]

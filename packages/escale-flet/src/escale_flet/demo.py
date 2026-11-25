@@ -177,12 +177,14 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/trip-detail": None,
     "/flight-detail": None,
     "/stay-detail": None,
+    "/stay-editor": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
 ``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts;
 ``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail,
-``/stay-detail`` the hotel's.
+``/stay-detail`` the hotel's,
+``/stay-editor`` its editor.
 """
 
 
@@ -202,7 +204,7 @@ async def run(page: ft.Page) -> None:
     route = page.route.rstrip("/")
     store = InMemoryReservationStore()
     clock = None
-    trip_routes = ("/trip", "/ticket", "/trip-jump", "/trip-detail", "/stay-detail")
+    trip_routes = ("/trip", "/ticket", "/trip-jump", "/trip-detail", "/stay-detail", "/stay-editor")
     if route in trip_routes:
         found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP_FULL]
         await store.add(Document("demo", "ticket.pdf", "application/pdf"), [r for r in found if r])
@@ -231,6 +233,9 @@ async def run(page: ft.Page) -> None:
         shell.open_detail(shell.trip.reservations[-1])
     elif route == "/stay-detail" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[1])
+    elif route == "/stay-editor" and shell.trip is not None:
+        shell.open_detail(shell.trip.reservations[1])
+        shell.edit_stay()
     elif route == "/flight-detail" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[0])
     elif elements is not None and route not in trip_routes:

@@ -21,10 +21,12 @@ from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.extraction import ExtractedReservation
 from escale_core.flights import follow_link
 from escale_core.importer import Importer
+from escale_core.stays import StayFields, edited
 from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.trips import Trip, active_trip, group
 from escale_flet.detail_view import detail_view
 from escale_flet.import_sheet import confirmation_sheet, headline, phone_sheet
+from escale_flet.stay_editor import stay_editor
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
 from escale_flet.ticket_view import MAX_WIDTH as TICKET_WIDTH
 from escale_flet.ticket_view import ticket_view
@@ -190,6 +192,7 @@ class Shell:
         self.trip: Trip | None = None
         self.ticket: ExtractedReservation | None = None
         self.detail: ExtractedReservation | None = None
+        self.editing = False
         self.highlight: str | None = None
         self.scroll_target: str | None = None
         self.width: float | None = None
@@ -327,9 +330,44 @@ class Shell:
         self._apply()
         self._update()
 
+    def edit_stay(self) -> None:
+        """The editor in place of the stay's detail (S017b)."""
+        self.editing = self.detail is not None and self.detail.type == "LodgingReservation"
+        self._apply()
+        self._update()
+
+    def cancel_edit(self) -> None:
+        self.editing = False
+        self._apply()
+        self._update()
+
+    async def save_stay(self, values: StayFields) -> None:
+        """Write the edited stay to the store, then show its detail again."""
+        old = self.detail
+        if old is None:
+            return
+        new = edited(old, values)
+        await self.store.replace(old, new)
+        self.editing = False
+        trips = group(await self.store.reservations())
+        self.trip = active_trip(trips, self.clock())
+        kept = [r for r in self.trip.reservations if r == new] if self.trip else []
+        self.detail = kept[0] if kept else None
+        if self.detail is not None:
+            self.highlight = segment_ref(self.detail)
+        self._apply()
+        self._update()
+
+    def _on_edit(self, _: Any) -> None:
+        self.edit_stay()
+
+    def _on_cancel_edit(self, _: Any) -> None:
+        self.cancel_edit()
+
     async def close_detail(self) -> None:
         ref = segment_ref(self.detail) if self.detail is not None else None
         self.detail = None
+        self.editing = False
         if ref is None:
             self._apply()
             self._update()
@@ -547,7 +585,9 @@ class Shell:
         hide_tabs = False
         if self.selected == Tab.CURRENT and self.trip is not None and self.detail is not None:
             self.body.content = ft.Container(
-                detail_view(
+                stay_editor(self.detail, self.save_stay, self._on_cancel_edit)
+                if self.editing
+                else detail_view(
                     self.detail,
                     self.trip.name,
                     self._on_close_detail,
@@ -555,6 +595,7 @@ class Shell:
                     self._open_document(self.detail),
                     self._share_flight(self.detail),
                     self.launch,
+                    self._on_edit,
                 ),
                 max_width=MAX_WIDTH,
                 expand=True,
