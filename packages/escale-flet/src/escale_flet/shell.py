@@ -180,6 +180,7 @@ class Shell:
         store: ReservationStore | None = None,
         clock: Callable[[], datetime] | None = None,
         share: Sharer | None = None,
+        launch: Callable[[str], Awaitable[None]] | None = None,
     ) -> None:
         if importer is None:
             importer = Importer(KitineraryCli(), store or InMemoryReservationStore())
@@ -195,6 +196,7 @@ class Shell:
         self._timeline: ft.Column | None = None
         self.choose_file: FileChooser = choose_file or self._pick_file
         self.share: Sharer = share or self._share_text
+        self.launch: Callable[[str], Awaitable[None]] = launch or self._launch_url
         self.selected = Tab.CURRENT
         self.layout = Layout.WIDE
         self._page: ft.Page | None = None
@@ -461,6 +463,11 @@ class Shell:
 
         return share_it
 
+    async def _launch_url(self, url: str) -> None:
+        """A link handed to the system: browser, dialler, mail app (S017a)."""
+        if isinstance(self._page, ft.Page):
+            await ft.UrlLauncher().launch_url(url)
+
     async def _share_text(self, text: str) -> str | None:
         page = self._page
         if not isinstance(page, ft.Page):
@@ -547,6 +554,7 @@ class Shell:
                     self._ticket_handler(self.detail) if has_ticket(self.detail) else None,
                     self._open_document(self.detail),
                     self._share_flight(self.detail),
+                    self.launch,
                 ),
                 max_width=MAX_WIDTH,
                 expand=True,

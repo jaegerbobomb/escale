@@ -98,8 +98,26 @@ LONDON_TRIP: list[dict[str, Any]] = [
 ]
 """A synthetic trip for screenshots and tests; no real booking."""
 
+STAY_DETAILS: dict[str, Any] = {
+    "lodgingUnitDescription": "Cosy room, one double bed",
+    "potentialAction": {
+        "@type": "UpdateAction",
+        "target": "https://secure.booking.com/myreservations.html",
+    },
+}
+"""What a Booking.com confirmation adds to the stay (S017a); the contact is made up."""
+
 LONDON_TRIP_FULL: list[dict[str, Any]] = [
-    *LONDON_TRIP[:2],
+    LONDON_TRIP[0],
+    {
+        **LONDON_TRIP[1],
+        **STAY_DETAILS,
+        "reservationFor": {
+            **LONDON_TRIP[1]["reservationFor"],
+            "telephone": "+44 20 7946 0000",
+            "email": "stay@example.com",
+        },
+    },
     {
         "@type": "EventReservation",
         "reservationNumber": "ESC-E1",
@@ -158,11 +176,13 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/trip-jump": None,
     "/trip-detail": None,
     "/flight-detail": None,
+    "/stay-detail": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
 ``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts;
-``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail.
+``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail,
+``/stay-detail`` the hotel's.
 """
 
 
@@ -182,7 +202,7 @@ async def run(page: ft.Page) -> None:
     route = page.route.rstrip("/")
     store = InMemoryReservationStore()
     clock = None
-    trip_routes = ("/trip", "/ticket", "/trip-jump", "/trip-detail")
+    trip_routes = ("/trip", "/ticket", "/trip-jump", "/trip-detail", "/stay-detail")
     if route in trip_routes:
         found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP_FULL]
         await store.add(Document("demo", "ticket.pdf", "application/pdf"), [r for r in found if r])
@@ -209,6 +229,8 @@ async def run(page: ft.Page) -> None:
         await shell.jump("ESC-E1")
     elif route == "/trip-detail" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[-1])
+    elif route == "/stay-detail" and shell.trip is not None:
+        shell.open_detail(shell.trip.reservations[1])
     elif route == "/flight-detail" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[0])
     elif elements is not None and route not in trip_routes:

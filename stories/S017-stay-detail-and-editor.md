@@ -3,10 +3,10 @@ id: S017
 title: "Stay detail and editor"
 epic: timeline
 depends_on: [S010b]
-status: todo
+status: split
 estimate: M
 bdd: true
-updated: "2026-11-24"
+updated: "2026-11-25"
 ---
 
 ## User story
@@ -74,3 +74,6 @@ updated: "2026-11-24"
 - Proposed 2026-11-24, as the prerequisite of importing a place shared from Google Maps
   (S019): a shared place becomes a stay, so stays must be editable first.
 - 2026-11-24: validated by the maintainer (`todo`).
+- 2026-11-25: split, validated by the maintainer: about 350 lines of production code,
+  over the ~300-line limit. **S017a** — the stay's detail (scenarios 1 and 3);
+  **S017b** — the editor (scenarios 2, 4 and 5).

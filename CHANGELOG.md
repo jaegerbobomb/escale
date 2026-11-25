@@ -6,6 +6,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-25
+
+### Added
+- S017a: a stay's detail shows its full address, room, contact (telephone, e-mail and
+  website open in the system's apps), booking status, and "Manage booking on <site>"
+  when the confirmation gives a link (Booking.com, Airbnb, …).
+
+### Changed
+- S017 split into S017a (stay detail) and S017b (stay editor).
+
 ## [0.12.0] - 2026-11-25
 
 ### Added
@@ -137,7 +147,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/jaegerbobomb/escale/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/jaegerbobomb/escale/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/jaegerbobomb/escale/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/jaegerbobomb/escale/compare/v0.10.0...v0.11.0

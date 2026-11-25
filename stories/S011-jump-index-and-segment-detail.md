@@ -67,4 +67,5 @@ adr: [7]
   travellers, booking reference, "Ticket"; "‹ <trip>" goes back, scrolled to the card
   and with it highlighted. Read-only; editing is S012 (train) and S017 (stay).
 - The demo trip has five segments (`LONDON_TRIP_FULL`: museum and dinner added).
-
+- 2026-11-25, when validating S016: the maintainer is not fond of the layout of the
+  detail's action buttons (row under the title). To revisit later, not blocking.
