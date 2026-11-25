@@ -10,7 +10,7 @@ import flet as ft
 
 from escale_core.importer import reservation_from_jsonld
 from escale_core.trips import group
-from escale_flet.demo import LONDON_TRIP
+from escale_flet.demo import LONDON_TRIP, LONDON_TRIP_FULL
 from escale_flet.testing import texts, walk
 from escale_flet.timeline import connection, initials, trip_view
 
@@ -106,3 +106,35 @@ def test_next_segment_has_the_band_others_are_in_a_boxed_list() -> None:
     assert [c.data["segment"] for c in nexts] == ["ESC-T1"]
     assert nexts[0].border is not None
     assert "NEXT · leaves in 40 min" in texts(nexts[0])
+
+
+def test_an_outing_row_shows_the_street_not_the_title_again() -> None:
+    found = [reservation_from_jsonld(e, ("d",)) for e in LONDON_TRIP_FULL]
+    [trip] = group([r for r in found if r])
+    shown = texts(trip_view(trip, LEAVES - timedelta(minutes=40)))
+    assert shown.count("Dishoom Covent Garden") == 1
+    assert shown.count("Tate Modern") == 1
+    assert "12 Upper St Martin's Lane" in shown
+    assert "Bankside" in shown
+
+
+def test_an_event_elsewhere_than_its_name_shows_the_venue() -> None:
+    r = reservation_from_jsonld(
+        {
+            "@type": "EventReservation",
+            "reservationFor": {
+                "@type": "Event",
+                "name": "Hamlet",
+                "startDate": "2026-07-09T19:30:00+01:00",
+                "location": {
+                    "@type": "Place",
+                    "name": "Barbican Theatre",
+                    "address": {"streetAddress": "Silk Street"},
+                },
+            },
+        },
+        (),
+    )
+    assert r is not None
+    [trip] = group([r])
+    assert "Barbican Theatre · Silk Street" in texts(trip_view(trip, LEAVES))

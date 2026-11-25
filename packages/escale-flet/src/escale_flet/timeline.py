@@ -206,12 +206,14 @@ def _lodging(r: ExtractedReservation, start: datetime, end: datetime) -> list[ft
 
 
 def _other(r: ExtractedReservation, start: datetime) -> list[ft.Control]:
+    """Time, then where: the venue unless it is the title already, and its street."""
     target = _m(r.raw.get("reservationFor"))
     location = _m(target.get("location")) or target
-    name = location.get("name")
+    name, street = location.get("name"), _m(location.get("address")).get("streetAddress")
+    where = [w for w in (name, street) if isinstance(w, str) and w and w != _title(r)]
     return [
         ft.Text(f"{_day(start)} · {start:%H:%M}"),
-        *([_dim(name)] if isinstance(name, str) else []),
+        *([_dim(" · ".join(where))] if where else []),
     ]
 
 
@@ -223,9 +225,16 @@ def _title(r: ExtractedReservation) -> str:
     return headline(r)
 
 
+_TICKETED = _TRANSPORT | {"EventReservation"}
+"""Bookings whose kept document is the ticket itself (an e-ticket)."""
+
+
 def has_ticket(r: ExtractedReservation) -> bool:
-    """Something to show full screen: a barcode, or a kept document (S015)."""
-    return ticket_of(r).barcode is not None or bool(r.subject_of)
+    """Something to show at a gate (S015): a barcode, or the kept document of a transport
+    or an event. A stay's or a table's document is a booking, not a ticket."""
+    if ticket_of(r).barcode is not None:
+        return True
+    return r.type in _TICKETED and bool(r.subject_of)
 
 
 def _segment_body(r: ExtractedReservation, now: datetime, on_ticket: OnTicket | None) -> ft.Control:

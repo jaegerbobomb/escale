@@ -11,3 +11,6 @@ needed, in a tunnel or abroad.
 
 If the booking has no code, or a Data Matrix code that Escale cannot draw yet, the view
 offers **Open the original document** instead: the PDF or file you imported.
+
+Hotels and restaurants have no **Ticket**: what you imported for them is a booking, not
+something to scan. Open the booking and use **Booking document** to see the file.

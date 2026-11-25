@@ -19,11 +19,12 @@ import flet as ft
 
 from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.extraction import ExtractedReservation
+from escale_core.flights import follow_link
 from escale_core.importer import Importer
 from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.trips import Trip, active_trip, group
 from escale_flet.detail_view import detail_view
-from escale_flet.import_sheet import confirmation_sheet, phone_sheet
+from escale_flet.import_sheet import confirmation_sheet, headline, phone_sheet
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
 from escale_flet.ticket_view import MAX_WIDTH as TICKET_WIDTH
 from escale_flet.ticket_view import ticket_view
@@ -119,6 +120,13 @@ IMPORT_EXTENSIONS = ["pdf", "pkpass", "ics", "itinerary", "html", "eml", "png", 
 PHONES = {ft.PagePlatform.ANDROID, ft.PagePlatform.IOS, ft.PagePlatform.ANDROID_TV}
 
 FileChooser = Callable[[], Awaitable[Path | None]]
+Sharer = Callable[[str], Awaitable[str | None]]
+"""Shares a text; returns a message to confirm it (``None``: the system showed its own)."""
+
+
+def shares_with_sheet(platform: ft.PagePlatform | None) -> bool:
+    """Phones have a share sheet; elsewhere Escale copies the text instead (S016)."""
+    return platform in (ft.PagePlatform.ANDROID, ft.PagePlatform.IOS)
 
 
 def layout_for(width: float | None) -> Layout:
@@ -171,6 +179,7 @@ class Shell:
         choose_file: FileChooser | None = None,
         store: ReservationStore | None = None,
         clock: Callable[[], datetime] | None = None,
+        share: Sharer | None = None,
     ) -> None:
         if importer is None:
             importer = Importer(KitineraryCli(), store or InMemoryReservationStore())
@@ -185,6 +194,7 @@ class Shell:
         self.width: float | None = None
         self._timeline: ft.Column | None = None
         self.choose_file: FileChooser = choose_file or self._pick_file
+        self.share: Sharer = share or self._share_text
         self.selected = Tab.CURRENT
         self.layout = Layout.WIDE
         self._page: ft.Page | None = None
@@ -435,6 +445,35 @@ class Shell:
                 return open_it
         return None
 
+    def _share_flight(
+        self, reservation: ExtractedReservation
+    ) -> Callable[[Any], Awaitable[None]] | None:
+        """ "Share flight": a Flightradar24 link, when the callsign is known (S016)."""
+        link = follow_link(reservation)
+        if link is None:
+            return None
+        text = f"Follow flight {headline(reservation)}: {link}"
+
+        async def share_it(_: Any) -> None:
+            message = await self.share(text)
+            if message and self._page is not None:
+                self._page.show_dialog(ft.SnackBar(ft.Text(message)))
+
+        return share_it
+
+    async def _share_text(self, text: str) -> str | None:
+        page = self._page
+        if not isinstance(page, ft.Page):
+            return None
+        try:
+            if shares_with_sheet(page.platform):
+                await ft.Share().share_text(text, subject="Follow my flight")
+                return None
+            await ft.Clipboard().set(text)
+        except Exception:
+            return "Could not share the link"
+        return "Link copied"
+
     async def start_import(self) -> None:
         """Choose a file, show what it holds, save it only if the user confirms (S004)."""
         page = self._page
@@ -506,6 +545,8 @@ class Shell:
                     self.trip.name,
                     self._on_close_detail,
                     self._ticket_handler(self.detail) if has_ticket(self.detail) else None,
+                    self._open_document(self.detail),
+                    self._share_flight(self.detail),
                 ),
                 max_width=MAX_WIDTH,
                 expand=True,

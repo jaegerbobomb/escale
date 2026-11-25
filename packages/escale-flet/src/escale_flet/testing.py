@@ -86,9 +86,9 @@ def texts(control: Any) -> list[str]:
     for c in walk(control):
         if isinstance(c, ft.Text) and c.value:
             found.append(c.value)
-        elif isinstance(c, ft.Button | ft.FilledButton | ft.TextButton) and isinstance(
-            c.content, str
-        ):
+        elif isinstance(
+            c, ft.Button | ft.FilledButton | ft.OutlinedButton | ft.TextButton
+        ) and isinstance(c.content, str):
             found.append(c.content)
     return found
 
@@ -96,7 +96,10 @@ def texts(control: Any) -> list[str]:
 def button(control: Any, label: str) -> Any:
     """The button labelled ``label`` under ``control``."""
     for c in walk(control):
-        if isinstance(c, ft.Button | ft.FilledButton | ft.TextButton) and c.content == label:
+        if (
+            isinstance(c, ft.Button | ft.FilledButton | ft.OutlinedButton | ft.TextButton)
+            and c.content == label
+        ):
             return c
     raise LookupError(f"no button {label!r}")
 
