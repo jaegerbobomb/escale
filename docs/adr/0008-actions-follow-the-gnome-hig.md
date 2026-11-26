@@ -27,7 +27,11 @@ other editors) will have the same questions.
 - **Editing and creating happen in action dialogs**: header with Cancel first, a heading
   naming the action, an imperative affirmative button (Save, Add) in the suggested
   style, insensitive while invalid; Return activates it, Esc cancels. Forms are boxed
-  lists of entry rows, one section per list. Under 550 px the dialog fills the window.
+  lists of entry rows, one section per list. Under 450 px wide (or 360 px high) the
+  dialog is a bottom sheet, as libadwaita's `AdwDialog` in its automatic presentation
+  mode.
+- **The primary header bar** follows the same rules: "Add" at the start as a flat split
+  button, the other shortcuts flat at the end.
 - The navigation model of ADR-0007 does not change.
 
 ## Consequences
@@ -39,8 +43,8 @@ other editors) will have the same questions.
 **Costs / risks**
 - Flet has no libadwaita widgets: header bars, entry rows and adaptive dialogs are
   rebuilt from Material controls, and each needs checking on screenshots.
-- The mockup's primary header bar ("Add" split button, "Ticket" tonal button) deviates
-  from this; left as is until the maintainer decides.
+- The primary header bar departs from the mockup ("Add" was a blue split button on the
+  right); the maintainer agreed (2026-11-26).
 
 ## Rejected alternatives
 

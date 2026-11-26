@@ -106,11 +106,13 @@ def detail_view(
     on_document: Action | None = None,
     on_share: Action | None = None,
     open_url: Opener | None = None,
+    titled: bool = True,
 ) -> ft.Control:
-    """The booking's detail; back and Edit are in the header bar (ADR-0008)."""
+    """The booking's detail; back and Edit are in the header bar (ADR-0008). Without
+    ``titled`` (a narrow window, whose header bar shows the title) no title repeats it."""
     if r.type == "LodgingReservation":
         return ft.Column(
-            stay_body(r, open_url, on_document),
+            stay_body(r, open_url, on_document, titled),
             spacing=14,
             scroll=ft.ScrollMode.AUTO,
             expand=True,
@@ -132,7 +134,7 @@ def detail_view(
         secondary.append((ft.Icons.SHARE_OUTLINED, "Share flight", on_share))
     return ft.Column(
         [
-            ft.Text(headline(r), size=26, weight=ft.FontWeight.W_700),
+            *([ft.Text(headline(r), size=26, weight=ft.FontWeight.W_700)] if titled else []),
             *([ft.Row([primary("Ticket", on_ticket)])] if on_ticket else []),
             ft.Container(
                 ft.Column(listed, spacing=0, tight=True),

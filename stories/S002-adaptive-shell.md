@@ -83,3 +83,6 @@ flowchart LR
   the build environment; taken from `@fontsource/adwaita-sans`). Flet maps one file per
   family, so the bold weight is the family `Adwaita Sans Bold`.
 - The 400 px breakpoint only matters once a trip and a segment detail exist (S011).
+- 2026-11-26, S061 (ADR-0008): the "Add" split button is flat and sits at the start of
+  the header bar, as the GNOME HIG asks for main actions; it was blue and on the right,
+  as in the mockup.

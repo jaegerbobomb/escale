@@ -3,7 +3,8 @@
 KDE Itinerary's ``HotelEditor`` fields, as entry rows in boxed lists, one list per
 section. The header holds "Cancel", the heading and "Save" (suggested), insensitive
 with the reasons below the form while the fields are not valid. Return saves, Esc
-cancels; under 550 px the dialog fills the window.
+cancels. Under 450 px it is a bottom sheet, closed by Cancel or by swiping it down, as
+libadwaita's AdwDialog in its automatic presentation mode.
 """
 
 from __future__ import annotations
@@ -65,12 +66,12 @@ def stay_editor(
     on_save: OnSave,
     on_cancel: Callable[[Any], Any],
     on_dismiss: Callable[[Any], Any],
-    full_window: float | None = None,
+    sheet: bool = False,
     height: float = 640,
     initial: StayFields | None = None,
-) -> ft.AlertDialog:
-    """The dialog; ``full_window`` is the window's width when it should fill it.
-    ``data["values"]`` gives the fields as typed so far."""
+) -> ft.AlertDialog | ft.BottomSheet:
+    """A floating dialog, or a bottom sheet on a phone (``sheet``), as libadwaita's
+    AdwDialog presents itself. ``data["values"]`` gives the fields as typed so far."""
     inputs: dict[str, ft.TextField] = {}
     save = ft.FilledButton("Save")
     errors = ft.Column(spacing=2, tight=True)
@@ -134,29 +135,38 @@ def stay_editor(
             )
         )
     check()
+    header = ft.Row(
+        [
+            ft.TextButton("Cancel", on_click=on_cancel),
+            ft.Text(
+                "Edit Stay",
+                size=17,
+                weight=ft.FontWeight.W_700,
+                expand=True,
+                text_align=ft.TextAlign.CENTER,
+            ),
+            save,
+        ],
+    )
+    form = ft.Column([*groups, errors], spacing=18, scroll=ft.ScrollMode.AUTO, expand=True)
+    data = {"editor": r.reference, "values": current}
+    if sheet:
+        return ft.BottomSheet(
+            ft.Container(
+                ft.Column([header, form], spacing=12),
+                padding=ft.Padding.only(left=16, right=16, bottom=16),
+                height=height,
+            ),
+            show_drag_handle=True,
+            scrollable=True,
+            on_dismiss=on_dismiss,
+            data=data,
+        )
     return ft.AlertDialog(
         modal=False,
-        title=ft.Row(
-            [
-                ft.TextButton("Cancel", on_click=on_cancel),
-                ft.Text(
-                    "Edit Stay",
-                    size=17,
-                    weight=ft.FontWeight.W_700,
-                    expand=True,
-                    text_align=ft.TextAlign.CENTER,
-                ),
-                save,
-            ],
-        ),
-        content=ft.Container(
-            ft.Column([*groups, errors], spacing=18, scroll=ft.ScrollMode.AUTO),
-            width=full_window or WIDTH,
-            height=None if full_window else height,
-            expand=bool(full_window),
-        ),
-        inset_padding=ft.Padding.all(0) if full_window else None,
-        shape=ft.RoundedRectangleBorder(radius=0 if full_window else 14),
+        title=header,
+        content=ft.Container(form, width=WIDTH, height=height),
+        shape=ft.RoundedRectangleBorder(radius=14),
         on_dismiss=on_dismiss,
-        data={"editor": r.reference, "values": current},
+        data=data,
     )

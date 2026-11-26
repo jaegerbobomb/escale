@@ -81,7 +81,7 @@ def _card(content: ft.Control) -> ft.Control:
     )
 
 
-def _identity(r: ExtractedReservation) -> ft.Control:
+def _identity(r: ExtractedReservation, titled: bool = True) -> ft.Control:
     place = r.raw.get("reservationFor")
     name = place.get("name") if isinstance(place, dict) else None
     where = address(r)
@@ -97,10 +97,16 @@ def _identity(r: ExtractedReservation) -> ft.Control:
             ),
             ft.Column(
                 [
-                    ft.Text(
-                        name if isinstance(name, str) else "Stay",
-                        size=22,
-                        weight=ft.FontWeight.W_700,
+                    *(
+                        [
+                            ft.Text(
+                                name if isinstance(name, str) else "Stay",
+                                size=22,
+                                weight=ft.FontWeight.W_700,
+                            )
+                        ]
+                        if titled
+                        else []
                     ),
                     *(
                         [ft.Text(where, size=13, color=ft.Colors.ON_SURFACE_VARIANT)]
@@ -114,7 +120,7 @@ def _identity(r: ExtractedReservation) -> ft.Control:
             ),
         ],
         spacing=12,
-        vertical_alignment=ft.CrossAxisAlignment.START,
+        vertical_alignment=ft.CrossAxisAlignment.START if titled else ft.CrossAxisAlignment.CENTER,
     )
 
 
@@ -216,10 +222,13 @@ def _facts(rows: list[ft.Control]) -> ft.Control:
 
 
 def stay_body(
-    r: ExtractedReservation, open_url: Opener | None, on_document: Action | None
+    r: ExtractedReservation,
+    open_url: Opener | None,
+    on_document: Action | None,
+    titled: bool = True,
 ) -> list[ft.Control]:
     """A stay's detail; back and Edit are in the header bar (ADR-0008)."""
-    body: list[ft.Control] = [_identity(r)]
+    body: list[ft.Control] = [_identity(r, titled)]
     timing = span(r)
     if timing is not None:
         body.append(_strip(*timing))

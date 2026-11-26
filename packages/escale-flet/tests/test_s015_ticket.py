@@ -174,7 +174,7 @@ def test_back_returns_to_the_trip(world: World) -> None:
     assert world.page.navigation_bar is None
     asyncio.run(world.shell.close_ticket())
     assert world.shell.ticket is None
-    assert world.page.appbar.leading is None
+    assert world.page.appbar.leading is world.shell.add_button  # no back arrow; Add (S061)
 
 
 def test_no_document_and_no_barcode_disables_the_button(world: World) -> None:

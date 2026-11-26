@@ -45,6 +45,8 @@ NARROW_BELOW = 550
 
 
 COMPACT_BELOW = 400
+SHEET_BELOW = 450
+"""Under this width the editor is a bottom sheet, as libadwaita's AdwDialog in auto mode."""
 """Window width under which the jump index is a bottom sheet and a detail a pushed page."""
 
 
@@ -113,7 +115,6 @@ ADD_MENU_ENTRIES: tuple[str, ...] = (
 )
 """The mockup's "Add" menu; entries other than import wait for their stories."""
 
-SPLIT_RADIUS = 7
 """libadwaita's standard control radius, used by the "Add" split button."""
 
 IMPORT_EXTENSIONS = ["pdf", "pkpass", "ics", "itinerary", "html", "eml", "png", "jpg", "jpeg"]
@@ -129,6 +130,13 @@ Sharer = Callable[[str], Awaitable[str | None]]
 def shares_with_sheet(platform: ft.PagePlatform | None) -> bool:
     """Phones have a share sheet; elsewhere Escale copies the text instead (S016)."""
     return platform in (ft.PagePlatform.ANDROID, ft.PagePlatform.IOS)
+
+
+def _editor_height(window: object, sheet: bool) -> float:
+    """Most of the window for a bottom sheet; at most 640 px for a floating dialog."""
+    if not isinstance(window, int | float) or not window:
+        return 640
+    return window * 0.9 if sheet else min(640, window * 0.8)
 
 
 def layout_for(width: float | None) -> Layout:
@@ -193,7 +201,7 @@ class Shell:
         self.ticket: ExtractedReservation | None = None
         self.detail: ExtractedReservation | None = None
         self.editing = False
-        self._editor: ft.AlertDialog | None = None
+        self._editor: ft.AlertDialog | ft.BottomSheet | None = None
         self.highlight: str | None = None
         self.scroll_target: str | None = None
         self.width: float | None = None
@@ -226,46 +234,28 @@ class Shell:
             selected_index=0,
             on_change=self._on_bottom_bar_change,
         )
-        # libadwaita's split button: the main action and its menu side by side.
-        # libadwaita's AdwSplitButton (.suggested-action): the main action and its menu as
-        # two joined buttons, standard 7 px radius, no shadow, a 1 px separator between.
+        # libadwaita's AdwSplitButton in a header bar: flat, no suggested style (ADR-0008);
+        # the main action (import) and its menu, a thin separator between.
         self.add_button = ft.Row(
             [
-                ft.FilledButton(
+                ft.TextButton(
                     "Add",
                     icon=ft.Icons.ADD,
                     tooltip="Import a file",
                     on_click=self._on_import,
-                    height=36,
-                    style=ft.ButtonStyle(
-                        elevation=0,
-                        shape=ft.RoundedRectangleBorder(
-                            radius=ft.BorderRadius.only(
-                                top_left=SPLIT_RADIUS, bottom_left=SPLIT_RADIUS
-                            )
-                        ),
-                    ),
+                    style=ft.ButtonStyle(color=ft.Colors.ON_SURFACE),
                 ),
                 ft.Container(
-                    width=1,
-                    height=36,
-                    bgcolor=ft.Colors.with_opacity(0.35, ft.Colors.ON_PRIMARY),
+                    width=1, height=20, bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.ON_SURFACE)
                 ),
                 ft.PopupMenuButton(
-                    content=ft.Container(
-                        ft.Icon(ft.Icons.ARROW_DROP_DOWN, color=ft.Colors.ON_PRIMARY),
-                        bgcolor=ft.Colors.PRIMARY,
-                        height=36,
-                        padding=ft.Padding.symmetric(horizontal=6),
-                        border_radius=ft.BorderRadius.only(
-                            top_right=SPLIT_RADIUS, bottom_right=SPLIT_RADIUS
-                        ),
-                    ),
+                    icon=ft.Icons.ARROW_DROP_DOWN,
                     tooltip="Add…",
                     items=_add_menu_items(self._on_import),
                 ),
             ],
             spacing=0,
+            tight=True,
         )
         self.add_menu_compact = ft.PopupMenuButton(
             icon=ft.Icons.ADD, tooltip="Add…", items=_add_menu_items(self._on_import)
@@ -299,17 +289,23 @@ class Shell:
     # --- state changes ---
 
     def resize(self, width: float | None) -> None:
-        was_compact = self._compact()
+        was_compact, was_sheet = self._compact(), self._sheet()
         self.width = width
         layout = layout_for(width)
-        if layout != self.layout or self._compact() != was_compact:
+        changed = layout != self.layout or self._compact() != was_compact
+        if changed:
             self.layout = layout
             self._apply()
-            if self.editing and self._editor is not None:
-                values = self._editor.data["values"]()  # keep what was typed
-                self._close_editor()
-                self.edit_stay(values)
+        if self.editing and self._editor is not None and self._sheet() != was_sheet:
+            values = self._editor.data["values"]()  # keep what was typed
+            self._close_editor()
+            self.edit_stay(values)
+        elif changed:
             self._update()
+
+    def _sheet(self) -> bool:
+        """Under 450 px the editor is a bottom sheet (libadwaita's AdwDialog, ADR-0008)."""
+        return self.width is not None and self.width < SHEET_BELOW
 
     def _compact(self) -> bool:
         """Under 400 px: the index is a bottom sheet, the detail a pushed page (ADR-0007)."""
@@ -346,8 +342,8 @@ class Shell:
             self.save_stay,
             self._on_cancel_edit,
             self._on_editor_dismissed,
-            full_window=self.width if layout_for(self.width) == Layout.NARROW else None,
-            height=min(640, height * 0.8) if isinstance(height, int | float) and height else 640,
+            sheet=self._sheet(),
+            height=_editor_height(height, self._sheet()),
             initial=values,
         )
         self._page.show_dialog(self._editor)
@@ -616,6 +612,7 @@ class Shell:
                     self._open_document(self.detail),
                     self._share_flight(self.detail),
                     self.launch,
+                    titled=self.layout == Layout.WIDE,
                 ),
                 max_width=MAX_WIDTH,
                 expand=True,
@@ -658,7 +655,10 @@ class Shell:
             self.appbar.title = ft.Text(_spec(self.selected).label)
             add = self.add_menu_compact
             navigation_bar = None if hide_tabs else self.bottom_bar
-        self.appbar.actions = [*self._ticket_action(wide=wide), add]
+        # Main actions at the start of the header bar, the rest at the end (ADR-0008).
+        self.appbar.leading = add
+        self.appbar.leading_width = 150 if wide else None
+        self.appbar.actions = self._ticket_action(wide=wide)
         if in_detail and self.trip is not None and self.detail is not None:
             self._detail_header_bar(self.trip.name, self.detail, wide)
         if self._page is not None:
@@ -721,10 +721,13 @@ class Shell:
         icon = ft.Icons.CONFIRMATION_NUMBER_OUTLINED
         if wide:
             return [
-                ft.FilledTonalButton(
-                    "Ticket", icon=icon, tooltip=tooltip, on_click=self._on_current_ticket
+                ft.TextButton(
+                    "Ticket",
+                    icon=icon,
+                    tooltip=tooltip,
+                    on_click=self._on_current_ticket,
+                    style=ft.ButtonStyle(color=ft.Colors.ON_SURFACE),
                 ),
-                ft.Container(width=8),
             ]
         return [ft.IconButton(icon, tooltip=tooltip, on_click=self._on_current_ticket)]
 

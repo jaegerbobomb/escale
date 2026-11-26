@@ -55,10 +55,12 @@ VIEWS: dict[str, str] = {
 }
 """View name -> route. Add a view here when a story adds or changes one."""
 
-CLICKS: dict[str, tuple[int, int]] = {
-    "add-menu": (28, 28),
+CLICKS: dict[str, tuple[tuple[int, int], tuple[int, int]]] = {
+    # "Add" is at the start of the header bar (S061): its menu arrow, or the "+" button.
+    "add-menu": ((102, 28), (28, 28)),
 }
-"""View name -> point to click, in px from the top-RIGHT corner, before each capture."""
+"""View name -> point to click, in px from the top-LEFT corner, before each capture:
+(on a window 550 px wide or more, under 550 px)."""
 
 WIDTHS = (1000, 500, 380)
 HEIGHT = 720
@@ -126,8 +128,9 @@ def capture(out: Path, views: list[str], chromium: str | None, scale: float) -> 
                         if view in CLICKS:
                             page.keyboard.press("Escape")
                             time.sleep(SETTLE_S / 2)
-                            dx, dy = CLICKS[view]
-                            page.mouse.click(width - dx, dy)
+                            wide, narrow = CLICKS[view]
+                            x, y = wide if width >= 550 else narrow
+                            page.mouse.click(x, y)
                             time.sleep(SETTLE_S)
                         path = out / f"{view}-{width}-{scheme}.png"
                         page.screenshot(path=str(path))

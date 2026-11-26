@@ -53,10 +53,14 @@ So (ADR-0008):
 - **The editor is an action dialog**: header with "Cancel" first, the heading "Edit
   Stay", then "Save" (suggested), insensitive while the fields are not valid; Return in
   a field saves when valid, Esc cancels. Its form is boxed lists of entry rows, one
-  field per row, a heading per section. Under 550 px the dialog fills the window.
-- Out of scope, noted for a later decision: the primary header bar's "Add" split button
-  (suggested style) and "Ticket" tonal button come from the mockup and deviate from the
-  header bar guidelines.
+  field per row, a heading per section. Under 450 px it is a **bottom sheet**, as
+  libadwaita's `AdwDialog` presents itself in its automatic mode ("max-width: 450px or
+  max-height: 360px"), closed by Cancel or by swiping it down.
+- **Primary header bar**: "Add" moves to the start (main actions) as a flat split
+  button; the current-ticket shortcut is a flat icon-and-label button at the end. No
+  suggested or tonal style in the header bar.
+- On a narrow window the header bar shows the booking's title, so the content does not
+  repeat it.
 
 ## Acceptance Criteria
 
@@ -102,7 +106,13 @@ So (ADR-0008):
 - Editor: `ft.AlertDialog` whose title row is Cancel / "Edit Stay" / Save; fields are
   borderless text fields in boxed lists, one per row. Return submits through each
   field's `on_submit`; Esc dismisses the dialog (`on_dismiss`), checked in Chromium.
-  Under 550 px the dialog has no inset, no radius and the window's width; crossing the
-  breakpoint rebuilds it with what was typed.
+  Under 450 px: `ft.BottomSheet` with a drag handle, 90 % of the window's height;
+  crossing 450 px rebuilds it with what was typed.
+- 2026-11-26, review of the first screenshots, agreed by the maintainer: "Add" and the
+  ticket shortcut made flat and "Add" moved to the start; the title no longer repeated
+  on narrow windows. The maintainer asked whether a chevron on "Cancel" (a new screen)
+  or a drawer would suit phones better: libadwaita's answer is the bottom sheet
+  (`AdwDialog`, read in its documentation), so the editor is one under 450 px; "Cancel"
+  keeps its label since a sheet is dismissed, not navigated back from.
 - Seen while capturing, not caused by this story: the header's view switcher sometimes
   wraps "Statistics" on the first frames in the web build (font loading); to watch.

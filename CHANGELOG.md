@@ -13,7 +13,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   ("‹ trip") is at the left of the header bar and Edit (a pencil) at its right; a
   detail has one main button ("Ticket" or "Manage booking on …"), the other actions are
   rows. The stay editor is a dialog with Cancel, then Save; Return saves, Esc cancels;
-  on a narrow window it fills the screen.
+  on a phone it is a bottom sheet. "Add" moves to the left of the header bar; header
+  bar buttons are flat.
 
 ## [0.14.0] - 2026-11-25
 

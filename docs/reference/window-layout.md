@@ -5,8 +5,8 @@ Escale has three top-level views: **Current** (the trip you are on), **My trips*
 
 | Window width | Where the views are | "Add" |
 |---|---|---|
-| 550 px and more | a switcher in the middle of the header | button with a menu, right of the header |
-| under 550 px | a bar at the bottom of the window | "+" menu, right of the header |
+| 550 px and more | a switcher in the middle of the header | button with a menu, left of the header |
+| under 550 px | a bar at the bottom of the window | "+" menu, left of the header |
 
 The layout changes as soon as the window is resized; the selected view stays selected.
 

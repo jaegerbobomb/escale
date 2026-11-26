@@ -175,13 +175,25 @@ def test_escape_cancels_the_editor(world: World) -> None:
     assert world.shell is not None and not world.shell.editing
 
 
-def test_narrow_editor_fills_the_window(world: World) -> None:
+def test_phone_editor_is_a_bottom_sheet(world: World) -> None:
     world.page = FakePage(width=380)
     stay_detail(world)
     world.edit()
-    dialog = world.page.dialog
-    assert isinstance(dialog, ft.AlertDialog)
-    assert dialog.inset_padding == ft.Padding.all(0)
+    sheet = world.page.dialog
+    assert isinstance(sheet, ft.BottomSheet) and sheet.show_drag_handle
+    assert [c.content for c in walk(sheet) if isinstance(c, ft.TextButton | ft.FilledButton)][
+        :2
+    ] == [
+        "Cancel",
+        "Save",
+    ]
+
+
+def test_medium_editor_is_a_floating_dialog(world: World) -> None:
+    world.page = FakePage(width=500)
+    stay_detail(world)
+    world.edit()
+    assert isinstance(world.page.dialog, ft.AlertDialog)
 
 
 def test_editor_fields_are_entry_rows(world: World) -> None:
@@ -191,13 +203,36 @@ def test_editor_fields_are_entry_rows(world: World) -> None:
     assert isinstance(name.border, ft.NoInputBorder)
 
 
-def test_resizing_keeps_what_was_typed_and_fills_the_window(world: World) -> None:
+def test_resizing_to_a_phone_keeps_what_was_typed(world: World) -> None:
     stay_detail(world)
     world.edit()
     name = tagged(world.page.dialog, "field", "name")
     name.value = "Typed name"
     run(name.on_change)
     world.page.resize(380)
-    dialog = world.page.dialog
-    assert isinstance(dialog, ft.AlertDialog) and dialog.inset_padding == ft.Padding.all(0)
-    assert tagged(dialog, "field", "name").value == "Typed name"
+    sheet = world.page.dialog
+    assert isinstance(sheet, ft.BottomSheet)
+    assert tagged(sheet, "field", "name").value == "Typed name"
+    assert len(world.page.dialogs) == 1
+
+
+def test_main_actions_at_the_start_of_the_header_bar() -> None:
+    world = World()
+    train_detail(world)
+    shell = world.shell
+    assert shell is not None
+    run(world.page.appbar.leading.on_click)  # type: ignore[union-attr]  # back to the timeline
+    assert world.page.appbar is not None
+    assert world.page.appbar.leading is shell.add_button
+    main, _, menu = shell.add_button.controls
+    assert isinstance(main, ft.TextButton) and isinstance(menu, ft.PopupMenuButton)
+    actions = world.page.appbar.actions or []
+    assert not [c for c in walk(actions) if type(c) in (ft.FilledButton, ft.FilledTonalButton)]
+
+
+def test_narrow_detail_does_not_repeat_the_title(world: World) -> None:
+    world.page = FakePage(width=500)
+    train_detail(world)
+    assert world.shell is not None
+    assert "IC 9014" not in texts(world.shell.body)
+    assert texts(world.page.appbar.title) == ["IC 9014"]  # type: ignore[union-attr]
