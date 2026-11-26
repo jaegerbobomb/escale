@@ -3,10 +3,10 @@ id: S029
 title: "Flight segment editor"
 epic: timeline
 depends_on: [S011]
-status: proposed
+status: todo
 estimate: S
 bdd: true
-updated: "2026-11-25"
+updated: "2026-11-26"
 ---
 
 ## User story
@@ -37,3 +37,4 @@ updated: "2026-11-25"
 ## Notes
 
 - Proposed 2026-11-25 to bring Escale close to KDE Itinerary on Android (gap review against apps.kde.org/itinerary and its release notes).
+- 2026-11-26: validated by the maintainer (`todo`), to follow the sync arc (S006–S009).

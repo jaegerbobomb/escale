@@ -3,10 +3,10 @@ id: S006
 title: "Connect a Nextcloud account"
 epic: sync
 depends_on: [S002]
-status: todo
+status: split
 estimate: M
 bdd: true
-updated: "2026-11-24"
+updated: "2026-11-26"
 adr: [4]
 ---
 
@@ -57,3 +57,7 @@ adr: [4]
 ## Notes
 
 - 2026-11-24: validated by the maintainer (`todo`).
+- 2026-11-26: split, validated by the maintainer (about 370 lines of production code):
+  **S006a** — the core (adapters, connection, calendars, folder, integration tests
+  against a Nextcloud container); **S006b** — the Preferences › Account page, the app
+  password in the system keyring, the settings file.

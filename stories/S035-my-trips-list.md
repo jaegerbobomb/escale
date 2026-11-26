@@ -3,10 +3,10 @@ id: S035
 title: "My trips list"
 epic: browse
 depends_on: [S010a]
-status: proposed
+status: todo
 estimate: M
 bdd: true
-updated: "2026-11-25"
+updated: "2026-11-26"
 ---
 
 ## User story
@@ -35,3 +35,4 @@ updated: "2026-11-25"
 ## Notes
 
 - Proposed 2026-11-25 to bring Escale close to KDE Itinerary on Android (gap review against apps.kde.org/itinerary and its release notes).
+- 2026-11-26: validated by the maintainer (`todo`), to follow the sync arc (S006–S009).

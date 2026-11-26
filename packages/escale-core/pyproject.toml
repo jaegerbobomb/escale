@@ -1,10 +1,12 @@
 [project]
 name = "escale-core"
-version = "0.16.0"
+version = "0.17.0"
 description = "Escale core: domain, services and adapters. Never imports a UI toolkit."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
-dependencies = []
+dependencies = [
+    "caldav>=3.7,<4",
+]
 
 [build-system]
 requires = ["hatchling>=1.27"]

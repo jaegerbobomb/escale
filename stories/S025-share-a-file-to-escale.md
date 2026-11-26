@@ -3,10 +3,10 @@ id: S025
 title: "Share a file to Escale"
 epic: import
 depends_on: [S003, S004]
-status: proposed
+status: todo
 estimate: M
 bdd: true
-updated: "2026-11-25"
+updated: "2026-11-26"
 ---
 
 ## User story
@@ -38,3 +38,4 @@ updated: "2026-11-25"
 
 - Blocked by issue #19 for Android.
 - Proposed 2026-11-25 to bring Escale close to KDE Itinerary on Android (gap review against apps.kde.org/itinerary and its release notes).
+- 2026-11-26: validated by the maintainer (`todo`), to follow the sync arc (S006–S009).

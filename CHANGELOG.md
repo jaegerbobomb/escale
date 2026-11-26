@@ -6,6 +6,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-26
+
+### Added
+- S006a: the core connects to a Nextcloud account (CalDAV and WebDAV through
+  `caldav`): checks the app password, lists the calendars, creates the "Trips" calendar
+  on request and the "Escale" folder, and says why a connection failed (refused,
+  unreachable, not a Nextcloud). Tested against a real Nextcloud in a CI job. No screen
+  yet: the preferences come with S006b.
+
+### Changed
+- S006 split into S006a (core) and S006b (preferences); S007 no longer waits for S005
+  (one event per reservation until batches exist); S025, S028, S029, S030 and S035
+  validated.
+
 ## [0.16.0] - 2026-11-26
 
 ### Changed
@@ -173,7 +187,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/jaegerbobomb/escale/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/jaegerbobomb/escale/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/jaegerbobomb/escale/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/jaegerbobomb/escale/compare/v0.13.0...v0.14.0
