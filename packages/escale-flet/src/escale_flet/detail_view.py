@@ -1,6 +1,7 @@
 """A segment's detail, in place of the timeline (S011, ADR-0007).
 
-"‹ <trip>" goes back to the timeline, scrolled to the segment with its card highlighted.
+"‹ <trip>", in the header bar (ADR-0008), goes back to the timeline, scrolled to the
+segment with its card highlighted.
 A stay has a layout of its own (``stay_view``, S017a). Editing comes with S012 (train)
 and S017b (stay).
 """
@@ -16,7 +17,7 @@ from escale_core.extraction import ExtractedReservation
 from escale_core.stays import cancelled
 from escale_core.trips import span
 from escale_flet.import_sheet import format_when, headline, travellers
-from escale_flet.stay_view import Opener, opens, stay_body
+from escale_flet.stay_view import Opener, action_rows, opens, primary, stay_body
 
 Action = Callable[[Any], Any]
 Row = tuple[str, str, str | None]
@@ -101,23 +102,17 @@ def _rows(r: ExtractedReservation) -> list[Row]:
 
 def detail_view(
     r: ExtractedReservation,
-    trip_name: str,
-    on_back: Action,
     on_ticket: Action | None,
     on_document: Action | None = None,
     on_share: Action | None = None,
     open_url: Opener | None = None,
-    on_edit: Action | None = None,
+    titled: bool = True,
 ) -> ft.Control:
-    back = ft.TextButton(
-        trip_name,
-        icon=ft.Icons.ARROW_BACK_IOS_NEW,
-        on_click=on_back,
-        data={"back": True},
-    )
+    """The booking's detail; back and Edit are in the header bar (ADR-0008). Without
+    ``titled`` (a narrow window, whose header bar shows the title) no title repeats it."""
     if r.type == "LodgingReservation":
         return ft.Column(
-            [back, *stay_body(r, open_url, on_document, on_edit)],
+            stay_body(r, open_url, on_document, titled),
             spacing=14,
             scroll=ft.ScrollMode.AUTO,
             expand=True,
@@ -132,41 +127,22 @@ def detail_view(
         if i:
             listed.append(ft.Divider(height=1, thickness=1, color=ft.Colors.OUTLINE_VARIANT))
         listed.append(row)
-    actions: list[ft.Control] = []
-    if on_ticket is not None:
-        actions.append(
-            ft.FilledTonalButton(
-                "Ticket", icon=ft.Icons.CONFIRMATION_NUMBER_OUTLINED, on_click=on_ticket
-            )
-        )
-    elif on_document is not None:
-        actions.append(
-            ft.FilledTonalButton(
-                "Booking document", icon=ft.Icons.DESCRIPTION_OUTLINED, on_click=on_document
-            )
-        )
+    secondary: list[tuple[ft.IconData, str, Action]] = []
+    if on_ticket is None and on_document is not None:
+        secondary.append((ft.Icons.DESCRIPTION_OUTLINED, "Booking document", on_document))
     if on_share is not None:
-        actions.append(
-            ft.OutlinedButton("Share flight", icon=ft.Icons.SHARE_OUTLINED, on_click=on_share)
-        )
+        secondary.append((ft.Icons.SHARE_OUTLINED, "Share flight", on_share))
     return ft.Column(
         [
-            back,
-            ft.Text(
-                headline(r),
-                size=26,
-                weight=ft.FontWeight.W_700,
-            ),
-            *([ft.Row(actions, wrap=True, spacing=8, run_spacing=8)] if actions else []),
+            *([ft.Text(headline(r), size=26, weight=ft.FontWeight.W_700)] if titled else []),
+            *([ft.Row([primary("Ticket", on_ticket)])] if on_ticket else []),
             ft.Container(
                 ft.Column(listed, spacing=0, tight=True),
                 bgcolor=ft.Colors.SURFACE_CONTAINER,
                 border=ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
                 border_radius=12,
             ),
-            ft.Text(
-                "Editing comes with a later version.", size=12.5, color=ft.Colors.ON_SURFACE_VARIANT
-            ),
+            *([action_rows(secondary)] if secondary else []),
         ],
         spacing=12,
         scroll=ft.ScrollMode.AUTO,

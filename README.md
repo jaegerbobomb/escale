@@ -181,6 +181,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S058](stories/S058-signed-release-apk.md) | Signed release APK from a tag | packaging | proposed |
 | [S059](stories/S059-first-run-screen.md) | First-run screen | packaging | proposed |
 | [S060](stories/S060-ios-build.md) | iOS build | packaging | proposed |
+| [S061](stories/S061-detail-and-editor-follow-the-hig.md) | Detail and editor follow the GNOME HIG | timeline | done |
 
 </details>
 

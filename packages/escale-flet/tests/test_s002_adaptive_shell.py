@@ -193,13 +193,14 @@ def test_add_menu_entries_are_present_and_only_import_is_enabled() -> None:
     assert [bool(item.disabled) for item in menu.items] == [True, False, True, True, True, True]
 
 
-def test_add_is_a_split_button_without_shadow() -> None:
+def test_add_is_a_flat_split_button_at_the_start() -> None:
+    # Header bar buttons are flat, main actions at the start (ADR-0008, S061).
     world = World(page=FakePage(width=1000))
     world.start()
     main, separator, menu = world.shell.add_button.controls
-    assert isinstance(main, ft.FilledButton) and isinstance(menu, ft.PopupMenuButton)
-    assert main.style is not None and main.style.elevation == 0
+    assert isinstance(main, ft.TextButton) and isinstance(menu, ft.PopupMenuButton)
     assert isinstance(separator, ft.Container) and separator.width == 1
+    assert world.page.appbar is not None and world.page.appbar.leading is world.shell.add_button
 
 
 def test_state_colours_are_tokens_per_variant() -> None:

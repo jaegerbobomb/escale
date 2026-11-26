@@ -101,8 +101,8 @@ def open_any(world: World) -> None:
 @when("goes back to the trip")
 def go_back(world: World) -> None:
     assert world.shell is not None
-    [back] = [c for c in walk(world.shell.body) if isinstance(c.data, dict) and c.data.get("back")]
-    run(back.on_click)
+    assert world.page is not None and world.page.appbar is not None
+    run(world.page.appbar.leading.on_click)  # type: ignore[union-attr]
 
 
 @then("the timeline scrolls to the Tate Modern card and highlights it")

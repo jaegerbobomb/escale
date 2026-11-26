@@ -16,7 +16,7 @@ from escale_core.importer import reservation_from_jsonld
 from escale_core.store import InMemoryReservationStore
 from escale_flet.demo import FLIGHT, LONDON_TRIP
 from escale_flet.shell import Shell
-from escale_flet.testing import FakePage, button
+from escale_flet.testing import FakePage, action
 
 scenarios("S016.feature")
 
@@ -81,7 +81,7 @@ def unknown_airline(world: World) -> None:
 @when("the user shares it")
 def shares(world: World) -> None:
     assert world.shell is not None
-    run(button(world.shell.body, "Share flight").on_click)
+    run(action(world.shell.body, "Share flight").on_click)
 
 
 @then("the shared text holds a Flightradar24 link for AFR718")
@@ -94,7 +94,7 @@ def link_shared(world: World) -> None:
 def no_share(world: World) -> None:
     assert world.shell is not None
     with pytest.raises(LookupError):
-        button(world.shell.body, "Share flight")
+        action(world.shell.body, "Share flight")
 
 
 # --- details ---
