@@ -2,11 +2,11 @@
 id: S007
 title: "Map reservations to calendar events"
 epic: sync
-depends_on: [S005]
+depends_on: [S014]
 status: todo
 estimate: S
 bdd: false
-updated: "2026-11-24"
+updated: "2026-11-26"
 adr: [4]
 ---
 
@@ -49,3 +49,7 @@ adr: [4]
 
 - `bdd: false`: a pure mapping, covered by unit tests; the scenarios above name them.
 - 2026-11-24: validated by the maintainer (`todo`).
+- 2026-11-26, option A chosen by the maintainer: no dependency on S005 (deferred). Until
+  batches exist, one event holds one reservation — the `X-KDE-KITINERARY-RESERVATION`
+  array has a single element, which KItinerary reads as a batch of one. Batches come
+  back with S005.

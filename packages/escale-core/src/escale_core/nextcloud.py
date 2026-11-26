@@ -1,0 +1,95 @@
+"""Connecting to the user's Nextcloud (S006a, ADR-0004).
+
+The calendar holds the reservations (CalDAV), the files hold the documents (WebDAV,
+under ``Escale/``). This module checks an account and prepares it; the adapters that
+talk to a server are in ``escale_core.adapters`` (``nextcloud_dav``, and a fake).
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+from typing import Protocol
+from urllib.parse import quote
+
+TRIPS = "Trips"
+"""The calendar Escale creates when the user has none to give it."""
+FOLDER = "Escale"
+"""The folder of the user's files that holds the documents (SPEC § Documents)."""
+
+
+@dataclass(frozen=True)
+class Calendar:
+    name: str
+    url: str
+
+
+class Problem(Enum):
+    """Why a connection failed, in words the UI can say."""
+
+    REFUSED = "The server refused the login or the app password."
+    UNREACHABLE = "The server cannot be reached."
+    NOT_NEXTCLOUD = "No Nextcloud answers at this address."
+
+
+class NextcloudError(Exception):
+    problem: Problem
+
+
+class CredentialsRefused(NextcloudError):
+    problem = Problem.REFUSED
+
+
+class ServerUnreachable(NextcloudError):
+    problem = Problem.UNREACHABLE
+
+
+class NotNextcloud(NextcloudError):
+    problem = Problem.NOT_NEXTCLOUD
+
+
+class NextcloudServer(Protocol):
+    """What Escale needs from a Nextcloud; adapters raise ``NextcloudError``."""
+
+    async def calendars(self) -> list[Calendar]: ...
+
+    async def create_calendar(self, name: str) -> Calendar: ...
+
+    async def folder_exists(self, name: str) -> bool: ...
+
+    async def create_folder(self, name: str) -> None: ...
+
+
+@dataclass(frozen=True)
+class Connection:
+    calendars: tuple[Calendar, ...]
+    problem: Problem | None = None
+
+
+def endpoints(url: str, login: str) -> tuple[str, str]:
+    """The DAV root and the user's files root, from what the user typed as the server."""
+    base = url.strip().rstrip("/")
+    if "://" not in base:
+        base = "https://" + base
+    base = base.removesuffix("/index.php").rstrip("/")
+    dav = base + "/remote.php/dav"
+    return dav, f"{dav}/files/{quote(login, safe='')}/"
+
+
+async def connect(server: NextcloudServer) -> Connection:
+    """Check the account, list its calendars, make sure the ``Escale`` folder exists."""
+    try:
+        calendars = await server.calendars()
+        if not await server.folder_exists(FOLDER):
+            await server.create_folder(FOLDER)
+    except NextcloudError as e:
+        return Connection((), e.problem)
+    return Connection(tuple(calendars))
+
+
+async def create_trips_calendar(server: NextcloudServer) -> Calendar:
+    """The "Trips" calendar, created unless it is already there."""
+    for calendar in await server.calendars():
+        if calendar.name == TRIPS:
+            return calendar
+    return await server.create_calendar(TRIPS)

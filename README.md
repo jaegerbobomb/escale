@@ -121,7 +121,9 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S003](stories/S003-extract-ticket-with-kitinerary.md) | Extract a ticket with kitinerary | import | done |
 | [S004](stories/S004-import-confirmation.md) | Import with confirmation | import | done |
 | [S005](stories/S005-merge-traveller-batches.md) | Merge reservations into traveller batches | import | deferred |
-| [S006](stories/S006-connect-nextcloud-account.md) | Connect a Nextcloud account | sync | todo |
+| [S006](stories/S006-connect-nextcloud-account.md) | Connect a Nextcloud account | sync | split |
+| [S006a](stories/S006a-nextcloud-connection-core.md) | Nextcloud connection (core) | sync | done |
+| [S006b](stories/S006b-nextcloud-account-preferences.md) | Nextcloud account in the preferences | sync | todo |
 | [S007](stories/S007-reservation-event-mapping.md) | Map reservations to calendar events | sync | todo |
 | [S008](stories/S008-two-way-calendar-sync.md) | Two-way calendar sync | sync | todo |
 | [S009](stories/S009-sync-documents.md) | Sync ticket documents | sync | todo |
@@ -145,17 +147,17 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S022](stories/S022-open-place-in-map-app.md) | Open a place in a map app | timeline | todo |
 | [S023](stories/S023-find-a-stay-in-openstreetmap.md) | Find a stay in OpenStreetMap | import | todo |
 | [S024](stories/S024-import-booking-airbnb-stays.md) | Import Booking.com and Airbnb stays | import | proposed |
-| [S025](stories/S025-share-a-file-to-escale.md) | Share a file to Escale | import | proposed |
+| [S025](stories/S025-share-a-file-to-escale.md) | Share a file to Escale | import | todo |
 | [S026](stories/S026-add-a-ticket-barcode.md) | Add a barcode to a reservation | import | proposed |
 | [S027](stories/S027-import-online-train-ticket.md) | Import an online train ticket | import | proposed |
-| [S028](stories/S028-import-a-kde-itinerary-file.md) | Import a KDE Itinerary file | import | proposed |
-| [S029](stories/S029-flight-segment-editor.md) | Flight segment editor | timeline | proposed |
-| [S030](stories/S030-bus-and-ferry-editors.md) | Bus and ferry editors | timeline | proposed |
+| [S028](stories/S028-import-a-kde-itinerary-file.md) | Import a KDE Itinerary file | import | todo |
+| [S029](stories/S029-flight-segment-editor.md) | Flight segment editor | timeline | todo |
+| [S030](stories/S030-bus-and-ferry-editors.md) | Bus and ferry editors | timeline | todo |
 | [S031](stories/S031-event-restaurant-car-editors.md) | Event, restaurant and car editors | timeline | proposed |
 | [S032](stories/S032-group-bookings-into-outings.md) | Group bookings into outings | outings | proposed |
 | [S033](stories/S033-create-an-outing-by-hand.md) | Create an outing by hand | outings | proposed |
 | [S034](stories/S034-outing-walks-and-last-ride.md) | Walks and the last ride home | outings | proposed |
-| [S035](stories/S035-my-trips-list.md) | My trips list | browse | proposed |
+| [S035](stories/S035-my-trips-list.md) | My trips list | browse | todo |
 | [S036](stories/S036-manage-trips.md) | Rename, merge, split, delete trips | browse | proposed |
 | [S037](stories/S037-travel-statistics.md) | Travel statistics | browse | proposed |
 | [S038](stories/S038-segment-tracking-indicator.md) | Show whether a segment is tracked | live | proposed |

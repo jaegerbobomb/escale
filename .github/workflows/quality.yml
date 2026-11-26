@@ -33,6 +33,47 @@ jobs:
       - name: Lint stories (story-lint)
         run: python3 scripts/lint_stories.py --stories-dir=stories --strict
 
+  nextcloud:
+    # The Nextcloud adapter against a real server (S006a): a throwaway instance with
+    # SQLite and a test admin, the app password asked from it at run time.
+    runs-on: ubuntu-24.04
+    services:
+      nextcloud:
+        image: nextcloud:31-apache
+        ports: ["8080:80"]
+        env:
+          SQLITE_DATABASE: nextcloud
+          NEXTCLOUD_ADMIN_USER: admin
+          NEXTCLOUD_ADMIN_PASSWORD: escale-test-pw
+          NEXTCLOUD_TRUSTED_DOMAINS: localhost 127.0.0.1
+    env:
+      ESCALE_REQUIRE_NEXTCLOUD: "1"
+      ESCALE_NEXTCLOUD_URL: http://127.0.0.1:8080
+      ESCALE_NEXTCLOUD_LOGIN: admin
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - name: Install the workspace
+        run: uv sync --all-packages --locked
+      - name: Wait for Nextcloud
+        run: |
+          for i in $(seq 1 60); do
+            curl -fs http://127.0.0.1:8080/status.php | grep -q '"installed":true' && exit 0
+            sleep 5
+          done
+          exit 1
+      - name: Ask for an app password
+        run: |
+          password=$(curl -fs -u admin:escale-test-pw -H 'OCS-APIRequest: true' \
+            'http://127.0.0.1:8080/ocs/v2.php/core/getapppassword?format=json' \
+            | python3 -c 'import json, sys; print(json.load(sys.stdin)["ocs"]["data"]["apppassword"])')
+          echo "::add-mask::$password"
+          echo "ESCALE_NEXTCLOUD_PASSWORD=$password" >> "$GITHUB_ENV"
+      - name: Pytest (Nextcloud adapter)
+        run: uv run pytest packages/escale-core/tests/test_nextcloud_dav.py
+
   screenshots:
     runs-on: ubuntu-latest
     steps:
