@@ -3,10 +3,11 @@ id: S062
 title: "Transport detail looks like the mockup"
 epic: timeline
 depends_on: [S011, S061]
-status: proposed
+status: done
 estimate: S
 bdd: true
 updated: "2026-11-26"
+released_in: "0.16.0"
 adr: [8]
 ---
 
@@ -23,8 +24,8 @@ small blue "Ticket" pill on top. The mockup's "Trajet en train — Aller" lays i
 
 - **Identity**: icon tile (train, plane, bus, boat), the number as title ("Eurostar
   9024", "AF 718"), a dim line below (operator or kind), a status badge when known.
-- **Timeline card**: departure and arrival times large (22 px) with the time zone
-  below when it differs from the device's, a dot-and-line between them, the station or
+- **Timeline card**: departure and arrival times large (22 px), with the time zone
+  below each when the two ends are in different zones (Paris → London), a dot-and-line between them, the station or
   airport in bold with platform / terminal below; the duration as a chip in between.
 - **Chips**: coach and seat, class.
 - **Facts rows** (as the stay, S017a): booking reference, travellers.
@@ -47,5 +48,12 @@ small blue "Ticket" pill on top. The mockup's "Trajet en train — Aller" lays i
 
 ## Notes
 
+- 2026-11-26: validated by the maintainer (`todo`).
 - Proposed 2026-11-26 after the maintainer's remark on S061's flight screenshots ("Il
   n'y a plus que le 'ticket' bleu sur la vue billet d'avion qui me gène").
+- Delivered in 0.16.0 (`escale_flet/transport_view.py`). The dim line under the number
+  is the kind ("Train", "Flight"), with the airline's or the operator's name when the
+  ticket gives one. Time zones read "UTC+2" from the ticket's offset, or the zone's
+  abbreviation when the time carries a named zone. Platform, terminal and gate come
+  from the JSON-LD when present. Events and restaurants keep the rows of S011 for now,
+  with the main button renamed "Show Ticket".

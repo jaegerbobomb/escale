@@ -182,7 +182,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S059](stories/S059-first-run-screen.md) | First-run screen | packaging | proposed |
 | [S060](stories/S060-ios-build.md) | iOS build | packaging | proposed |
 | [S061](stories/S061-detail-and-editor-follow-the-hig.md) | Detail and editor follow the GNOME HIG | timeline | done |
-| [S062](stories/S062-transport-detail-looks-like-the-mockup.md) | Transport detail looks like the mockup | timeline | proposed |
+| [S062](stories/S062-transport-detail-looks-like-the-mockup.md) | Transport detail looks like the mockup | timeline | done |
 
 </details>
 

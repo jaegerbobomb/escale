@@ -126,11 +126,11 @@ def saved(world: World) -> None:
     assert texts(tagged(world.shell.body, "moment", "Check-out"))[1] == "12:00"
 
 
-@then('"Ticket" is the only suggested button')
+@then('"Show Ticket" is the only suggested button')
 def one_suggested(world: World) -> None:
     assert world.shell is not None
     suggested = [c for c in walk(world.shell.body) if type(c) is ft.FilledButton]
-    assert [c.content for c in suggested] == ["Ticket"]
+    assert [c.content for c in suggested] == ["Show Ticket"]
 
 
 @then('"Share flight" is a row')
