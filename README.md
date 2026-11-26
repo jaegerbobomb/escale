@@ -63,6 +63,7 @@ investigate before deciding are GitHub issues labelled `investigation`.
 | S021 | Shortcut to the current ticket | timeline | done |
 | S022 | Open a place in a map app | timeline | todo |
 | S023 | Find a stay in OpenStreetMap | import | todo |
+| S061 | Detail and editor follow the GNOME HIG | timeline | done |
 
 ## Licence
 

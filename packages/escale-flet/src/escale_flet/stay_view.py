@@ -1,7 +1,8 @@
 """A stay's detail, laid out as the mockup's "Nuit d'hôtel" (S017a).
 
 Identity (icon, name, address), a strip with check-in, check-out and the number of
-nights, the booking's facts as label/value rows, the contact, then the actions. The
+nights, the booking's facts as label/value rows, the contact, then the main action (a pill) and
+the others as rows (ADR-0008). The
 mockup's photo, price and map need data Escale does not have yet.
 """
 
@@ -37,6 +38,37 @@ def opens(open_url: Opener, link: str) -> Callable[[Any], Awaitable[None]]:
         await open_url(link)
 
     return go
+
+
+def primary(label: str, on_click: Action) -> ft.Control:
+    """The view's one suggested action: label only, pill-shaped (ADR-0008)."""
+    return ft.FilledButton(
+        label,
+        on_click=on_click,
+        style=ft.ButtonStyle(
+            shape=ft.StadiumBorder(), padding=ft.Padding.symmetric(horizontal=24, vertical=14)
+        ),
+    )
+
+
+def action_rows(rows: list[tuple[ft.IconData, str, Action]]) -> ft.Control:
+    """Secondary actions as a boxed list: a label, a symbolic icon at the end."""
+    return _facts(
+        [
+            ft.Container(
+                ft.Row(
+                    [
+                        ft.Text(label, size=14, expand=True),
+                        ft.Icon(icon, size=16, color=ft.Colors.ON_SURFACE_VARIANT),
+                    ]
+                ),
+                padding=ft.Padding.symmetric(horizontal=16, vertical=14),
+                on_click=on_click,
+                data={"action": label},
+            )
+            for icon, label, on_click in rows
+        ]
+    )
 
 
 def _card(content: ft.Control) -> ft.Control:
@@ -184,12 +216,9 @@ def _facts(rows: list[ft.Control]) -> ft.Control:
 
 
 def stay_body(
-    r: ExtractedReservation,
-    open_url: Opener | None,
-    on_document: Action | None,
-    on_edit: Action | None = None,
+    r: ExtractedReservation, open_url: Opener | None, on_document: Action | None
 ) -> list[ft.Control]:
-    """Everything under the back button of a stay's detail."""
+    """A stay's detail; back and Edit are in the header bar (ADR-0008)."""
     body: list[ft.Control] = [_identity(r)]
     timing = span(r)
     if timing is not None:
@@ -227,24 +256,11 @@ def stay_body(
     ]
     if reach:
         body.append(_facts(reach))
-    actions: list[ft.Control] = []
     manage = manage_link(r)
     if open_url is not None and manage is not None:
-        actions.append(
-            ft.FilledButton(
-                f"Manage booking on {manage.site}",
-                icon=ft.Icons.OPEN_IN_NEW,
-                on_click=opens(open_url, manage.url),
-            )
+        body.append(
+            ft.Row([primary(f"Manage booking on {manage.site}", opens(open_url, manage.url))])
         )
     if on_document is not None:
-        actions.append(
-            ft.OutlinedButton(
-                "Booking document", icon=ft.Icons.DESCRIPTION_OUTLINED, on_click=on_document
-            )
-        )
-    if on_edit is not None:
-        actions.append(ft.OutlinedButton("Edit", icon=ft.Icons.EDIT_OUTLINED, on_click=on_edit))
-    if actions:
-        body.append(ft.Row(actions, wrap=True, spacing=10, run_spacing=10))
+        body.append(action_rows([(ft.Icons.DESCRIPTION_OUTLINED, "Booking document", on_document)]))
     return body

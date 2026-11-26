@@ -70,6 +70,10 @@ def walk(control: Any) -> Iterator[Any]:
     """Every control under ``control``, itself included."""
     if control is None:
         return
+    if isinstance(control, list):
+        for item in control:
+            yield from walk(item)
+        return
     yield control
     for name in ("content", "controls", "actions", "title"):
         child = getattr(control, name, None)
@@ -102,6 +106,19 @@ def button(control: Any, label: str) -> Any:
         ):
             return c
     raise LookupError(f"no button {label!r}")
+
+
+def tagged(control: Any, key: str, value: Any = True) -> Any:
+    """The one control under ``control`` whose ``data[key]`` is ``value``."""
+    found = [c for c in walk(control) if isinstance(c.data, dict) and c.data.get(key) == value]
+    if len(found) != 1:
+        raise LookupError(f"{len(found)} controls with {key}={value!r}")
+    return found[0]
+
+
+def action(control: Any, label: str) -> Any:
+    """The action row labelled ``label`` (ADR-0008: secondary actions are rows)."""
+    return tagged(control, "action", label)
 
 
 def click(control: Any) -> None:

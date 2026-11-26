@@ -16,7 +16,8 @@ from escale_core.importer import reservation_from_jsonld
 from escale_core.store import InMemoryReservationStore
 from escale_flet.demo import LONDON_TRIP
 from escale_flet.shell import Shell
-from escale_flet.testing import FakePage, button, texts, walk
+from escale_flet.testing import FakePage, button, texts
+from escale_flet.testing import tagged as find
 
 scenarios("S017b.feature")
 
@@ -25,8 +26,7 @@ CHECK_IN = datetime.fromisoformat(HOTEL["checkinTime"])
 
 
 def tagged(shell: Shell, key: str, value: str) -> Any:
-    [found] = [c for c in walk(shell.body) if isinstance(c.data, dict) and c.data.get(key) == value]
-    return found
+    return find(shell.body, key, value)
 
 
 def run(handler: Any) -> None:
@@ -53,12 +53,12 @@ class World:
 
     def open_editor(self) -> Shell:
         shell = self.open_detail()
-        run(button(shell.body, "Edit").on_click)
+        assert self.page.appbar is not None
+        run(find(self.page.appbar.actions, "edit", True).on_click)
         return shell
 
     def type_in(self, name: str, value: str) -> None:
-        assert self.shell is not None
-        text_field = tagged(self.shell, "field", name)
+        text_field = find(self.page.dialog, "field", name)
         text_field.value = value
         run(text_field.on_change)
 
@@ -70,7 +70,7 @@ def world() -> World:
 
 @given("the detail of a stay with check-out at 11:00")
 def detail(world: World) -> None:
-    world.open_detail()
+    pass  # opened by the "when" step, through the header bar's Edit
 
 
 @given("the editor of a stay with check-in on 8 July")
@@ -81,10 +81,9 @@ def editor(world: World) -> None:
 
 @when("the user edits the check-out to 12:00 and saves")
 def edit_check_out(world: World) -> None:
-    assert world.shell is not None
-    run(button(world.shell.body, "Edit").on_click)
+    world.open_editor()
     world.type_in("check_out_time", "12:00")
-    run(button(world.shell.body, "Save").on_click)
+    run(button(world.page.dialog, "Save").on_click)
 
 
 @when("the user sets the check-out to 7 July")
@@ -107,14 +106,12 @@ def shows_new_check_out(world: World) -> None:
 
 @then('"Save" is disabled')
 def save_disabled(world: World) -> None:
-    assert world.shell is not None
-    assert button(world.shell.body, "Save").disabled
+    assert button(world.page.dialog, "Save").disabled
 
 
 @then("the editor says the check-out must be after the check-in")
 def says_why(world: World) -> None:
-    assert world.shell is not None
-    assert "The check-out must be after the check-in." in texts(world.shell.body)
+    assert "The check-out must be after the check-in." in texts(world.page.dialog)
 
 
 # --- details ---
@@ -123,14 +120,15 @@ def says_why(world: World) -> None:
 def test_cancel_returns_to_the_detail_unchanged(world: World) -> None:
     shell = world.open_editor()
     world.type_in("name", "Another hotel")
-    run(button(shell.body, "Cancel").on_click)
+    run(button(world.page.dialog, "Cancel").on_click)
+    assert world.page.dialog is None
     assert "The Hoxton, Holborn" in texts(shell.body)
-    assert not [c for c in walk(shell.body) if isinstance(c.data, dict) and "field" in c.data]
 
 
 def test_saved_stay_stays_open_and_in_the_trip(world: World) -> None:
     shell = world.open_editor()
     world.type_in("name", "The Hoxton")
-    run(button(shell.body, "Save").on_click)
+    run(button(world.page.dialog, "Save").on_click)
+    assert world.page.dialog is None
     assert "The Hoxton" in texts(shell.body)
     assert shell.trip is not None and shell.detail in shell.trip.reservations

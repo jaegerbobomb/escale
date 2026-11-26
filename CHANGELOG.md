@@ -6,6 +6,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-26
+
+### Changed
+- S061 (ADR-0008): a booking's detail and the stay editor follow the GNOME HIG. Back
+  ("‹ trip") is at the left of the header bar and Edit (a pencil) at its right; a
+  detail has one main button ("Ticket" or "Manage booking on …"), the other actions are
+  rows. The stay editor is a dialog with Cancel, then Save; Return saves, Esc cancels;
+  on a narrow window it fills the screen.
+
 ## [0.14.0] - 2026-11-25
 
 ### Added
@@ -155,7 +164,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/jaegerbobomb/escale/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/jaegerbobomb/escale/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/jaegerbobomb/escale/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/jaegerbobomb/escale/compare/v0.11.1...v0.12.0

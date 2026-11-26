@@ -193,6 +193,7 @@ class Shell:
         self.ticket: ExtractedReservation | None = None
         self.detail: ExtractedReservation | None = None
         self.editing = False
+        self._editor: ft.AlertDialog | None = None
         self.highlight: str | None = None
         self.scroll_target: str | None = None
         self.width: float | None = None
@@ -304,6 +305,10 @@ class Shell:
         if layout != self.layout or self._compact() != was_compact:
             self.layout = layout
             self._apply()
+            if self.editing and self._editor is not None:
+                values = self._editor.data["values"]()  # keep what was typed
+                self._close_editor()
+                self.edit_stay(values)
             self._update()
 
     def _compact(self) -> bool:
@@ -330,16 +335,35 @@ class Shell:
         self._apply()
         self._update()
 
-    def edit_stay(self) -> None:
-        """The editor in place of the stay's detail (S017b)."""
-        self.editing = self.detail is not None and self.detail.type == "LodgingReservation"
-        self._apply()
+    def edit_stay(self, values: StayFields | None = None) -> None:
+        """The stay's editor, as an action dialog (S017b, S061)."""
+        if self.detail is None or self.detail.type != "LodgingReservation" or self._page is None:
+            return
+        self.editing = True
+        height = getattr(self._page, "height", None)
+        self._editor = stay_editor(
+            self.detail,
+            self.save_stay,
+            self._on_cancel_edit,
+            self._on_editor_dismissed,
+            full_window=self.width if layout_for(self.width) == Layout.NARROW else None,
+            height=min(640, height * 0.8) if isinstance(height, int | float) and height else 640,
+            initial=values,
+        )
+        self._page.show_dialog(self._editor)
         self._update()
 
+    def _close_editor(self) -> None:
+        if self.editing and self._page is not None:
+            self.editing = False
+            self._page.pop_dialog()
+
     def cancel_edit(self) -> None:
-        self.editing = False
-        self._apply()
+        self._close_editor()
         self._update()
+
+    def _on_editor_dismissed(self, _: Any) -> None:
+        self.editing = False  # Esc or a click outside: the dialog is already gone
 
     async def save_stay(self, values: StayFields) -> None:
         """Write the edited stay to the store, then show its detail again."""
@@ -347,8 +371,8 @@ class Shell:
         if old is None:
             return
         new = edited(old, values)
+        self._close_editor()
         await self.store.replace(old, new)
-        self.editing = False
         trips = group(await self.store.reservations())
         self.trip = active_trip(trips, self.clock())
         kept = [r for r in self.trip.reservations if r == new] if self.trip else []
@@ -582,20 +606,16 @@ class Shell:
                 self._page.navigation_bar = None
             return
         self.appbar.leading = None
+        self.appbar.leading_width = None
         hide_tabs = False
         if self.selected == Tab.CURRENT and self.trip is not None and self.detail is not None:
             self.body.content = ft.Container(
-                stay_editor(self.detail, self.save_stay, self._on_cancel_edit)
-                if self.editing
-                else detail_view(
+                detail_view(
                     self.detail,
-                    self.trip.name,
-                    self._on_close_detail,
                     self._ticket_handler(self.detail) if has_ticket(self.detail) else None,
                     self._open_document(self.detail),
                     self._share_flight(self.detail),
                     self.launch,
-                    self._on_edit,
                 ),
                 max_width=MAX_WIDTH,
                 expand=True,
@@ -626,16 +646,59 @@ class Shell:
         else:
             self.body.content = _empty_view(_spec(self.selected))
             self.body.alignment = ft.Alignment.CENTER
-        if self.layout == Layout.WIDE:
+        wide = self.layout == Layout.WIDE
+        in_detail = (
+            self.selected == Tab.CURRENT and self.trip is not None and self.detail is not None
+        )
+        if wide:
             self.appbar.title = self.switcher
-            self.appbar.actions = [*self._ticket_action(wide=True), self.add_button]
+            add: ft.Control = self.add_button
             navigation_bar = None
         else:
             self.appbar.title = ft.Text(_spec(self.selected).label)
-            self.appbar.actions = [*self._ticket_action(wide=False), self.add_menu_compact]
+            add = self.add_menu_compact
             navigation_bar = None if hide_tabs else self.bottom_bar
+        self.appbar.actions = [*self._ticket_action(wide=wide), add]
+        if in_detail and self.trip is not None and self.detail is not None:
+            self._detail_header_bar(self.trip.name, self.detail, wide)
         if self._page is not None:
             self._page.navigation_bar = navigation_bar
+
+    def _detail_header_bar(self, trip: str, detail: ExtractedReservation, wide: bool) -> None:
+        """Back at the start, Edit at the end; Add is hidden (S061, ADR-0008)."""
+        tooltip = f"Back to {trip}"
+        icon = ft.Icons.ARROW_BACK_IOS_NEW
+        self.appbar.leading = (
+            ft.TextButton(
+                trip,
+                icon=icon,
+                tooltip=tooltip,
+                on_click=self._on_close_detail,
+                data={"back": True},
+            )
+            if wide
+            else ft.IconButton(
+                icon, tooltip=tooltip, on_click=self._on_close_detail, data={"back": True}
+            )
+        )
+        self.appbar.leading_width = 180 if wide else None
+        if not wide:
+            self.appbar.title = ft.Text(
+                segment_ref_title(detail), max_lines=1, overflow=ft.TextOverflow.ELLIPSIS
+            )
+        edit = (
+            [
+                ft.IconButton(
+                    ft.Icons.EDIT_OUTLINED,
+                    tooltip="Edit",
+                    on_click=self._on_edit,
+                    data={"edit": True},
+                )
+            ]
+            if detail.type == "LodgingReservation"
+            else []
+        )
+        self.appbar.actions = [*edit, *self._ticket_action(wide=wide)]
 
     def _update(self) -> None:
         if self._page is not None:

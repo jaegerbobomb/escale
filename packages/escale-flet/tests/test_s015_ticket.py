@@ -24,7 +24,7 @@ from escale_core.tickets import Barcode
 from escale_flet.barcode import MODULE_PX
 from escale_flet.demo import LONDON_TRIP, LONDON_TRIP_FULL
 from escale_flet.shell import Shell
-from escale_flet.testing import FakePage, button, texts, walk
+from escale_flet.testing import FakePage, action, button, texts, walk
 from escale_flet.timeline import has_ticket
 
 scenarios("S015.feature")
@@ -225,7 +225,7 @@ def no_ticket_button(world: World) -> None:
 def detail_offers_document(world: World) -> None:
     assert world.shell is not None and world.reservation is not None
     world.shell.open_detail(world.reservation)
-    assert not button(world.shell.body, "Booking document").disabled
+    assert action(world.shell.body, "Booking document").on_click is not None
     with pytest.raises(LookupError):
         button(world.shell.body, "Ticket")
 
