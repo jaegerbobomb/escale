@@ -124,7 +124,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S006](stories/S006-connect-nextcloud-account.md) | Connect a Nextcloud account | sync | split |
 | [S006a](stories/S006a-nextcloud-connection-core.md) | Nextcloud connection (core) | sync | done |
 | [S006b](stories/S006b-nextcloud-account-preferences.md) | Nextcloud account in the preferences | sync | done |
-| [S007](stories/S007-reservation-event-mapping.md) | Map reservations to calendar events | sync | todo |
+| [S007](stories/S007-reservation-event-mapping.md) | Map reservations to calendar events | sync | done |
 | [S008](stories/S008-two-way-calendar-sync.md) | Two-way calendar sync | sync | todo |
 | [S009](stories/S009-sync-documents.md) | Sync ticket documents | sync | todo |
 | [S010](stories/S010-trip-grouping-and-timeline.md) | Trip grouping and timeline | timeline | split |

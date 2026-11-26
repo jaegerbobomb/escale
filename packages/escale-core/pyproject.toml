@@ -1,6 +1,6 @@
 [project]
 name = "escale-core"
-version = "0.18.0"
+version = "0.19.0"
 description = "Escale core: domain, services and adapters. Never imports a UI toolkit."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
@@ -8,6 +8,8 @@ dependencies = [
     "caldav>=3.7,<4",
     # The app password goes to the system keyring (S006b); MIT, Secret Service on Linux.
     "keyring>=25",
+    # Calendar events in KDE Itinerary's format (S007); BSD-2-Clause, already used by caldav.
+    "icalendar>=6.1",
 ]
 
 [build-system]

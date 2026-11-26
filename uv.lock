@@ -428,22 +428,24 @@ wheels = [
 
 [[package]]
 name = "escale-core"
-version = "0.18.0"
+version = "0.19.0"
 source = { editable = "packages/escale-core" }
 dependencies = [
     { name = "caldav" },
+    { name = "icalendar" },
     { name = "keyring" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "caldav", specifier = ">=3.7,<4" },
+    { name = "icalendar", specifier = ">=6.1" },
     { name = "keyring", specifier = ">=25" },
 ]
 
 [[package]]
 name = "escale-flet"
-version = "0.18.0"
+version = "0.19.0"
 source = { editable = "packages/escale-flet" }
 dependencies = [
     { name = "aztec-code-generator" },
@@ -479,7 +481,7 @@ provides-extras = ["desktop", "web"]
 
 [[package]]
 name = "escale-workspace"
-version = "0.18.0"
+version = "0.19.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]
