@@ -29,7 +29,7 @@ _MONTHS = (
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
 )  # fmt: skip
-_TINT = ft.Colors.with_opacity(0.14, ft.Colors.PRIMARY)
+TINT = ft.Colors.with_opacity(0.14, ft.Colors.PRIMARY)
 _RADIUS = 14
 
 
@@ -53,7 +53,7 @@ def primary(label: str, on_click: Action) -> ft.Control:
 
 def action_rows(rows: list[tuple[ft.IconData, str, Action]]) -> ft.Control:
     """Secondary actions as a boxed list: a label, a symbolic icon at the end."""
-    return _facts(
+    return facts(
         [
             ft.Container(
                 ft.Row(
@@ -71,7 +71,7 @@ def action_rows(rows: list[tuple[ft.IconData, str, Action]]) -> ft.Control:
     )
 
 
-def _card(content: ft.Control) -> ft.Control:
+def card(content: ft.Control) -> ft.Control:
     return ft.Container(
         content,
         bgcolor=ft.Colors.SURFACE_CONTAINER,
@@ -92,7 +92,7 @@ def _identity(r: ExtractedReservation, titled: bool = True) -> ft.Control:
                 width=42,
                 height=42,
                 border_radius=11,
-                bgcolor=_TINT,
+                bgcolor=TINT,
                 alignment=ft.Alignment.CENTER,
             ),
             ft.Column(
@@ -150,7 +150,7 @@ def _moment(label: str, moment: datetime) -> ft.Control:
 def _strip(start: datetime, end: datetime) -> ft.Control:
     nights = max((end.date() - start.date()).days, 1)
     separator = ft.Container(width=1, bgcolor=ft.Colors.OUTLINE_VARIANT)
-    return _card(
+    return card(
         ft.Row(
             [
                 _moment("Check-in", start),
@@ -178,7 +178,7 @@ def _strip(start: datetime, end: datetime) -> ft.Control:
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
                     width=84,
-                    bgcolor=_TINT,
+                    bgcolor=TINT,
                     alignment=ft.Alignment.CENTER,
                 ),
             ],
@@ -189,7 +189,7 @@ def _strip(start: datetime, end: datetime) -> ft.Control:
     )
 
 
-def _fact(icon: ft.IconData, label: str, value: str, on_click: Action | None = None) -> ft.Control:
+def fact(icon: ft.IconData, label: str, value: str, on_click: Action | None = None) -> ft.Control:
     return ft.Container(
         ft.Row(
             [
@@ -212,13 +212,13 @@ def _fact(icon: ft.IconData, label: str, value: str, on_click: Action | None = N
     )
 
 
-def _facts(rows: list[ft.Control]) -> ft.Control:
+def facts(rows: list[ft.Control]) -> ft.Control:
     listed: list[ft.Control] = []
     for i, row in enumerate(rows):
         if i:
             listed.append(ft.Divider(height=1, thickness=1, color=ft.Colors.OUTLINE_VARIANT))
         listed.append(row)
-    return _card(ft.Column(listed, spacing=0, tight=True))
+    return card(ft.Column(listed, spacing=0, tight=True))
 
 
 def stay_body(
@@ -235,18 +235,18 @@ def stay_body(
     booking: list[ft.Control] = []
     if r.reference:
         booking.append(
-            _fact(ft.Icons.CONFIRMATION_NUMBER_OUTLINED, "Booking reference", r.reference)
+            fact(ft.Icons.CONFIRMATION_NUMBER_OUTLINED, "Booking reference", r.reference)
         )
     room = r.raw.get("lodgingUnitDescription")
     if isinstance(room, str) and room.strip():
-        booking.append(_fact(ft.Icons.BED_OUTLINED, "Room", room.strip()))
+        booking.append(fact(ft.Icons.BED_OUTLINED, "Room", room.strip()))
     names = travellers(r)
     if names:
-        booking.append(_fact(ft.Icons.PERSON_OUTLINE, "Travellers", ", ".join(names)))
+        booking.append(fact(ft.Icons.PERSON_OUTLINE, "Travellers", ", ".join(names)))
     if cancelled(r):
-        booking.append(_fact(ft.Icons.EVENT_BUSY_OUTLINED, "Status", "Cancelled"))
+        booking.append(fact(ft.Icons.EVENT_BUSY_OUTLINED, "Status", "Cancelled"))
     if booking:
-        body.append(_facts(booking))
+        body.append(facts(booking))
     c = contact(r)
     links = [
         (
@@ -259,12 +259,12 @@ def stay_body(
         (ft.Icons.LANGUAGE, "Website", c.website, c.website or ""),
     ]
     reach = [
-        _fact(icon, label, value, opens(open_url, link) if open_url else None)
+        fact(icon, label, value, opens(open_url, link) if open_url else None)
         for icon, label, value, link in links
         if value
     ]
     if reach:
-        body.append(_facts(reach))
+        body.append(facts(reach))
     manage = manage_link(r)
     if open_url is not None and manage is not None:
         body.append(

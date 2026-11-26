@@ -2,7 +2,8 @@
 
 "‹ <trip>", in the header bar (ADR-0008), goes back to the timeline, scrolled to the
 segment with its card highlighted.
-A stay has a layout of its own (``stay_view``, S017a). Editing comes with S012 (train)
+A stay (``stay_view``, S017a) and a transport (``transport_view``, S062) have layouts
+of their own. Editing comes with S012 (train)
 and S017b (stay).
 """
 
@@ -18,6 +19,7 @@ from escale_core.stays import cancelled
 from escale_core.trips import span
 from escale_flet.import_sheet import format_when, headline, travellers
 from escale_flet.stay_view import Opener, action_rows, opens, primary, stay_body
+from escale_flet.transport_view import transport_body
 
 Action = Callable[[Any], Any]
 Row = tuple[str, str, str | None]
@@ -48,48 +50,19 @@ def _row(label: str, value: str, on_click: Action | None = None) -> ft.Control:
 
 
 def _rows(r: ExtractedReservation) -> list[Row]:
+    """Rows of a booking that is neither a transport (``transport_view``) nor a stay."""
     target = _m(r.raw.get("reservationFor"))
     rows: list[Row] = []
-    if r.departure is not None or r.arrival is not None:
-        for label, stop, key in (
-            ("Departure", r.departure, "departurePlatform"),
-            ("Arrival", r.arrival, "arrivalPlatform"),
-        ):
-            if stop is None:
-                continue
-            parts = [format_when(stop.time) if stop.time else None, stop.name]
-            platform = target.get(key)
-            if isinstance(platform, str):
-                parts.append(f"Platform {platform}")
-            rows.append((label, " · ".join(p for p in parts if p), None))
-        seat = _m(_m(r.raw.get("reservedTicket")).get("ticketedSeat"))
-        coach, number = seat.get("seatSection"), seat.get("seatNumber")
-        if isinstance(coach, str) or isinstance(number, str):
-            rows.append(
-                (
-                    "Seat",
-                    " · ".join(
-                        p
-                        for p in (
-                            f"Coach {coach}" if isinstance(coach, str) else None,
-                            f"Seat {number}" if isinstance(number, str) else None,
-                        )
-                        if p
-                    ),
-                    None,
-                )
-            )
-    else:
-        timing = span(r)
-        if timing is not None:
-            start, _ = timing
-            rows.append(("When", format_when(start), None))
-        place = _m(target.get("location")) or target
-        postal = _m(place.get("address"))
-        where = [place.get("name"), postal.get("streetAddress"), postal.get("addressLocality")]
-        text = ", ".join(str(w) for w in dict.fromkeys(where) if isinstance(w, str) and w)
-        if text:
-            rows.append(("Place", text, None))
+    timing = span(r)
+    if timing is not None:
+        start, _ = timing
+        rows.append(("When", format_when(start), None))
+    place = _m(target.get("location")) or target
+    postal = _m(place.get("address"))
+    where = [place.get("name"), postal.get("streetAddress"), postal.get("addressLocality")]
+    text = ", ".join(str(w) for w in dict.fromkeys(where) if isinstance(w, str) and w)
+    if text:
+        rows.append(("Place", text, None))
     names = travellers(r)
     if names:
         rows.append(("Travellers", ", ".join(names), None))
@@ -118,6 +91,19 @@ def detail_view(
             expand=True,
             data={"detail": r.reference},
         )
+    secondary: list[tuple[ft.IconData, str, Action]] = []
+    if on_ticket is None and on_document is not None:
+        secondary.append((ft.Icons.DESCRIPTION_OUTLINED, "Booking document", on_document))
+    if on_share is not None:
+        secondary.append((ft.Icons.SHARE_OUTLINED, "Share flight", on_share))
+    if r.departure is not None or r.arrival is not None:
+        return ft.Column(
+            transport_body(r, on_ticket, secondary, titled),
+            spacing=14,
+            scroll=ft.ScrollMode.AUTO,
+            expand=True,
+            data={"detail": r.reference},
+        )
     rows = [
         _row(label, value, opens(open_url, link) if open_url and link else None)
         for label, value, link in _rows(r)
@@ -127,15 +113,10 @@ def detail_view(
         if i:
             listed.append(ft.Divider(height=1, thickness=1, color=ft.Colors.OUTLINE_VARIANT))
         listed.append(row)
-    secondary: list[tuple[ft.IconData, str, Action]] = []
-    if on_ticket is None and on_document is not None:
-        secondary.append((ft.Icons.DESCRIPTION_OUTLINED, "Booking document", on_document))
-    if on_share is not None:
-        secondary.append((ft.Icons.SHARE_OUTLINED, "Share flight", on_share))
     return ft.Column(
         [
             *([ft.Text(headline(r), size=26, weight=ft.FontWeight.W_700)] if titled else []),
-            *([ft.Row([primary("Ticket", on_ticket)])] if on_ticket else []),
+            *([ft.Row([primary("Show Ticket", on_ticket)])] if on_ticket else []),
             ft.Container(
                 ft.Column(listed, spacing=0, tight=True),
                 bgcolor=ft.Colors.SURFACE_CONTAINER,

@@ -85,7 +85,7 @@ So (ADR-0008):
 ### Scenario: One suggested action per view
 
 * **Given** a flight's detail with a ticket
-* **Then** "Ticket" is the only suggested button
+* **Then** "Show Ticket" is the only suggested button
 * **And** "Share flight" is a row
 
 ## Notes
@@ -116,3 +116,5 @@ So (ADR-0008):
   keeps its label since a sheet is dismissed, not navigated back from.
 - Seen while capturing, not caused by this story: the header's view switcher sometimes
   wraps "Statistics" on the first frames in the web build (font loading); to watch.
+- 2026-11-26, S062: the detail's main button reads "Show Ticket" (the mockup's
+  "Afficher le billet"); the scenario above says so.

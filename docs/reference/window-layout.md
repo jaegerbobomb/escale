@@ -26,5 +26,10 @@ to the same place.
 
 In a booking's detail, the header bar follows it: its title on a narrow window, **Edit**
 (a pencil) at the right when the booking can be edited, and no "Add". The main action
-("Ticket", or "Manage booking on …" for a stay) is the one blue button; the others
+("Show Ticket", or "Manage booking on …" for a stay) is the one blue button; the others
 ("Share flight", "Booking document") are rows under the details.
+
+A train's or a flight's detail shows its number and kind, then departure and arrival
+times large with their stations or airports (and the time zone of each when they
+differ), the seat, the booking reference and the travellers, and **Show Ticket** at
+the bottom.
