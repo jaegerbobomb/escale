@@ -6,6 +6,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-26
+
+### Added
+- S006b: Preferences, from a new main menu (☰) in the header bar: connect Escale to a
+  Nextcloud with its address, a login and an app password, see the account as
+  connected, choose the calendar for the trips or create a "Trips" calendar, and
+  disconnect. The app password goes to the system keyring, the rest to a settings file;
+  nothing is saved when the server refuses the credentials.
+
 ## [0.17.0] - 2026-11-26
 
 ### Added
@@ -187,7 +196,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/jaegerbobomb/escale/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/jaegerbobomb/escale/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/jaegerbobomb/escale/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/jaegerbobomb/escale/compare/v0.14.0...v0.15.0

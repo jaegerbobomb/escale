@@ -218,7 +218,9 @@ def facts(rows: list[ft.Control]) -> ft.Control:
         if i:
             listed.append(ft.Divider(height=1, thickness=1, color=ft.Colors.OUTLINE_VARIANT))
         listed.append(row)
-    return card(ft.Column(listed, spacing=0, tight=True))
+    return card(
+        ft.Column(listed, spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
+    )
 
 
 def stay_body(

@@ -48,6 +48,10 @@ VIEWS: dict[str, str] = {
     "stay-detail": "/stay-detail",
     # The hotel's editor (S017b).
     "stay-editor": "/stay-editor",
+    # The preferences: empty, after a refused password, connected (S006b).
+    "preferences": "/preferences",
+    "preferences-refused": "/preferences-refused",
+    "preferences-connected": "/preferences-connected",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).

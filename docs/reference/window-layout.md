@@ -10,6 +10,10 @@ Escale has three top-level views: **Current** (the trip you are on), **My trips*
 
 The layout changes as soon as the window is resized; the selected view stays selected.
 
+The main menu (☰) is the last button at the right of the header bar, on the three
+views; it opens **Preferences** (see [Connect your Nextcloud](../how-to/connect-your-nextcloud.md)).
+Preferences open over the window, and slide up from the bottom under 450 px.
+
 The theme follows the system's light or dark preference.
 
 A view can be opened directly by its path in the web version: `/trips`, `/statistics`.
