@@ -123,7 +123,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S005](stories/S005-merge-traveller-batches.md) | Merge reservations into traveller batches | import | deferred |
 | [S006](stories/S006-connect-nextcloud-account.md) | Connect a Nextcloud account | sync | split |
 | [S006a](stories/S006a-nextcloud-connection-core.md) | Nextcloud connection (core) | sync | done |
-| [S006b](stories/S006b-nextcloud-account-preferences.md) | Nextcloud account in the preferences | sync | todo |
+| [S006b](stories/S006b-nextcloud-account-preferences.md) | Nextcloud account in the preferences | sync | done |
 | [S007](stories/S007-reservation-event-mapping.md) | Map reservations to calendar events | sync | todo |
 | [S008](stories/S008-two-way-calendar-sync.md) | Two-way calendar sync | sync | todo |
 | [S009](stories/S009-sync-documents.md) | Sync ticket documents | sync | todo |

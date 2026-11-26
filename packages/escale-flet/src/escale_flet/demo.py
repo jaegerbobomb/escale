@@ -15,9 +15,13 @@ from typing import Any
 
 import flet as ft
 
+from escale_core.account import Account
 from escale_core.adapters.fake_extractor import FakeExtractor
+from escale_core.adapters.fake_nextcloud import FakeNextcloud
 from escale_core.extraction import Document
 from escale_core.importer import Importer, reservation_from_jsonld
+from escale_core.passwords import MemoryPasswords
+from escale_core.settings import SettingsFile
 from escale_core.store import InMemoryReservationStore
 from escale_flet.import_sheet import phone_sheet
 from escale_flet.shell import Shell
@@ -178,13 +182,17 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/flight-detail": None,
     "/stay-detail": None,
     "/stay-editor": None,
+    "/preferences": None,
+    "/preferences-refused": None,
+    "/preferences-connected": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
 ``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts;
 ``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail,
 ``/stay-detail`` the hotel's,
-``/stay-editor`` its editor.
+``/stay-editor`` its editor; ``/preferences*`` the preferences, empty, after a refused
+password, and connected to a fake Nextcloud (S006b).
 """
 
 
@@ -216,10 +224,21 @@ async def run(page: ft.Page) -> None:
         await store.add(Document("demo", "boarding-pass.pdf", "application/pdf"), [flight])
         leaves = datetime.fromisoformat(FLIGHT["reservationFor"]["departureTime"])
         clock = lambda: leaves - timedelta(hours=2)  # noqa: E731
+    server = FakeNextcloud(["Personal", "Work"], password_ok=route != "/preferences-refused")
+    account = Account(
+        SettingsFile(ticket.parent / "settings.json"),
+        MemoryPasswords(lasting=True),
+        lambda url, login, password: server,
+    )
+    if route in ("/preferences-refused", "/preferences-connected"):
+        await account.connect("cloud.example.org", "jane", "demo-app-password")
+    if account.calendars:
+        await account.choose(account.calendars[0])
     shell = Shell(
         importer=Importer(FakeExtractor(elements or []), store),
         choose_file=choose_file,
         clock=clock,
+        account=account,
     )
     shell.mount(page)
     await shell.refresh()
@@ -236,6 +255,13 @@ async def run(page: ft.Page) -> None:
     elif route == "/stay-editor" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[1])
         shell.edit_stay()
+    elif route.startswith("/preferences"):
+        await shell.open_preferences()
+        if route == "/preferences-refused" and shell.preferences is not None:
+            shell.preferences.draft.update(
+                url="cloud.example.org", login="jane", password="demo-app-password"
+            )
+            shell.preferences.render()
     elif route == "/flight-detail" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[0])
     elif elements is not None and route not in trip_routes:

@@ -7,8 +7,12 @@ from pathlib import Path
 
 import flet as ft
 
+from escale_core.account import Account
 from escale_core.adapters.kitinerary_cli import KitineraryCli
+from escale_core.adapters.nextcloud_dav import NextcloudDav
+from escale_core.adapters.system_keyring import SystemKeyring
 from escale_core.importer import Importer
+from escale_core.settings import SettingsFile, default_config_dir
 from escale_core.sqlite_store import SqliteReservationStore, default_data_dir
 from escale_flet import demo
 from escale_flet.shell import Shell
@@ -21,7 +25,11 @@ async def main(page: ft.Page) -> None:
         await demo.run(page)
         return
     store = SqliteReservationStore(default_data_dir())
-    shell = Shell(importer=Importer(KitineraryCli(), store))
+    account = Account(
+        SettingsFile(default_config_dir() / "settings.json"), SystemKeyring(), NextcloudDav
+    )
+    await account.restore()
+    shell = Shell(importer=Importer(KitineraryCli(), store), account=account)
     shell.mount(page)
     await shell.refresh()
 

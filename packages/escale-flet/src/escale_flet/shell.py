@@ -17,6 +17,7 @@ from typing import Any
 
 import flet as ft
 
+from escale_core.account import Account
 from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.extraction import ExtractedReservation
 from escale_core.flights import follow_link
@@ -26,6 +27,7 @@ from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.trips import Trip, active_trip, group
 from escale_flet.detail_view import detail_view
 from escale_flet.import_sheet import confirmation_sheet, headline, phone_sheet
+from escale_flet.preferences import Preferences
 from escale_flet.stay_editor import stay_editor
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
 from escale_flet.ticket_view import MAX_WIDTH as TICKET_WIDTH
@@ -191,10 +193,13 @@ class Shell:
         clock: Callable[[], datetime] | None = None,
         share: Sharer | None = None,
         launch: Callable[[str], Awaitable[None]] | None = None,
+        account: Account | None = None,
     ) -> None:
         if importer is None:
             importer = Importer(KitineraryCli(), store or InMemoryReservationStore())
         self.importer = importer
+        self.account = account
+        self.preferences: Preferences | None = None
         self.store: ReservationStore = store or importer.store
         self.clock: Callable[[], datetime] = clock or (lambda: datetime.now().astimezone())
         self.trip: Trip | None = None
@@ -296,7 +301,11 @@ class Shell:
         if changed:
             self.layout = layout
             self._apply()
-        if self.editing and self._editor is not None and self._sheet() != was_sheet:
+        if self.preferences is not None and self._sheet() != was_sheet:
+            if self._page is not None:
+                self._page.pop_dialog()  # the same preferences, rebuilt for the new width
+            self._show_preferences()
+        elif self.editing and self._editor is not None and self._sheet() != was_sheet:
             values = self._editor.data["values"]()  # keep what was typed
             self._close_editor()
             self.edit_stay(values)
@@ -377,6 +386,59 @@ class Shell:
             self.highlight = segment_ref(self.detail)
         self._apply()
         self._update()
+
+    # --- preferences (S006b) ---
+
+    async def open_preferences(self) -> None:
+        if self.account is None or self._page is None:
+            return
+        self.preferences = Preferences(self.account, self._on_close_preferences)
+        self._show_preferences()
+        if self.account.connected and not self.account.calendars:
+            await self.preferences.load()
+
+    def _show_preferences(self) -> None:
+        if self.preferences is None or self._page is None:
+            return
+        height = getattr(self._page, "height", None)
+        self._page.show_dialog(
+            self.preferences.dialog(
+                self._on_preferences_dismissed,
+                sheet=self._sheet(),
+                height=min(_editor_height(height, self._sheet()), 480),
+            )
+        )
+        self._update()
+
+    def _close_preferences(self) -> None:
+        if self.preferences is not None and self._page is not None:
+            self.preferences = None
+            self._page.pop_dialog()
+
+    def _on_close_preferences(self, _: Any) -> None:
+        self._close_preferences()
+        self._update()
+
+    def _on_preferences_dismissed(self, _: Any) -> None:
+        self.preferences = None  # Esc, a click outside or a swipe: already gone
+
+    async def _on_preferences(self, _: Any) -> None:
+        await self.open_preferences()
+
+    def _primary_menu(self) -> list[ft.Control]:
+        """The main menu, last in the header bar of the main views (ADR-0008)."""
+        if self.account is None:
+            return []
+        return [
+            ft.PopupMenuButton(
+                icon=ft.Icons.MENU,
+                tooltip="Main Menu",
+                items=[
+                    ft.PopupMenuItem(content=ft.Text("Preferences"), on_click=self._on_preferences)
+                ],
+                data={"primary_menu": True},
+            )
+        ]
 
     def _on_edit(self, _: Any) -> None:
         self.edit_stay()
@@ -658,7 +720,7 @@ class Shell:
         # Main actions at the start of the header bar, the rest at the end (ADR-0008).
         self.appbar.leading = add
         self.appbar.leading_width = 150 if wide else None
-        self.appbar.actions = self._ticket_action(wide=wide)
+        self.appbar.actions = [*self._ticket_action(wide=wide), *self._primary_menu()]
         if in_detail and self.trip is not None and self.detail is not None:
             self._detail_header_bar(self.trip.name, self.detail, wide)
         if self._page is not None:
