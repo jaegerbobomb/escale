@@ -3,7 +3,7 @@ id: S008c
 title: "A conflicting edit keeps the server version"
 epic: sync
 depends_on: [S008b]
-status: proposed
+status: todo
 estimate: S
 bdd: true
 updated: "2026-11-27"
@@ -36,4 +36,4 @@ adr: [4]
 
 ## Notes
 
-- Split from S008 (2026-11-27), proposed.
+- Split from S008 (2026-11-27), validated by the maintainer (`todo`).

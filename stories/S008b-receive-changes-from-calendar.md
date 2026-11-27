@@ -3,7 +3,7 @@ id: S008b
 title: "Receive changes from the calendar"
 epic: sync
 depends_on: [S008a]
-status: proposed
+status: todo
 estimate: M
 bdd: true
 updated: "2026-11-27"
@@ -53,4 +53,4 @@ adr: [4]
 
 ## Notes
 
-- Split from S008 (2026-11-27), proposed.
+- Split from S008 (2026-11-27), validated by the maintainer (`todo`).

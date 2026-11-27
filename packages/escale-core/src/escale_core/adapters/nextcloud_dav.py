@@ -17,6 +17,7 @@ from niquests import exceptions as http_error
 from escale_core.nextcloud import (
     Calendar,
     CredentialsRefused,
+    EventChanged,
     NextcloudError,
     NotNextcloud,
     ServerUnreachable,
@@ -78,6 +79,23 @@ class NextcloudDav:
             self._client.mkcol(self._folder(name), "")
 
         await self._run(work)
+
+    async def put_event(self, href: str, ics: bytes, etag: str | None) -> str | None:
+        headers = {"Content-Type": "text/calendar; charset=utf-8"}
+        headers.update({"If-Match": etag} if etag else {"If-None-Match": "*"})
+
+        def work() -> str | None:
+            response = self._client.put(href, ics.decode(), headers)
+            if response.status == 412:
+                raise EventChanged
+            if response.status == 401:
+                raise dav_error.AuthorizationError(href)
+            if response.status >= 400:
+                raise dav_error.PutError(f"{response.status} {response.reason}")
+            tag = response.headers.get("ETag")
+            return str(tag) if tag else None
+
+        return await self._run(work)
 
     def _folder(self, name: str) -> str:
         return f"{self._files}{name}/"

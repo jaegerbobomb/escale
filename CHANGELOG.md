@@ -6,6 +6,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-11-27
+
+### Added
+- S008a: reservations are written to the Nextcloud calendar chosen in the preferences,
+  as KDE Itinerary-compatible events: after an import or an edit, once a calendar is
+  chosen, at start and every 10 minutes. Without network, changes wait on the device.
+
+### Changed
+- S008 split into S008a (send), S008b (receive) and S008c (conflicts); S063 (use the
+  Nextcloud account of GNOME Online Accounts) proposed, investigation in #42.
+
 ## [0.19.0] - 2026-11-26
 
 ### Added
@@ -204,7 +215,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/jaegerbobomb/escale/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/jaegerbobomb/escale/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/jaegerbobomb/escale/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/jaegerbobomb/escale/compare/v0.16.0...v0.17.0

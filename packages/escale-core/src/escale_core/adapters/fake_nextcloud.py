@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from escale_core.nextcloud import (
     Calendar,
     CredentialsRefused,
+    EventChanged,
     NotNextcloud,
     ServerUnreachable,
 )
@@ -31,6 +32,9 @@ class FakeNextcloud:
         self.calendars_named = list(calendars or [])
         self.folders = set(folders or ())
         self.password_ok, self.reachable, self.nextcloud = password_ok, reachable, nextcloud
+        self.events: dict[str, dict[str, tuple[bytes, str]]] = {}
+        """Calendar URL -> event name (its uid) -> (ICS, ETag)."""
+        self._version = 0
 
     def _check(self) -> None:
         if not self.reachable:
@@ -41,8 +45,12 @@ class FakeNextcloud:
             raise CredentialsRefused
 
     @staticmethod
-    def _calendar(name: str) -> Calendar:
-        return Calendar(name, f"https://cloud.test/remote.php/dav/calendars/u/{name.lower()}/")
+    def calendar_url(name: str) -> str:
+        return f"https://cloud.test/remote.php/dav/calendars/u/{name.lower()}/"
+
+    @classmethod
+    def _calendar(cls, name: str) -> Calendar:
+        return Calendar(name, cls.calendar_url(name))
 
     async def calendars(self) -> list[Calendar]:
         self._check()
@@ -60,3 +68,24 @@ class FakeNextcloud:
     async def create_folder(self, name: str) -> None:
         self._check()
         self.folders.add(name)
+
+    def _etag(self) -> str:
+        self._version += 1
+        return f'"{self._version}"'
+
+    async def put_event(self, href: str, ics: bytes, etag: str | None) -> str | None:
+        self._check()
+        calendar, _, name = href.rpartition("/")
+        events = self.events.setdefault(calendar + "/", {})
+        uid = name.removesuffix(".ics")
+        current = events.get(uid)
+        if (etag is None) != (current is None) or (current and current[1] != etag):
+            raise EventChanged
+        events[uid] = (ics, self._etag())
+        return events[uid][1]
+
+    def touch_all(self) -> None:
+        """Every event changed by someone else: new ETags."""
+        for events in self.events.values():
+            for uid, (ics, _) in events.items():
+                events[uid] = (ics, self._etag())

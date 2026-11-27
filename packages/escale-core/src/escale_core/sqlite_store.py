@@ -20,8 +20,9 @@ from typing import Any
 
 from escale_core.extraction import Document, ExtractedReservation
 from escale_core.importer import reservation_from_jsonld
+from escale_core.store import Outgoing
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -36,7 +37,16 @@ CREATE TABLE IF NOT EXISTS reservations (
     raw TEXT NOT NULL,
     subject_of TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS calendar_events (
+    identity TEXT PRIMARY KEY,
+    uid TEXT NOT NULL,
+    href TEXT NOT NULL,
+    etag TEXT,
+    sent TEXT NOT NULL
+);
 """
+"""``calendar_events`` (version 2, S008a): the event of each reservation sent to the
+calendar, and the JSON-LD it was sent with."""
 
 
 def default_data_dir() -> Path:
@@ -81,7 +91,7 @@ class SqliteReservationStore:
             db = sqlite3.connect(self._dir / "escale.sqlite", check_same_thread=False)
             db.executescript(_SCHEMA)
             db.execute(
-                "INSERT OR IGNORE INTO meta (key, value) VALUES ('schema_version', ?)",
+                "INSERT OR REPLACE INTO meta (key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
             db.commit()
@@ -199,6 +209,51 @@ class SqliteReservationStore:
                     "UPDATE reservations SET identity = ?, raw = ? WHERE identity = ?",
                     (identity(new), json.dumps(dict(new.raw)), identity(old)),
                 )
+                db.execute(
+                    "UPDATE calendar_events SET identity = ? WHERE identity = ?",
+                    (identity(new), identity(old)),
+                )
+
+    def _unsent(self) -> tuple[Outgoing, ...]:
+        with self._lock:
+            rows = (
+                self._connect()
+                .execute(
+                    "SELECT r.raw, r.subject_of, e.uid, e.href, e.etag, e.sent"
+                    " FROM reservations r LEFT JOIN calendar_events e USING (identity)"
+                    " ORDER BY r.id"
+                )
+                .fetchall()
+            )
+        found: list[Outgoing] = []
+        for raw, subject_of, uid, href, etag, sent in rows:
+            element: dict[str, Any] = json.loads(raw)
+            if sent is not None and json.loads(sent) == element:
+                continue
+            reservation = reservation_from_jsonld(element, tuple(json.loads(subject_of)))
+            if reservation is not None:
+                found.append(Outgoing(reservation, uid, href, etag))
+        return tuple(found)
+
+    def _sent(
+        self, reservation: ExtractedReservation, uid: str, href: str, etag: str | None
+    ) -> None:
+        with self._lock:
+            db = self._connect()
+            with db:
+                db.execute(
+                    "INSERT OR REPLACE INTO calendar_events (identity, uid, href, etag, sent)"
+                    " VALUES (?, ?, ?, ?, ?)",
+                    (identity(reservation), uid, href, etag, json.dumps(dict(reservation.raw))),
+                )
+
+    async def unsent(self) -> tuple[Outgoing, ...]:
+        return await asyncio.to_thread(self._unsent)
+
+    async def sent(
+        self, reservation: ExtractedReservation, uid: str, href: str, etag: str | None
+    ) -> None:
+        await asyncio.to_thread(self._sent, reservation, uid, href, etag)
 
     async def add(
         self,

@@ -3,11 +3,12 @@ id: S008a
 title: "Send local reservations to the calendar"
 epic: sync
 depends_on: [S006b, S007, S014]
-status: proposed
+status: done
 estimate: M
 bdd: true
 updated: "2026-11-27"
 adr: [4]
+released_in: "0.20.0"
 ---
 
 ## User story
@@ -54,4 +55,13 @@ adr: [4]
 
 ## Notes
 
-- Split from S008 (2026-11-27), proposed.
+- Split from S008 (2026-11-27), validated by the maintainer (`todo`).
+- 2026-11-27, implemented: `escale_core/sync.py` (`Sync.run`, one run at a time), the
+  outbox in both stores (`unsent`, `sent`; SQLite table `calendar_events`, schema
+  version 2), `put_event` on the server port (`If-None-Match: *` / `If-Match`, `412`
+  raised as `EventChanged`). The push also runs once a calendar is chosen or created in
+  the preferences. A reservation without any date has no event and stays local.
+- Checked against Nextcloud 31.0.14 (local container and CI): `PUT` answers with an
+  `ETag`; a second `If-None-Match: *` or a stale `If-Match` gets `412`; the event read
+  back keeps `X-KDE-KITINERARY-RESERVATION` intact, escaped commas and semicolons
+  included — part of issue #3 (KDE Itinerary's side is still open there).

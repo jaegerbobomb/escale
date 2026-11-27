@@ -56,9 +56,16 @@ def _row(label: str, on_click: Callable[[Any], Any], color: str | None = None) -
 class Preferences:
     """The dialog's state, kept across a rebuild when the window crosses 450 px."""
 
-    def __init__(self, account: Account, on_close: Callable[[Any], Any]) -> None:
+    def __init__(
+        self,
+        account: Account,
+        on_close: Callable[[Any], Any],
+        on_calendar: Callable[[], Awaitable[object]] | None = None,
+    ) -> None:
         self.account = account
         self.on_close = on_close
+        self.on_calendar = on_calendar
+        """Run once a calendar is chosen or created: the sync (S008a)."""
         self.draft: dict[str, str] = {}
         self.busy = False
         self.body = ft.Column(spacing=22, tight=True)
@@ -181,6 +188,11 @@ class Preferences:
 
     # --- connected ---
 
+    async def _create_trips(self) -> None:
+        await self.account.create_trips()
+        if self.on_calendar is not None and self.account.target() is not None:
+            await self.on_calendar()
+
     def _account(self) -> list[ft.Control]:
         a = self.account
         who = ft.Container(
@@ -229,12 +241,14 @@ class Preferences:
                 )
             )
         if a.can_create_trips and not self.busy:
-            choices.append(_row("Create a Trips calendar", self._act(a.create_trips)))
+            choices.append(_row("Create a Trips calendar", self._act(self._create_trips)))
 
         async def choose(e: Any) -> None:
             picked = [c for c in a.calendars if c.url == calendars.value]
             if picked:
                 await a.choose(picked[0])
+                if self.on_calendar is not None:
+                    await self.on_calendar()
 
         calendars = ft.RadioGroup(
             facts(choices),
