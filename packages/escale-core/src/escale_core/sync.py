@@ -1,9 +1,11 @@
 """Keeping the local store and the user's calendar in step (S008, ADR-0004).
 
 Each run first receives what changed on the calendar (S008b: ``sync-collection`` with the
-stored token), then sends the store's outbox (S008a), as events in KDE Itinerary's
-format (S007). Nothing happens without an account and a chosen calendar; an unreachable
-server leaves everything for the next run.
+stored token), uploads the documents the server does not have (S009a), then sends the
+store's outbox (S008a), as events in KDE Itinerary's format (S007). Documents go before
+events, so that an event never names a document the server lacks. Nothing happens
+without an account and a chosen calendar; an unreachable server leaves everything for
+the next run.
 
 When the same event changed both here and on the server (S008c), the server's version
 wins: the local change is dropped and the run names the reservation, so that the UI
@@ -17,6 +19,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from escale_core.account import Account
+from escale_core.documents import upload
 from escale_core.extraction import ExtractedReservation
 from escale_core.ical_mapping import entries_in, new_entry, to_ics
 from escale_core.nextcloud import (
@@ -39,18 +42,23 @@ class SyncReport:
     """Reservations whose local change gave way to the server's version (S008c)."""
     problem: Problem | None = None
     """Why the run stopped early (server unreachable, credentials refused)."""
+    uploaded: int = 0
+    """Documents put on the server (S009a)."""
 
 
 @dataclass
 class _Run:
     received: int = 0
     sent: int = 0
+    uploaded: int = 0
     changed_elsewhere: list[ExtractedReservation] = field(default_factory=list)
     settled: set[str] = field(default_factory=set)
     """Hrefs whose conflict this run already resolved: not sent again."""
 
     def report(self, problem: Problem | None = None) -> SyncReport:
-        return SyncReport(self.sent, self.received, tuple(self.changed_elsewhere), problem)
+        return SyncReport(
+            self.sent, self.received, tuple(self.changed_elsewhere), problem, self.uploaded
+        )
 
 
 class Sync:
@@ -68,6 +76,7 @@ class Sync:
             run = _Run()
             try:
                 await self._pull(server, calendar, run)
+                await self._upload(server, run)
                 await self._push(server, calendar, run)
             except NextcloudError as e:
                 return run.report(e.problem)
@@ -114,6 +123,13 @@ class Sync:
             if href in known:
                 await self._gone(href, run, pending.get(href, ()))
         await self._store.set_calendar_token(calendar, changes.token)
+
+    async def _upload(self, server: NextcloudServer, run: _Run) -> None:
+        for document, path in await self._store.unsent_documents():
+            content = await asyncio.to_thread(path.read_bytes)
+            if await upload(server, document, content):
+                run.uploaded += 1
+            await self._store.document_sent(document.id)
 
     async def _push(self, server: NextcloudServer, calendar: str, run: _Run) -> None:
         for outgoing in await self._store.unsent():

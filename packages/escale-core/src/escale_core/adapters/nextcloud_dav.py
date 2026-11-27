@@ -9,11 +9,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from typing import Any, TypeVar
-from urllib.parse import urljoin
+from urllib.parse import quote, urljoin
 from xml.sax.saxutils import escape
 
 from caldav.davclient import DAVClient
 from caldav.lib import error as dav_error
+from caldav.lib.python_utilities import WireBytes
 from niquests import exceptions as http_error
 
 from escale_core.nextcloud import (
@@ -93,6 +94,40 @@ class NextcloudDav:
 
         await self._run(work)
 
+    async def file_exists(self, path: str) -> bool:
+        def work() -> bool:
+            response = self._client.propfind(self._file(path), depth=0)
+            if response.status == 401:
+                raise dav_error.AuthorizationError(self._files)
+            return bool(response.status == 207)
+
+        return await self._run(work)
+
+    async def put_file(self, path: str, content: bytes, content_type: str) -> bool:
+        headers = {"Content-Type": content_type, "If-None-Match": "*"}
+        # sent as is: caldav turns the line ends of a plain body into CRLF
+        body: Any = WireBytes(content)
+
+        def put() -> int:
+            return int(self._client.put(self._file(path), body, headers).status)
+
+        def work() -> bool:
+            status = put()
+            if status == 404:  # Nextcloud: a folder on the way is missing
+                parts = path.split("/")[:-1]
+                for n in range(1, len(parts) + 1):
+                    made = self._client.mkcol(self._file("/".join(parts[:n])) + "/", "")
+                    if made.status not in (201, 405):  # 405: already there
+                        raise dav_error.MkcolError(f"{made.status} {made.reason}")
+                status = put()
+            if status == 412:  # already there: a document never changes
+                return False
+            if status >= 400:
+                raise dav_error.PutError(f"{status}")
+            return True
+
+        return await self._run(work)
+
     async def put_event(self, href: str, ics: bytes, etag: str | None) -> str | None:
         headers = {"Content-Type": "text/calendar; charset=utf-8"}
         headers.update({"If-Match": etag} if etag else {"If-None-Match": "*"})
@@ -158,6 +193,9 @@ class NextcloudDav:
             return Changes(result.sync_token, changed, removed, full)
 
         return await self._run(work)
+
+    def _file(self, path: str) -> str:
+        return self._files + quote(path)
 
     def _folder(self, name: str) -> str:
         return f"{self._files}{name}/"

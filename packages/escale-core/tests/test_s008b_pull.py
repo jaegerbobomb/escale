@@ -17,7 +17,7 @@ from escale_core.extraction import Document, ExtractedReservation
 from escale_core.importer import reservation_from_jsonld
 from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
-from escale_core.sqlite_store import SqliteReservationStore
+from escale_core.sqlite_store import SCHEMA_VERSION, SqliteReservationStore
 from escale_core.stays import edited, fields_of
 from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.sync import Sync
@@ -271,8 +271,10 @@ def test_a_version_2_database_is_migrated(tmp_path: Path) -> None:
     db.commit()
     db.close()
     store = SqliteReservationStore(folder)
-    assert store.schema_version() == 3
-    assert asyncio.run(store.unsent()) == ()
+    assert store.schema_version() == SCHEMA_VERSION
+    # sent again once, now with its document in ``subjectOf`` (S009a)
+    [outgoing] = asyncio.run(store.unsent())
+    assert (outgoing.uid, outgoing.href) == ("KIT-1", "https://c/KIT-1.ics")
     assert asyncio.run(store.events()) == {"https://c/KIT-1.ics": '"7"'}
     asyncio.run(store.add(DOC, [hotel()]))  # same booking again: not duplicated
     assert len(asyncio.run(store.reservations())) == 1

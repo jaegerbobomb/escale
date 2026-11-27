@@ -28,6 +28,12 @@ It also takes in what changed on the calendar since: reservations added or edite
 your other devices, or by KDE Itinerary, appear, and those whose event was deleted
 disappear.
 
+The PDF or image of each ticket you import goes to the `Escale` folder of your files,
+as `Escale/documents/<id>/` with a `meta.json` (KDE Itinerary's layout), before the
+reservation's event, so that the event never points to a missing file. A document never
+changes, so each one is uploaded once, even when you import the same file again on
+another device.
+
 If a reservation you changed here was also changed elsewhere before your change
 reached the server, the version on the server is kept and a notice says so: "… was
 changed on another device; that version is kept." The same goes for a reservation

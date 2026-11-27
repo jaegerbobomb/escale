@@ -73,6 +73,15 @@ class NextcloudServer(Protocol):
 
     async def create_folder(self, name: str) -> None: ...
 
+    async def file_exists(self, path: str) -> bool:
+        """Whether ``path``, relative to the user's files, is there (S009a)."""
+        ...
+
+    async def put_file(self, path: str, content: bytes, content_type: str) -> bool:
+        """Create the file at ``path`` and the folders it needs; a file already there is
+        left as it is (``False``): a document never changes (S009a)."""
+        ...
+
     async def put_event(self, href: str, ics: bytes, etag: str | None) -> str | None:
         """Write a calendar object: a new one when ``etag`` is ``None``, else the one
         with that ETag; ``EventChanged`` otherwise. Returns its new ETag, if given."""

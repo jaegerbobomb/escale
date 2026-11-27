@@ -3,7 +3,8 @@
 Nextcloud is the source of truth and the store its local cache (ADR-0004): SQLite on a
 device (``sqlite_store``), or this module's in-memory store for tests and the demo. Each
 reservation remembers the calendar event it belongs to (S008): its uid, its href, its
-ETag, and the JSON-LD the calendar last had, so that what changed since is known.
+ETag, and the JSON-LD the calendar last had, so that what changed since is known. Each
+document remembers whether it is on the server yet (S009a).
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Protocol
 
+from escale_core.documents import jsonld
 from escale_core.extraction import Document, ExtractedReservation
 
 
@@ -72,6 +74,10 @@ class ReservationStore(Protocol):
 
     async def documents(self) -> tuple[Document, ...]: ...
 
+    def document_path(self, document_id: str) -> Path | None:
+        """The local copy of a document, if there is one."""
+        ...
+
     async def replace(self, old: ExtractedReservation, new: ExtractedReservation) -> None:
         """Put ``new`` in the place of ``old``, an edited copy of it (S017b); its
         calendar event stays the same."""
@@ -116,6 +122,16 @@ class ReservationStore(Protocol):
 
     async def set_calendar_token(self, calendar: str, token: str | None) -> None: ...
 
+    # --- documents (S009a) ---
+
+    async def unsent_documents(self) -> tuple[tuple[Document, Path], ...]:
+        """Documents with a local copy that are not on the server yet, and that copy."""
+        ...
+
+    async def document_sent(self, document_id: str) -> None:
+        """The document is on the server."""
+        ...
+
 
 @dataclass
 class _Row:
@@ -124,11 +140,12 @@ class _Row:
     href: str | None = None
     etag: str | None = None
     sent: Mapping[str, Any] | None = None
-    """The JSON-LD the calendar has; the row waits to be sent while it differs."""
+    """The JSON-LD the calendar has, ``subjectOf`` included; the row waits to be sent
+    while it differs."""
 
     @property
     def pending(self) -> bool:
-        return self.sent is None or self.sent != self.reservation.raw
+        return self.sent is None or self.sent != jsonld(self.reservation)
 
 
 @dataclass
@@ -138,6 +155,8 @@ class InMemoryReservationStore:
     _rows: dict[str, _Row] = field(default_factory=dict)
     _documents: dict[str, Document] = field(default_factory=dict)
     _tokens: dict[str, str | None] = field(default_factory=dict)
+    _files: dict[str, Path] = field(default_factory=dict)
+    _uploaded: set[str] = field(default_factory=set)
 
     async def add(
         self,
@@ -146,6 +165,8 @@ class InMemoryReservationStore:
         source: Path | None = None,
     ) -> None:
         self._documents.setdefault(document.id, document)
+        if source is not None and source.is_file():
+            self._files.setdefault(document.id, source)
         for r in reservations:
             key = identity(r)
             row = self._rows.get(key)
@@ -162,6 +183,10 @@ class InMemoryReservationStore:
 
     async def documents(self) -> tuple[Document, ...]:
         return tuple(self._documents.values())
+
+    def document_path(self, document_id: str) -> Path | None:
+        path = self._files.get(document_id)
+        return path if path is not None and path.is_file() else None
 
     async def replace(self, old: ExtractedReservation, new: ExtractedReservation) -> None:
         key = identity(old)
@@ -190,7 +215,7 @@ class InMemoryReservationStore:
         for r in batch:
             row = self._rows.get(identity(r))
             if row is not None:
-                row.uid, row.href, row.etag, row.sent = uid, href, etag, dict(r.raw)
+                row.uid, row.href, row.etag, row.sent = uid, href, etag, jsonld(r)
 
     async def received(
         self,
@@ -211,7 +236,8 @@ class InMemoryReservationStore:
         for r in batch:
             key = identity(r)
             kept = documents.get(key, ())
-            self._rows[key] = _Row(_with_documents(r, kept), uid, href, etag, dict(r.raw))
+            both = kept + tuple(d for d in r.subject_of if d not in kept)
+            self._rows[key] = _Row(_with_documents(r, both), uid, href, etag, jsonld(r))
         return True
 
     async def removed(self, href: str, force: bool = False) -> bool:
@@ -230,6 +256,13 @@ class InMemoryReservationStore:
 
     async def set_calendar_token(self, calendar: str, token: str | None) -> None:
         self._tokens[calendar] = token
+
+    async def unsent_documents(self) -> tuple[tuple[Document, Path], ...]:
+        found = ((d, self.document_path(d.id)) for d in self._documents.values())
+        return tuple((d, p) for d, p in found if p is not None and d.id not in self._uploaded)
+
+    async def document_sent(self, document_id: str) -> None:
+        self._uploaded.add(document_id)
 
 
 def _with_documents(r: ExtractedReservation, subject_of: tuple[str, ...]) -> ExtractedReservation:
