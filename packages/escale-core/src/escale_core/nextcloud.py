@@ -31,6 +31,7 @@ class Problem(Enum):
     UNREACHABLE = "The server cannot be reached."
     NOT_NEXTCLOUD = "No Nextcloud answers at this address."
     CHANGED = "The event was changed on the server meanwhile."
+    BUSY = "The server asks to try again later."
 
 
 class NextcloudError(Exception):
@@ -47,6 +48,12 @@ class ServerUnreachable(NextcloudError):
 
 class NotNextcloud(NextcloudError):
     problem = Problem.NOT_NEXTCLOUD
+
+
+class ServerBusy(NextcloudError):
+    """``429``: the server limits how often it is asked (S008b)."""
+
+    problem = Problem.BUSY
 
 
 class EventChanged(NextcloudError):
@@ -70,6 +77,28 @@ class NextcloudServer(Protocol):
         """Write a calendar object: a new one when ``etag`` is ``None``, else the one
         with that ETag; ``EventChanged`` otherwise. Returns its new ETag, if given."""
         ...
+
+    async def changes(self, calendar: str, token: str | None) -> Changes:
+        """What changed in ``calendar`` since ``token`` (RFC 6578 ``sync-collection``);
+        everything, as a full listing, when there is no token or the server refused it."""
+        ...
+
+
+@dataclass(frozen=True)
+class RemoteEvent:
+    href: str
+    """Absolute URL of the calendar object."""
+    etag: str | None
+    ics: bytes
+
+
+@dataclass(frozen=True)
+class Changes:
+    token: str | None
+    changed: tuple[RemoteEvent, ...] = ()
+    removed: tuple[str, ...] = ()
+    full: bool = False
+    """``changed`` lists every event of the calendar: one not listed is gone."""
 
 
 @dataclass(frozen=True)

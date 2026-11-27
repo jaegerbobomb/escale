@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import TypeVar
+from typing import Any, TypeVar
+from urllib.parse import urljoin
+from xml.sax.saxutils import escape
 
 from caldav.davclient import DAVClient
 from caldav.lib import error as dav_error
@@ -16,15 +18,24 @@ from niquests import exceptions as http_error
 
 from escale_core.nextcloud import (
     Calendar,
+    Changes,
     CredentialsRefused,
     EventChanged,
     NextcloudError,
     NotNextcloud,
+    RemoteEvent,
+    ServerBusy,
     ServerUnreachable,
     endpoints,
 )
 
 T = TypeVar("T")
+_SYNC_COLLECTION = """<?xml version="1.0" encoding="utf-8"?>
+<d:sync-collection xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+  <d:sync-token>{token}</d:sync-token>
+  <d:sync-level>1</d:sync-level>
+  <d:prop><d:getetag/><c:calendar-data/></d:prop>
+</d:sync-collection>"""
 TIMEOUT_S = 20
 
 
@@ -44,6 +55,8 @@ class NextcloudDav:
             raise CredentialsRefused from e
         except (http_error.ConnectionError, http_error.Timeout, OSError) as e:
             raise ServerUnreachable from e
+        except dav_error.RateLimitError as e:
+            raise ServerBusy from e
         except dav_error.DAVError as e:
             raise NotNextcloud from e
         except NextcloudError:
@@ -94,6 +107,38 @@ class NextcloudDav:
                 raise dav_error.PutError(f"{response.status} {response.reason}")
             tag = response.headers.get("ETag")
             return str(tag) if tag else None
+
+        return await self._run(work)
+
+    async def changes(self, calendar: str, token: str | None) -> Changes:
+        def report(token: str | None) -> Any:
+            body = _SYNC_COLLECTION.format(token=escape(token or ""))
+            return self._client.request(
+                calendar, "REPORT", body, {"Depth": "0", "Content-Type": "application/xml"}
+            )
+
+        def work() -> Changes:
+            # A refused token (Nextcloud: 403, which caldav raises as an authorisation
+            # error) means starting over with a full listing; refused credentials fail
+            # that one too.
+            try:
+                response, full = report(token), token is None
+            except dav_error.AuthorizationError:
+                if token is None:
+                    raise
+                response, full = report(None), True
+            if response.status in (400, 403, 409, 412) and token is not None:
+                response, full = report(None), True
+            if response.status == 401:
+                raise dav_error.AuthorizationError(calendar)
+            result = response.parse_sync_collection()
+            changed = tuple(
+                RemoteEvent(urljoin(calendar, c.href), c.etag, c.calendar_data.encode())
+                for c in result.changed
+                if c.calendar_data
+            )
+            removed = tuple(urljoin(calendar, href) for href in result.deleted)
+            return Changes(result.sync_token, changed, removed, full)
 
         return await self._run(work)
 
