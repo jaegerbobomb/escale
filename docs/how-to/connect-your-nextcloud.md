@@ -34,6 +34,11 @@ reservation's event, so that the event never points to a missing file. A documen
 changes, so each one is uploaded once, even when you import the same file again on
 another device.
 
+On your other devices, a ticket's document downloads when you open it, and the
+documents of your current trip download after each sync, so that they open without
+network at the gate. If a document is not on the device yet and the server cannot be
+reached, Escale says so; it downloads at the next try with network.
+
 If a reservation you changed here was also changed elsewhere before your change
 reached the server, the version on the server is kept and a notice says so: "… was
 changed on another device; that version is kept." The same goes for a reservation

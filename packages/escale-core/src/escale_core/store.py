@@ -11,12 +11,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Protocol
 
-from escale_core.documents import jsonld
+from escale_core.documents import file_name, jsonld
 from escale_core.extraction import Document, ExtractedReservation
 
 
@@ -132,6 +133,10 @@ class ReservationStore(Protocol):
         """The document is on the server."""
         ...
 
+    async def keep_document(self, document: Document, content: bytes) -> None:
+        """A copy of a document downloaded from the server (S009b)."""
+        ...
+
 
 @dataclass
 class _Row:
@@ -157,6 +162,8 @@ class InMemoryReservationStore:
     _tokens: dict[str, str | None] = field(default_factory=dict)
     _files: dict[str, Path] = field(default_factory=dict)
     _uploaded: set[str] = field(default_factory=set)
+    _folder: Path | None = None
+    """Where downloaded documents go: a temporary folder, made when first needed."""
 
     async def add(
         self,
@@ -263,6 +270,16 @@ class InMemoryReservationStore:
 
     async def document_sent(self, document_id: str) -> None:
         self._uploaded.add(document_id)
+
+    async def keep_document(self, document: Document, content: bytes) -> None:
+        if self._folder is None:
+            self._folder = Path(tempfile.mkdtemp(prefix="escale-documents-"))
+        target = self._folder / document.id / file_name(document)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+        self._documents.setdefault(document.id, document)
+        self._files[document.id] = target
+        self._uploaded.add(document.id)
 
 
 def _with_documents(r: ExtractedReservation, subject_of: tuple[str, ...]) -> ExtractedReservation:

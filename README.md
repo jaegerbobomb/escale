@@ -131,7 +131,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S008c](stories/S008c-conflicting-edit.md) | A conflicting edit keeps the server version | sync | done |
 | [S009](stories/S009-sync-documents.md) | Sync ticket documents | sync | split |
 | [S009a](stories/S009a-send-documents.md) | Send ticket documents to Nextcloud | sync | done |
-| [S009b](stories/S009b-documents-on-demand.md) | Ticket documents on every device | sync | todo |
+| [S009b](stories/S009b-documents-on-demand.md) | Ticket documents on every device | sync | done |
 | [S009c](stories/S009c-document-cache-limit.md) | Limit the space taken by ticket documents | sync | todo |
 | [S010](stories/S010-trip-grouping-and-timeline.md) | Trip grouping and timeline | timeline | split |
 | [S010a](stories/S010a-group-reservations-into-trips.md) | Group reservations into trips | timeline | done |

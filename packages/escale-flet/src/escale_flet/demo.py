@@ -18,13 +18,14 @@ import flet as ft
 from escale_core.account import Account
 from escale_core.adapters.fake_extractor import FakeExtractor
 from escale_core.adapters.fake_nextcloud import FakeNextcloud
+from escale_core.documents import Documents
 from escale_core.extraction import Document
 from escale_core.importer import Importer, reservation_from_jsonld
 from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
 from escale_core.store import InMemoryReservationStore
 from escale_flet.import_sheet import phone_sheet
-from escale_flet.shell import Shell, changed_elsewhere, toast
+from escale_flet.shell import NOT_ON_DEVICE, Shell, changed_elsewhere, toast
 
 SAMPLE: dict[str, Any] = {
     "@context": "http://schema.org",
@@ -186,6 +187,7 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/preferences-refused": None,
     "/preferences-connected": None,
     "/changed-elsewhere": None,
+    "/document-not-here": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
@@ -194,7 +196,9 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 ``/stay-detail`` the hotel's,
 ``/stay-editor`` its editor; ``/preferences*`` the preferences, empty, after a refused
 password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
-the toast of a change that gave way to one made on another device (S008c).
+the toast of a change that gave way to one made on another device (S008c);
+``/document-not-here`` the hotel's detail, offline, after "Booking document" was clicked
+for a document not on the device (S009b).
 """
 
 
@@ -222,6 +226,7 @@ async def run(page: ft.Page) -> None:
         "/stay-detail",
         "/stay-editor",
         "/changed-elsewhere",
+        "/document-not-here",
     )
     if route in trip_routes:
         found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP_FULL]
@@ -240,7 +245,7 @@ async def run(page: ft.Page) -> None:
         MemoryPasswords(lasting=True),
         lambda url, login, password: server,
     )
-    if route in ("/preferences-refused", "/preferences-connected"):
+    if route in ("/preferences-refused", "/preferences-connected", "/document-not-here"):
         await account.connect("cloud.example.org", "jane", "demo-app-password")
     if account.calendars:
         await account.choose(account.calendars[0])
@@ -249,6 +254,7 @@ async def run(page: ft.Page) -> None:
         choose_file=choose_file,
         clock=clock,
         account=account,
+        documents=Documents(store, account),
     )
     shell.mount(page)
     await shell.refresh()
@@ -265,6 +271,10 @@ async def run(page: ft.Page) -> None:
     elif route == "/stay-editor" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[1])
         shell.edit_stay()
+    elif route == "/document-not-here" and shell.trip is not None:
+        server.reachable = False
+        shell.open_detail(shell.trip.reservations[1])
+        page.show_dialog(toast(NOT_ON_DEVICE, page.width, duration=60_000))
     elif route == "/changed-elsewhere":
         text = changed_elsewhere(["The Hoxton, Holborn"])
         page.show_dialog(toast(text, page.width, duration=60_000))

@@ -6,17 +6,25 @@ points to its documents through schema.org ``subjectOf``, a list of their ids, a
 KItinerary's ``DocumentUtil`` writes it. In Escale the ids are kept apart from the
 JSON-LD (``ExtractedReservation.subject_of``); ``jsonld`` puts them back for the
 calendar and ``split`` takes them out again.
+
+A sync run uploads what the server lacks (S009a); ``Documents`` gets the copy a device
+lacks, when it is opened and ahead for the current trip (S009b).
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from escale_core.extraction import Document, ExtractedReservation
-from escale_core.nextcloud import FOLDER, NextcloudServer
+from escale_core.nextcloud import FOLDER, NextcloudError, NextcloudServer
+
+if TYPE_CHECKING:
+    from escale_core.account import Account
+    from escale_core.store import ReservationStore
 
 SUBJECT_OF = "subjectOf"
 
@@ -84,3 +92,70 @@ async def upload(server: NextcloudServer, document: Document, content: bytes) ->
     described = json.dumps(meta(document), indent=2).encode()
     await server.put_file(f"{where}/meta.json", described, "application/json")
     return True
+
+
+async def download(server: NextcloudServer, document_id: str) -> tuple[Document, bytes] | None:
+    """The document and its content; ``None`` when the server does not have it whole, or
+    when the content is not the one its id names."""
+    where = folder(document_id)
+    described = await server.get_file(f"{where}/meta.json")
+    try:
+        found = json.loads(described) if described is not None else None
+    except ValueError:
+        return None
+    name = found.get("name") if isinstance(found, dict) else None
+    if not isinstance(name, str) or not Path(name).name:
+        return None
+    content = await server.get_file(f"{where}/{Path(name).name}")
+    if content is None or hashlib.sha256(content).hexdigest() != document_id:
+        return None
+    kind = found.get("encodingFormat") if isinstance(found, dict) else None
+    mime_type = kind if isinstance(kind, str) else "application/octet-stream"
+    return Document(document_id, Path(name).name, mime_type), content
+
+
+class Documents:
+    """The local copy of a document, downloaded when missing (S009b)."""
+
+    def __init__(self, store: ReservationStore, account: Account) -> None:
+        self._store, self._account = store, account
+
+    async def _fetch(self, server: NextcloudServer, document_id: str) -> Path | None:
+        found = await download(server, document_id)
+        if found is None:
+            return None
+        await self._store.keep_document(*found)
+        return self._store.document_path(document_id)
+
+    async def local(self, document_id: str) -> Path | None:
+        """The copy on this device, downloaded first if needed; ``None`` when it cannot
+        be had now (no account, no network, not on the server)."""
+        path = self._store.document_path(document_id)
+        server = self._account.server
+        if path is not None or server is None:
+            return path
+        try:
+            return await self._fetch(server, document_id)
+        except NextcloudError:
+            return None
+
+    async def prefetch(self, reservations: Iterable[ExtractedReservation]) -> int:
+        """Download the documents of ``reservations`` the device lacks; how many came.
+        Stops at the first network problem: the next run tries again."""
+        server = self._account.server
+        count = 0
+        if server is None:
+            return count
+        missing = {
+            d: None
+            for r in reservations
+            for d in r.subject_of
+            if self._store.document_path(d) is None
+        }
+        try:
+            for document_id in missing:
+                if await self._fetch(server, document_id) is not None:
+                    count += 1
+        except NextcloudError:
+            pass
+        return count

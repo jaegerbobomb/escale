@@ -54,6 +54,8 @@ VIEWS: dict[str, str] = {
     "preferences-connected": "/preferences-connected",
     # The toast after a change made here gave way to one made elsewhere (S008c).
     "changed-elsewhere": "/changed-elsewhere",
+    # The hotel's document opened offline before it reached the device (S009b).
+    "document-not-here": "/document-not-here",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).

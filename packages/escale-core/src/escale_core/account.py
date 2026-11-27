@@ -52,6 +52,11 @@ class Account:
     def host(self) -> str:
         return urlparse(endpoints(self.saved.url, self.saved.login)[0]).netloc
 
+    @property
+    def server(self) -> NextcloudServer | None:
+        """The server, once the account is connected (S009b: documents need no calendar)."""
+        return self._server
+
     def target(self) -> tuple[NextcloudServer, str] | None:
         """The server and the chosen calendar's URL, once both are known (S008a)."""
         if self._server is None or not self.saved.calendar:

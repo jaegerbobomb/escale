@@ -12,6 +12,7 @@ from typing import Any, TypeVar
 from urllib.parse import quote, urljoin
 from xml.sax.saxutils import escape
 
+import niquests
 from caldav.davclient import DAVClient
 from caldav.lib import error as dav_error
 from caldav.lib.python_utilities import WireBytes
@@ -45,6 +46,7 @@ class NextcloudDav:
 
     def __init__(self, url: str, login: str, password: str) -> None:
         self._dav, self._files = endpoints(url, login)
+        self._login, self._password = login, password
         self._client = DAVClient(
             url=self._dav, username=login, password=password, timeout=TIMEOUT_S
         )
@@ -125,6 +127,25 @@ class NextcloudDav:
             if status >= 400:
                 raise dav_error.PutError(f"{status}")
             return True
+
+        return await self._run(work)
+
+    async def get_file(self, path: str) -> bytes | None:
+        def work() -> bytes | None:
+            # not through caldav: its responses turn CRLF into LF, which breaks a PDF
+            response = niquests.get(
+                self._file(path), auth=(self._login, self._password), timeout=TIMEOUT_S
+            )
+            status = response.status_code or 0
+            if status == 404:
+                return None
+            if status == 401:
+                raise dav_error.AuthorizationError(path)
+            if status == 429:
+                raise dav_error.RateLimitError(path)
+            if status >= 400 or status == 0:
+                raise dav_error.NotFoundError(f"{status}")
+            return bytes(response.content or b"")
 
         return await self._run(work)
 

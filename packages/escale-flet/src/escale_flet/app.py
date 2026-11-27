@@ -13,6 +13,7 @@ from escale_core.account import Account
 from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.adapters.nextcloud_dav import NextcloudDav
 from escale_core.adapters.system_keyring import SystemKeyring
+from escale_core.documents import Documents
 from escale_core.importer import Importer
 from escale_core.settings import SettingsFile, default_config_dir
 from escale_core.sqlite_store import SqliteReservationStore, default_data_dir
@@ -47,7 +48,12 @@ async def main(page: ft.Page) -> None:
     )
     await account.restore()
     sync = Sync(store, account)
-    shell = Shell(importer=Importer(KitineraryCli(), store), account=account, sync=sync.run)
+    shell = Shell(
+        importer=Importer(KitineraryCli(), store),
+        account=account,
+        sync=sync.run,
+        documents=Documents(store, account),
+    )
     shell.mount(page)
     await shell.refresh()
     page.run_task(keep_in_sync, shell)

@@ -94,6 +94,10 @@ class FakeNextcloud:
         self.uploads += 1
         return True
 
+    async def get_file(self, path: str) -> bytes | None:
+        self._check()
+        return self.files.get(path)
+
     def _etag(self) -> str:
         self._version += 1
         return f'"{self._version}"'

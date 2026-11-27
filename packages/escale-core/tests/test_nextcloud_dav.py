@@ -212,3 +212,14 @@ def test_put_file_makes_its_folders_and_never_overwrites(clean: None) -> None:
     request.add_header("Authorization", f"Basic {token}")
     with urllib.request.urlopen(request) as response:
         assert response.read() == content
+
+
+def test_get_file_returns_the_bytes_unchanged(clean: None) -> None:
+    """S009b: a PDF comes back as it went, CRLF included; a missing file is ``None``."""
+    server = NextcloudDav(URL, LOGIN, PASSWORD)
+    asyncio.run(connect(server))
+    path = "Escale/documents/def/billet.pdf"
+    content = b"%PDF-1.7\r\n\x00\n\r\nbinary\n"
+    assert asyncio.run(server.get_file(path)) is None
+    asyncio.run(server.put_file(path, content, "application/pdf"))
+    assert asyncio.run(server.get_file(path)) == content
