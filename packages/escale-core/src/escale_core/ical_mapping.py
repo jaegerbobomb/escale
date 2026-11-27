@@ -4,8 +4,9 @@ One reservation batch is one ``VEVENT``: the batch as a compact JSON array of sc
 JSON-LD in ``X-KDE-KITINERARY-RESERVATION``, a ``KIT-`` prefixed ``UID``, and what any
 calendar shows (``SUMMARY``, ``DTSTART``/``DTEND``, ``LOCATION``), as KItinerary's
 ``CalendarHandler`` writes them. Escale adds ``X-ESCALE-TRIP`` and ``X-ESCALE-STATE``
-when they are set (SPEC § Calendar events). Reading accepts KItinerary's events and
-Escale's; an event without the property is not a reservation.
+when they are set (SPEC § Calendar events). Each reservation names its documents in
+``subjectOf`` (S009a). Reading accepts KItinerary's events and Escale's; an event without
+the property is not a reservation.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from zoneinfo import ZoneInfo
 
 import icalendar
 
+from escale_core.documents import jsonld, split
 from escale_core.extraction import ExtractedReservation
 from escale_core.importer import parse_datetime, reservation_from_jsonld
 from escale_core.stays import address
@@ -131,7 +133,7 @@ def to_event(entry: CalendarEntry) -> icalendar.Event:
     location = _location(first)
     if location:
         event.add("LOCATION", location)
-    payload = [dict(r.raw) for r in entry.reservations]
+    payload = [jsonld(r) for r in entry.reservations]
     compact = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     event.add(PAYLOAD, icalendar.vText(compact))  # escaped as TEXT, as libical writes it
     if entry.trip:
@@ -190,7 +192,7 @@ def from_event(event: icalendar.Component) -> CalendarEntry | None:
         return None
     payload = _payload(_serialised(raw))
     elements = payload if isinstance(payload, list) else [payload]
-    found = [reservation_from_jsonld(e, ()) for e in elements if isinstance(e, Mapping)]
+    found = [reservation_from_jsonld(*split(e)) for e in elements if isinstance(e, Mapping)]
     reservations = tuple(r for r in found if r is not None)
     if not reservations:
         return None

@@ -3,10 +3,10 @@ id: S009
 title: "Sync ticket documents"
 epic: sync
 depends_on: [S006, S003]
-status: todo
+status: split
 estimate: M
 bdd: true
-updated: "2026-11-24"
+updated: "2026-11-27"
 adr: [4]
 ---
 
@@ -49,3 +49,8 @@ adr: [4]
 ## Notes
 
 - 2026-11-24: validated by the maintainer (`todo`).
+- 2026-11-27: split validated by the maintainer into S009a (send documents and link
+  them from events), S009b (download on demand, current trip offline) and S009c (cache
+  limit and eviction). Passes (`Escale/passes/…`) move to the story that imports pkpass
+  files (S055 or S028): Escale reads none yet. This story keeps the framing; the
+  children carry the work and the scenarios.

@@ -6,6 +6,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-27
+
+### Added
+- S009a: the PDF or image of each imported ticket is uploaded to the `Escale` folder of
+  your Nextcloud (`Escale/documents/<id>/`, as KDE Itinerary lays it out), before the
+  reservation's event, and only once; the event names it in schema.org `subjectOf`.
+
+### Changed
+- The local database moves to schema 4 (which documents are on the server); 0.22.0
+  databases are migrated at start, and their reservations are sent once more to add
+  their documents to the events.
+
 ## [0.22.0] - 2026-11-27
 
 ### Added
@@ -238,7 +250,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/jaegerbobomb/escale/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/jaegerbobomb/escale/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/jaegerbobomb/escale/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/jaegerbobomb/escale/compare/v0.19.0...v0.20.0

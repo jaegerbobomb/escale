@@ -189,3 +189,26 @@ def test_two_devices_share_a_reservation(clean: None, tmp_path: Path) -> None:
     DAVClient(url=dav, username=LOGIN, password=PASSWORD).delete(href)
     asyncio.run(second_sync.run())
     assert asyncio.run(second.reservations()) == ()
+
+
+def test_put_file_makes_its_folders_and_never_overwrites(clean: None) -> None:
+    """S009a: a document is uploaded byte for byte; a second upload changes nothing."""
+    import urllib.request
+    from base64 import b64encode
+
+    server = NextcloudDav(URL, LOGIN, PASSWORD)
+    asyncio.run(connect(server))
+    path = "Escale/documents/abc/ticket été.pdf"
+    content = b"%PDF-1.7\n\x00\x01\r\nbinary\n"
+    assert not asyncio.run(server.file_exists(path))
+    assert asyncio.run(server.put_file(path, content, "application/pdf"))
+    assert asyncio.run(server.file_exists(path))
+    assert not asyncio.run(server.put_file(path, b"other", "application/pdf"))
+    _, files = endpoints(URL, LOGIN)
+    from urllib.parse import quote
+
+    request = urllib.request.Request(files + quote(path))
+    token = b64encode(f"{LOGIN}:{PASSWORD}".encode()).decode()
+    request.add_header("Authorization", f"Basic {token}")
+    with urllib.request.urlopen(request) as response:
+        assert response.read() == content

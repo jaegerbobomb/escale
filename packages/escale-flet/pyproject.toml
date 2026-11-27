@@ -1,6 +1,6 @@
 [project]
 name = "escale-flet"
-version = "0.22.0"
+version = "0.23.0"
 description = "Escale user interface built with Flet."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"

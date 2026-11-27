@@ -3,7 +3,8 @@
 SQLite holds the reservations as kitinerary printed them, plus their document ids; the
 files themselves sit next to it as ``documents/<sha256>/<name>`` with a ``meta.json``
 (KDE Itinerary's layout). It is a cache of the user's Nextcloud: each reservation
-remembers its calendar event and what the calendar last had (S008).
+remembers its calendar event and what the calendar last had (S008); each document,
+whether it is on the server (S009a).
 """
 
 from __future__ import annotations
@@ -17,20 +18,22 @@ import threading
 from collections.abc import Sequence
 from pathlib import Path
 
+from escale_core.documents import file_name, meta, payload
 from escale_core.extraction import Document, ExtractedReservation
 from escale_core.importer import reservation_from_jsonld
 from escale_core.store import Outgoing, identity
 
 __all__ = ["SCHEMA_VERSION", "SqliteReservationStore", "default_data_dir", "identity"]
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS documents (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    mime_type TEXT NOT NULL
+    mime_type TEXT NOT NULL,
+    uploaded INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS reservations (
     id INTEGER PRIMARY KEY,
@@ -44,7 +47,8 @@ CREATE TABLE IF NOT EXISTS reservations (
 );
 """
 """Version 3 (S008b): ``uid``, ``href``, ``etag`` and ``sent`` (the JSON-LD the calendar
-has) on each reservation; identities include the travellers."""
+has) on each reservation; identities include the travellers. Version 4 (S009a):
+``uploaded`` on each document, and ``sent`` holds ``subjectOf`` too."""
 
 _SYNC_COLUMNS = ("uid", "href", "etag", "sent")
 
@@ -57,6 +61,8 @@ def default_data_dir() -> Path:
 
 def _migrate(db: sqlite3.Connection) -> None:
     """Bring a database written by an earlier version up to ``SCHEMA_VERSION``."""
+    if "uploaded" not in {row[1] for row in db.execute("PRAGMA table_info(documents)")}:
+        db.execute("ALTER TABLE documents ADD COLUMN uploaded INTEGER NOT NULL DEFAULT 0")
     columns = {row[1] for row in db.execute("PRAGMA table_info(reservations)")}
     for column in _SYNC_COLUMNS:
         if column not in columns:
@@ -139,15 +145,11 @@ class SqliteReservationStore:
     def _keep_file(self, document: Document, source: Path) -> None:
         folder = self._dir / "documents" / document.id
         folder.mkdir(parents=True, exist_ok=True)
-        target = folder / Path(document.name).name
+        target = folder / file_name(document)
         if not target.exists():
             shutil.copyfile(source, target)
-        meta = {
-            "@type": "DigitalDocument",
-            "name": target.name,
-            "encodingFormat": document.mime_type,
-        }
-        (folder / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        described = json.dumps(meta(document), indent=2)
+        (folder / "meta.json").write_text(described, encoding="utf-8")
 
     # --- reservations ---
 
@@ -223,15 +225,21 @@ class SqliteReservationStore:
 
     # --- calendar sync (S008) ---
 
-    _PENDING = "(sent IS NULL OR sent != raw)"
+    @staticmethod
+    def _pending(raw: str, subject_of: str, sent: str | None) -> bool:
+        """The calendar does not have the reservation as it is here."""
+        return sent is None or json.loads(sent) != payload(json.loads(raw), json.loads(subject_of))
 
     def _unsent(self) -> tuple[Outgoing, ...]:
         with self._lock:
             db = self._connect()
-            rows = db.execute(
-                f"SELECT raw, subject_of, uid, href, etag FROM reservations"
-                f" WHERE {self._PENDING} ORDER BY id"
-            ).fetchall()
+            rows = [
+                (raw, subject_of, uid, href, etag)
+                for raw, subject_of, uid, href, etag, sent in db.execute(
+                    "SELECT raw, subject_of, uid, href, etag, sent FROM reservations ORDER BY id"
+                )
+                if self._pending(raw, subject_of, sent)
+            ]
             batches = {
                 uid: db.execute(
                     "SELECT raw, subject_of FROM reservations WHERE uid = ? ORDER BY id", (uid,)
@@ -262,7 +270,7 @@ class SqliteReservationStore:
                     db.execute(
                         "UPDATE reservations SET uid = ?, href = ?, etag = ?, sent = ?"
                         " WHERE identity = ?",
-                        (uid, href, etag, json.dumps(dict(r.raw)), identity(r)),
+                        (uid, href, etag, json.dumps(payload(r.raw, r.subject_of)), identity(r)),
                     )
 
     def _received(
@@ -279,21 +287,31 @@ class SqliteReservationStore:
             db = self._connect()
             with db:
                 mine = db.execute(
-                    f"SELECT identity, subject_of, uid, {self._PENDING} FROM reservations"
+                    "SELECT identity, raw, subject_of, uid, sent FROM reservations"
                     f" WHERE href = ? OR identity IN ({marks})",
                     (href, *keys),
                 ).fetchall()
-                if not force and any(p and u is not None for _, _, u, p in mine):
+                waiting = (u is not None and self._pending(r, s, sent) for _, r, s, u, sent in mine)
+                if not force and any(waiting):
                     return False
-                documents = {key: subject_of for key, subject_of, _, _ in mine}
+                documents = {key: json.loads(subject_of) for key, _, subject_of, _, _ in mine}
                 db.execute("DELETE FROM reservations WHERE href = ?", (href,))
                 for key, r in zip(keys, batch, strict=True):
-                    raw = json.dumps(dict(r.raw))
+                    kept: list[str] = documents.get(key, [])
+                    both = kept + [d for d in r.subject_of if d not in kept]
                     db.execute(
                         "INSERT OR REPLACE INTO reservations"
                         " (identity, raw, subject_of, uid, href, etag, sent)"
                         " VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (key, raw, documents.get(key, "[]"), uid, href, etag, raw),
+                        (
+                            key,
+                            json.dumps(dict(r.raw)),
+                            json.dumps(both),
+                            uid,
+                            href,
+                            etag,
+                            json.dumps(payload(r.raw, r.subject_of)),
+                        ),
                     )
         return True
 
@@ -301,10 +319,10 @@ class SqliteReservationStore:
         with self._lock:
             db = self._connect()
             with db:
-                pending = db.execute(
-                    f"SELECT 1 FROM reservations WHERE href = ? AND {self._PENDING}", (href,)
-                ).fetchone()
-                if pending is not None and not force:
+                rows = db.execute(
+                    "SELECT raw, subject_of, sent FROM reservations WHERE href = ?", (href,)
+                ).fetchall()
+                if not force and any(self._pending(*row) for row in rows):
                     return False
                 db.execute("DELETE FROM reservations WHERE href = ?", (href,))
         return True
@@ -338,6 +356,24 @@ class SqliteReservationStore:
                         "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
                         (f"token {calendar}", token),
                     )
+
+    # --- documents (S009a) ---
+
+    def _unsent_documents(self) -> tuple[tuple[Document, Path], ...]:
+        with self._lock:
+            rows = (
+                self._connect()
+                .execute("SELECT id, name, mime_type FROM documents WHERE uploaded = 0")
+                .fetchall()
+            )
+        found = ((Document(i, n, m), self.document_path(i)) for i, n, m in rows)
+        return tuple((d, path) for d, path in found if path is not None)
+
+    def _document_sent(self, document_id: str) -> None:
+        with self._lock:
+            db = self._connect()
+            with db:
+                db.execute("UPDATE documents SET uploaded = 1 WHERE id = ?", (document_id,))
 
     # --- ReservationStore ---
 
@@ -387,3 +423,9 @@ class SqliteReservationStore:
 
     async def set_calendar_token(self, calendar: str, token: str | None) -> None:
         await asyncio.to_thread(self._set_token, calendar, token)
+
+    async def unsent_documents(self) -> tuple[tuple[Document, Path], ...]:
+        return await asyncio.to_thread(self._unsent_documents)
+
+    async def document_sent(self, document_id: str) -> None:
+        await asyncio.to_thread(self._document_sent, document_id)

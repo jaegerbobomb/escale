@@ -40,6 +40,11 @@ class FakeNextcloud:
         self._log: list[tuple[int, str, str]] = []
         """(version, calendar, name) of each write or delete, for ``changes``."""
         self._epoch = 0
+        self.files: dict[str, bytes] = {}
+        """Path relative to the user's files -> content (S009a)."""
+        self.written: list[str] = []
+        """The files written, in order."""
+        self.uploads = 0
 
     def _check(self) -> None:
         if not self.reachable:
@@ -73,6 +78,21 @@ class FakeNextcloud:
     async def create_folder(self, name: str) -> None:
         self._check()
         self.folders.add(name)
+
+    async def file_exists(self, path: str) -> bool:
+        self._check()
+        return path in self.files
+
+    async def put_file(self, path: str, content: bytes, content_type: str) -> bool:
+        self._check()
+        if path in self.files:
+            return False
+        parts = path.split("/")
+        self.folders.update("/".join(parts[:n]) for n in range(1, len(parts)))
+        self.files[path] = content
+        self.written.append(path)
+        self.uploads += 1
+        return True
 
     def _etag(self) -> str:
         self._version += 1
