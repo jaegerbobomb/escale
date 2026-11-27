@@ -24,6 +24,11 @@ right away, after each import or edit, when it starts and every 10 minutes while
 open. Without network, the changes wait on the device and are sent when the server can
 be reached again. A reservation with no date at all stays on the device.
 
+It also takes in what changed on the calendar since: reservations added or edited on
+your other devices, or by KDE Itinerary, appear, and those whose event was deleted
+disappear. A change you made on this device that has not reached the server yet is
+never overwritten.
+
 If the connection fails, nothing is saved and the preferences say why: the server
 refused the login or the app password, the server cannot be reached, or no Nextcloud
 answers at that address.

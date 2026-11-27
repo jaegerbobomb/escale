@@ -6,9 +6,11 @@ from dataclasses import dataclass, field
 
 from escale_core.nextcloud import (
     Calendar,
+    Changes,
     CredentialsRefused,
     EventChanged,
     NotNextcloud,
+    RemoteEvent,
     ServerUnreachable,
 )
 
@@ -35,6 +37,9 @@ class FakeNextcloud:
         self.events: dict[str, dict[str, tuple[bytes, str]]] = {}
         """Calendar URL -> event name (its uid) -> (ICS, ETag)."""
         self._version = 0
+        self._log: list[tuple[int, str, str]] = []
+        """(version, calendar, name) of each write or delete, for ``changes``."""
+        self._epoch = 0
 
     def _check(self) -> None:
         if not self.reachable:
@@ -82,10 +87,41 @@ class FakeNextcloud:
         if (etag is None) != (current is None) or (current and current[1] != etag):
             raise EventChanged
         events[uid] = (ics, self._etag())
+        self._log.append((self._version, calendar + "/", uid))
         return events[uid][1]
 
     def touch_all(self) -> None:
         """Every event changed by someone else: new ETags."""
-        for events in self.events.values():
+        for calendar, events in self.events.items():
             for uid, (ics, _) in events.items():
                 events[uid] = (ics, self._etag())
+                self._log.append((self._version, calendar, uid))
+
+    def delete_all(self) -> None:
+        """Every event deleted by someone else."""
+        for calendar, events in self.events.items():
+            for uid in list(events):
+                del events[uid]
+                self._version += 1
+                self._log.append((self._version, calendar, uid))
+
+    def forget_tokens(self) -> None:
+        """The server lost its sync history: earlier tokens are refused."""
+        self._epoch += 1
+
+    async def changes(self, calendar: str, token: str | None) -> Changes:
+        self._check()
+        events = self.events.get(calendar, {})
+        now = f"{self._epoch}:{self._version}"
+        epoch, _, since = (token or "").partition(":")
+        if token is None or epoch != str(self._epoch):
+            listed = tuple(RemoteEvent(calendar + n + ".ics", e, i) for n, (i, e) in events.items())
+            return Changes(now, listed, full=True)
+        names = {n for v, c, n in self._log if c == calendar and v > int(since)}
+        changed = tuple(
+            RemoteEvent(calendar + n + ".ics", events[n][1], events[n][0])
+            for n in sorted(names)
+            if n in events
+        )
+        removed = tuple(calendar + n + ".ics" for n in sorted(names) if n not in events)
+        return Changes(now, changed, removed)

@@ -27,11 +27,11 @@ SYNC_EVERY_S = 600
 log = logging.getLogger(__name__)
 
 
-async def keep_in_sync(sync: Sync) -> None:
+async def keep_in_sync(shell: Shell) -> None:
     """At start, then every ``SYNC_EVERY_S``; a failure waits for the next round."""
     while True:
         try:
-            await sync.run()
+            await shell.synchronise()
         except Exception:
             log.exception("calendar sync failed")
         await asyncio.sleep(SYNC_EVERY_S)
@@ -50,7 +50,7 @@ async def main(page: ft.Page) -> None:
     shell = Shell(importer=Importer(KitineraryCli(), store), account=account, sync=sync.run)
     shell.mount(page)
     await shell.refresh()
-    page.run_task(keep_in_sync, sync)
+    page.run_task(keep_in_sync, shell)
 
 
 def run(argv: list[str] | None = None) -> None:

@@ -392,8 +392,24 @@ class Shell:
         await self._synced()
 
     async def _synced(self) -> None:
-        if self.sync is not None:
-            await self.sync()
+        await self.synchronise()
+
+    async def synchronise(self) -> None:
+        """Run the sync; show what it received (S008b). A detail whose reservation
+        changed or went away elsewhere is closed."""
+        if self.sync is None:
+            return
+        report = await self.sync()
+        if not getattr(report, "received", 0):
+            return
+        trips = group(await self.store.reservations())
+        self.trip = active_trip(trips, self.clock())
+        if self.detail is not None and (
+            self.trip is None or self.detail not in self.trip.reservations
+        ):
+            self.detail = None
+        self._apply()
+        self._update()
 
     # --- preferences (S006b) ---
 

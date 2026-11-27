@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from pathlib import Path
 
 import pytest
 from caldav.davclient import DAVClient
@@ -38,12 +39,17 @@ if not (URL and LOGIN and PASSWORD):
 
 @pytest.fixture
 def clean() -> None:
-    """No "Trips" calendar and no "Escale" folder before the test."""
+    """An empty "Trips" calendar, if there is one, and no "Escale" folder.
+
+    The calendar is emptied, not deleted: Nextcloud limits how many calendars an account
+    creates per hour (``Too many calendars created``), and each run would create one.
+    """
     dav, files = endpoints(URL, LOGIN)
     client = DAVClient(url=dav, username=LOGIN, password=PASSWORD)
     for calendar in client.principal().calendars():  # type: ignore[no-untyped-call]
         if calendar.get_display_name() == "Trips":
-            calendar.delete()
+            for event in calendar.events():
+                event.delete()
     client.delete(files + "Escale/")
 
 
@@ -108,3 +114,75 @@ def test_put_event_creates_then_updates_and_refuses_a_stale_etag(clean: None) ->
     body = DAVClient(url=dav, username=LOGIN, password=PASSWORD).request(href).raw
     [kept] = entries_in(body)
     assert dict(kept.reservations[0].raw) == dict(hotel.raw)
+
+
+def test_changes_list_then_follow_the_calendar(clean: None) -> None:
+    """S008b: a full listing, then only what changed, deletions included."""
+    server = NextcloudDav(URL, LOGIN, PASSWORD)
+    trips = asyncio.run(create_trips_calendar(server))
+    first = asyncio.run(server.changes(trips.url, None))
+    assert first.full and first.changed == () and first.token
+    hotel = reservation_from_jsonld(
+        {
+            "@type": "LodgingReservation",
+            "reservationNumber": "ESC-H2",
+            "checkinTime": "2026-07-08T15:00:00+01:00",
+            "checkoutTime": "2026-07-10T11:00:00+01:00",
+            "reservationFor": {"@type": "LodgingBusiness", "name": "Hotel"},
+        },
+        (),
+    )
+    assert hotel is not None
+    entry = new_entry([hotel])
+    href = event_href(trips.url, entry.uid)
+    etag = asyncio.run(server.put_event(href, to_ics([entry]), None))
+    second = asyncio.run(server.changes(trips.url, first.token))
+    assert not second.full
+    assert [(e.href, e.etag) for e in second.changed] == [(href, etag)]
+    assert entries_in(second.changed[0].ics)[0].uid == entry.uid
+    dav, _ = endpoints(URL, LOGIN)
+    DAVClient(url=dav, username=LOGIN, password=PASSWORD).delete(href)
+    third = asyncio.run(server.changes(trips.url, second.token))
+    assert third.removed == (href,) and third.changed == ()
+    refused = asyncio.run(server.changes(trips.url, "not-a-token"))
+    assert refused.full and refused.changed == ()
+
+
+def test_two_devices_share_a_reservation(clean: None, tmp_path: Path) -> None:
+    """S008a + S008b end to end: saved on one device, shown on the other, then gone."""
+    from escale_core.account import Account
+    from escale_core.extraction import Document
+    from escale_core.passwords import MemoryPasswords
+    from escale_core.settings import SettingsFile
+    from escale_core.store import InMemoryReservationStore
+    from escale_core.sync import Sync
+
+    devices = []
+    for n in range(2):
+        account = Account(SettingsFile(tmp_path / f"{n}.json"), MemoryPasswords(True), NextcloudDav)
+        assert asyncio.run(account.connect(URL, LOGIN, PASSWORD))
+        asyncio.run(account.create_trips())
+        store = InMemoryReservationStore()
+        devices.append((store, Sync(store, account)))
+    (first, first_sync), (second, second_sync) = devices
+    hotel = reservation_from_jsonld(
+        {
+            "@type": "LodgingReservation",
+            "reservationNumber": "ESC-H3",
+            "checkinTime": "2026-07-08T15:00:00+01:00",
+            "checkoutTime": "2026-07-10T11:00:00+01:00",
+            "reservationFor": {"@type": "LodgingBusiness", "name": "Hotel"},
+        },
+        ("d",),
+    )
+    assert hotel is not None
+    asyncio.run(first.add(Document("d", "b.pdf", "application/pdf"), [hotel]))
+    assert asyncio.run(first_sync.run()).sent == 1
+    assert asyncio.run(second_sync.run()).received == 1
+    [shown] = asyncio.run(second.reservations())
+    assert dict(shown.raw) == dict(hotel.raw)
+    [href] = asyncio.run(second.events())
+    dav, _ = endpoints(URL, LOGIN)
+    DAVClient(url=dav, username=LOGIN, password=PASSWORD).delete(href)
+    asyncio.run(second_sync.run())
+    assert asyncio.run(second.reservations()) == ()

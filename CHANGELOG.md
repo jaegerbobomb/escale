@@ -6,6 +6,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-27
+
+### Added
+- S008b: Escale takes in what changed on the calendar: reservations added or edited on
+  another device or by KDE Itinerary appear, deleted ones disappear, without
+  overwriting a local change that waits to be sent. A batch of several reservations
+  (one booking, two travellers) is written back whole.
+
+### Changed
+- The local database moves to schema 3 (sync state on each reservation; a booking for
+  two travellers is two reservations); 0.20.0 databases are migrated at start.
+- A server that limits requests (HTTP 429) is reported as "try again later".
+
 ## [0.20.0] - 2026-11-27
 
 ### Added
@@ -215,7 +228,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.21.0...HEAD
+[0.21.0]: https://github.com/jaegerbobomb/escale/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/jaegerbobomb/escale/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/jaegerbobomb/escale/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/jaegerbobomb/escale/compare/v0.17.0...v0.18.0
