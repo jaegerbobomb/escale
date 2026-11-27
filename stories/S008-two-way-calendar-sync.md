@@ -3,10 +3,10 @@ id: S008
 title: "Two-way calendar sync"
 epic: sync
 depends_on: [S006, S007]
-status: todo
+status: split
 estimate: L
 bdd: true
-updated: "2026-11-24"
+updated: "2026-11-27"
 adr: [4]
 ---
 
@@ -74,3 +74,6 @@ sequenceDiagram
 ## Notes
 
 - 2026-11-24: validated by the maintainer (`todo`).
+- 2026-11-27: proposed split into S008a (send local changes), S008b (receive changes
+  from the calendar) and S008c (a conflicting edit keeps the server version). This
+  story keeps the framing; the children carry the work and the scenarios.
