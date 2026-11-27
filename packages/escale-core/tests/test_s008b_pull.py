@@ -183,7 +183,8 @@ def test_plain_events_are_ignored(world: World) -> None:
     assert device.run().received == 0 and device.shown() == []
 
 
-def test_a_local_edit_waiting_to_be_sent_is_not_overwritten(world: World) -> None:
+def test_a_local_edit_meets_one_made_elsewhere(world: World) -> None:
+    """The local change is not sent over the other one; S008c keeps the server's."""
     first, second = world.device(), world.device()
     asyncio.run(first.store.add(DOC, [hotel()]))
     first.run()
@@ -195,8 +196,9 @@ def test_a_local_edit_waiting_to_be_sent_is_not_overwritten(world: World) -> Non
     first.run()
     world.server.reachable = True
     report = second.run()
-    assert report.changed_elsewhere == 1  # S008c decides
-    assert second.shown() == ["From the second"]
+    [kept] = report.changed_elsewhere
+    assert kept.raw["reservationFor"]["name"] == "From the first"
+    assert second.shown() == ["From the first"]
 
 
 def test_a_refused_token_starts_over(world: World) -> None:

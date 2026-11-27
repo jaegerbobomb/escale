@@ -180,7 +180,8 @@ def test_without_a_chosen_calendar_nothing_is_sent(world: World) -> None:
     assert world.server.events == {}
 
 
-def test_a_changed_event_stays_in_the_outbox(world: World) -> None:
+def test_a_changed_event_is_not_overwritten(world: World) -> None:
+    """S008c since: the server's version is kept, and the run says so."""
     world.connect()
     asyncio.run(world.store.add(DOC, [hotel()]))
     asyncio.run(world.sync().run())
@@ -188,8 +189,9 @@ def test_a_changed_event_stays_in_the_outbox(world: World) -> None:
     world.server.touch_all()  # someone else edited it: the known ETag is stale
     asyncio.run(world.store.replace(old, edited(old, replace(fields_of(old), name="X"))))
     report = asyncio.run(world.sync().run())
-    assert report.changed_elsewhere == 1
-    assert len(asyncio.run(world.store.unsent())) == 1
+    assert [r.raw for r in report.changed_elsewhere] == [HOTEL]
+    assert asyncio.run(world.store.unsent()) == ()
+    assert world.calendar() == [HOTEL]
 
 
 def test_a_reservation_without_date_is_skipped(world: World) -> None:

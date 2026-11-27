@@ -52,6 +52,8 @@ VIEWS: dict[str, str] = {
     "preferences": "/preferences",
     "preferences-refused": "/preferences-refused",
     "preferences-connected": "/preferences-connected",
+    # The toast after a change made here gave way to one made elsewhere (S008c).
+    "changed-elsewhere": "/changed-elsewhere",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).

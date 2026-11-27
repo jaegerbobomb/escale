@@ -110,6 +110,23 @@ class NextcloudDav:
 
         return await self._run(work)
 
+    async def get_event(self, href: str) -> RemoteEvent | None:
+        def work() -> RemoteEvent | None:
+            response = self._client.request(href)
+            if response.status == 404:
+                return None
+            if response.status >= 400:
+                raise dav_error.NotFoundError(f"{response.status} {response.reason}")
+            tag = response.headers.get("ETag")
+            body = response.raw
+            return RemoteEvent(
+                href,
+                str(tag) if tag else None,
+                body if isinstance(body, bytes) else str(body).encode(),
+            )
+
+        return await self._run(work)
+
     async def changes(self, calendar: str, token: str | None) -> Changes:
         def report(token: str | None) -> Any:
             body = _SYNC_COLLECTION.format(token=escape(token or ""))

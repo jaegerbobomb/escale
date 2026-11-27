@@ -8,7 +8,7 @@ keeps the selected tab across layouts.
 from __future__ import annotations
 
 import tempfile
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, StrEnum
@@ -127,6 +127,24 @@ PHONES = {ft.PagePlatform.ANDROID, ft.PagePlatform.IOS, ft.PagePlatform.ANDROID_
 FileChooser = Callable[[], Awaitable[Path | None]]
 Sharer = Callable[[str], Awaitable[str | None]]
 """Shares a text; returns a message to confirm it (``None``: the system showed its own)."""
+
+
+def toast(text: str, window: float | None = None, duration: int = 4000) -> ft.SnackBar:
+    """A short notice floating at the bottom, as libadwaita's AdwToast (ADR-0008)."""
+    return ft.SnackBar(
+        ft.Text(text),
+        behavior=ft.SnackBarBehavior.FLOATING,
+        shape=ft.RoundedRectangleBorder(radius=22),
+        width=min(460, (window or 460) - 24),
+        duration=duration,
+    )
+
+
+def changed_elsewhere(titles: Sequence[str]) -> str:
+    """The toast after a run where the server's version won over a local change (S008c)."""
+    if len(titles) == 1:
+        return f"{titles[0]} was changed on another device; that version is kept."
+    return f"{len(titles)} reservations were changed on another device; those versions are kept."
 
 
 def shares_with_sheet(platform: ft.PagePlatform | None) -> bool:
@@ -402,6 +420,7 @@ class Shell:
         report = await self.sync()
         if not getattr(report, "received", 0):
             return
+        titles = [segment_ref_title(r) for r in getattr(report, "changed_elsewhere", ())]
         trips = group(await self.store.reservations())
         self.trip = active_trip(trips, self.clock())
         if self.detail is not None and (
@@ -409,6 +428,8 @@ class Shell:
         ):
             self.detail = None
         self._apply()
+        if titles and self._page is not None:
+            self._page.show_dialog(toast(changed_elsewhere(titles), self.width))
         self._update()
 
     # --- preferences (S006b) ---
@@ -603,7 +624,7 @@ class Shell:
         async def share_it(_: Any) -> None:
             message = await self.share(text)
             if message and self._page is not None:
-                self._page.show_dialog(ft.SnackBar(ft.Text(message)))
+                self._page.show_dialog(toast(message, self.width))
 
         return share_it
 

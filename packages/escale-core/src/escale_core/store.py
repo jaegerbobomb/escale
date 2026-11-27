@@ -90,15 +90,22 @@ class ReservationStore(Protocol):
         ...
 
     async def received(
-        self, uid: str, href: str, etag: str | None, batch: Sequence[ExtractedReservation]
+        self,
+        uid: str,
+        href: str,
+        etag: str | None,
+        batch: Sequence[ExtractedReservation],
+        force: bool = False,
     ) -> bool:
         """The calendar's version of an event replaces the local one; ``False`` (and
-        nothing changed) while a local change of that event waits to be sent."""
+        nothing changed) while a local change of that event waits to be sent, unless
+        ``force`` (the server's version wins, S008c)."""
         ...
 
-    async def removed(self, href: str) -> bool:
+    async def removed(self, href: str, force: bool = False) -> bool:
         """The event at ``href`` is gone from the calendar: its reservations go too;
-        ``False`` (and nothing changed) while a local change of it waits to be sent."""
+        ``False`` (and nothing changed) while a local change of it waits to be sent,
+        unless ``force``."""
         ...
 
     async def events(self) -> dict[str, str | None]:
@@ -186,11 +193,16 @@ class InMemoryReservationStore:
                 row.uid, row.href, row.etag, row.sent = uid, href, etag, dict(r.raw)
 
     async def received(
-        self, uid: str, href: str, etag: str | None, batch: Sequence[ExtractedReservation]
+        self,
+        uid: str,
+        href: str,
+        etag: str | None,
+        batch: Sequence[ExtractedReservation],
+        force: bool = False,
     ) -> bool:
         keys = {identity(r) for r in batch}
         mine = [k for k, row in self._rows.items() if row.href == href or k in keys]
-        if any(self._rows[k].pending and self._rows[k].uid is not None for k in mine):
+        if not force and any(self._rows[k].pending and self._rows[k].uid for k in mine):
             return False
         documents = {k: self._rows[k].reservation.subject_of for k in mine}
         for k in mine:
@@ -202,9 +214,9 @@ class InMemoryReservationStore:
             self._rows[key] = _Row(_with_documents(r, kept), uid, href, etag, dict(r.raw))
         return True
 
-    async def removed(self, href: str) -> bool:
+    async def removed(self, href: str, force: bool = False) -> bool:
         mine = [k for k, row in self._rows.items() if row.href == href]
-        if any(self._rows[k].pending for k in mine):
+        if not force and any(self._rows[k].pending for k in mine):
             return False
         for k in mine:
             del self._rows[k]

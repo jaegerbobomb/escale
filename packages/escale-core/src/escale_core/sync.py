@@ -3,22 +3,28 @@
 Each run first receives what changed on the calendar (S008b: ``sync-collection`` with the
 stored token), then sends the store's outbox (S008a), as events in KDE Itinerary's
 format (S007). Nothing happens without an account and a chosen calendar; an unreachable
-server leaves everything for the next run. A local change waiting to be sent is never
-overwritten by the calendar's version: S008c decides between the two.
+server leaves everything for the next run.
+
+When the same event changed both here and on the server (S008c), the server's version
+wins: the local change is dropped and the run names the reservation, so that the UI
+can say so. No merge, no choice, in v1 (ADR-0004).
 """
 
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from collections.abc import Sequence
+from dataclasses import dataclass, field
 
 from escale_core.account import Account
+from escale_core.extraction import ExtractedReservation
 from escale_core.ical_mapping import entries_in, new_entry, to_ics
 from escale_core.nextcloud import (
     EventChanged,
     NextcloudError,
     NextcloudServer,
     Problem,
+    RemoteEvent,
     event_href,
 )
 from escale_core.store import ReservationStore
@@ -29,10 +35,22 @@ class SyncReport:
     sent: int = 0
     received: int = 0
     """Events added, changed or removed locally because the calendar changed."""
-    changed_elsewhere: int = 0
-    """Events changed on the server while a local change waits; S008c resolves them."""
+    changed_elsewhere: tuple[ExtractedReservation, ...] = ()
+    """Reservations whose local change gave way to the server's version (S008c)."""
     problem: Problem | None = None
     """Why the run stopped early (server unreachable, credentials refused)."""
+
+
+@dataclass
+class _Run:
+    received: int = 0
+    sent: int = 0
+    changed_elsewhere: list[ExtractedReservation] = field(default_factory=list)
+    settled: set[str] = field(default_factory=set)
+    """Hrefs whose conflict this run already resolved: not sent again."""
+
+    def report(self, problem: Problem | None = None) -> SyncReport:
+        return SyncReport(self.sent, self.received, tuple(self.changed_elsewhere), problem)
 
 
 class Sync:
@@ -47,53 +65,60 @@ class Sync:
             if target is None:
                 return SyncReport()
             server, calendar = target
+            run = _Run()
             try:
-                received, conflicts = await self._pull(server, calendar)
+                await self._pull(server, calendar, run)
+                await self._push(server, calendar, run)
             except NextcloudError as e:
-                return SyncReport(problem=e.problem)
-            return await self._push(server, calendar, received, conflicts)
+                return run.report(e.problem)
+            return run.report()
 
-    async def _pull(self, server: NextcloudServer, calendar: str) -> tuple[int, set[str]]:
-        """Apply the calendar's changes; returns how many, and the hrefs left in conflict."""
+    async def _apply(self, event: RemoteEvent, run: _Run, force: bool = False) -> None:
+        """The calendar's version of ``event``. A local change waiting to be sent is
+        dropped for it (S008c), and the reservation named in the report."""
+        for entry in entries_in(event.ics):
+            kept = await self._store.received(
+                entry.uid, event.href, event.etag, entry.reservations, force
+            )
+            if not kept:
+                await self._store.received(
+                    entry.uid, event.href, event.etag, entry.reservations, True
+                )
+            run.received += 1
+            if force or not kept:
+                run.changed_elsewhere.append(entry.reservations[0])
+                run.settled.add(event.href)
+
+    async def _gone(self, href: str, run: _Run, local: Sequence[ExtractedReservation]) -> None:
+        """The event at ``href`` was deleted elsewhere; a local change of it gives way."""
+        if not await self._store.removed(href):
+            await self._store.removed(href, force=True)
+            run.settled.add(href)
+            if local:
+                run.changed_elsewhere.append(local[0])
+        run.received += 1
+
+    async def _pull(self, server: NextcloudServer, calendar: str, run: _Run) -> None:
+        pending = {o.href: o.batch for o in await self._store.unsent() if o.href}
         token = await self._store.calendar_token(calendar)
         changes = await server.changes(calendar, token)
         known = await self._store.events()
-        received = 0
-        conflicts: set[str] = set()
         for event in changes.changed:
-            if known.get(event.href) == event.etag:
-                continue  # what this device sent itself
-            entries = entries_in(event.ics)
-            if not entries:
-                continue  # a plain event, not a reservation
-            for entry in entries:
-                if await self._store.received(
-                    entry.uid, event.href, event.etag, entry.reservations
-                ):
-                    received += 1
-                else:
-                    conflicts.add(event.href)
+            if known.get(event.href) != event.etag:  # else: what this device sent
+                await self._apply(event, run)
         gone = list(changes.removed)
         if changes.full:
             listed = {e.href for e in changes.changed}
             gone += [href for href in known if href not in listed]
         for href in gone:
-            if href not in known:
-                continue
-            if await self._store.removed(href):
-                received += 1
-            else:
-                conflicts.add(href)
+            if href in known:
+                await self._gone(href, run, pending.get(href, ()))
         await self._store.set_calendar_token(calendar, changes.token)
-        return received, conflicts
 
-    async def _push(
-        self, server: NextcloudServer, calendar: str, received: int, conflicts: set[str]
-    ) -> SyncReport:
-        sent, changed = 0, len(conflicts)
+    async def _push(self, server: NextcloudServer, calendar: str, run: _Run) -> None:
         for outgoing in await self._store.unsent():
-            if outgoing.href in conflicts:
-                continue  # the server has a newer version: S008c decides
+            if outgoing.href in run.settled:
+                continue
             batch = outgoing.batch or (outgoing.reservation,)
             try:
                 entry = new_entry(list(batch), uid=outgoing.uid)
@@ -104,10 +129,12 @@ class Sync:
             try:
                 etag = await server.put_event(href, ics, outgoing.etag)
             except EventChanged:
-                changed += 1
+                # changed on the server after the pull: its version wins (S008c)
+                current = await server.get_event(href)
+                if current is None:
+                    await self._gone(href, run, batch)
+                else:
+                    await self._apply(current, run, force=True)
                 continue
-            except NextcloudError as e:
-                return SyncReport(sent, received, changed, e.problem)
             await self._store.sent(batch, entry.uid, href, etag)
-            sent += 1
-        return SyncReport(sent, received, changed)
+            run.sent += 1
