@@ -78,6 +78,10 @@ class NextcloudServer(Protocol):
         with that ETag; ``EventChanged`` otherwise. Returns its new ETag, if given."""
         ...
 
+    async def get_event(self, href: str) -> RemoteEvent | None:
+        """The calendar object at ``href``; ``None`` when it is gone (S008c)."""
+        ...
+
     async def changes(self, calendar: str, token: str | None) -> Changes:
         """What changed in ``calendar`` since ``token`` (RFC 6578 ``sync-collection``);
         everything, as a full listing, when there is no token or the server refused it."""

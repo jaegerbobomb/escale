@@ -109,6 +109,12 @@ class FakeNextcloud:
         """The server lost its sync history: earlier tokens are refused."""
         self._epoch += 1
 
+    async def get_event(self, href: str) -> RemoteEvent | None:
+        self._check()
+        calendar, _, name = href.rpartition("/")
+        found = self.events.get(calendar + "/", {}).get(name.removesuffix(".ics"))
+        return RemoteEvent(href, found[1], found[0]) if found else None
+
     async def changes(self, calendar: str, token: str | None) -> Changes:
         self._check()
         events = self.events.get(calendar, {})

@@ -266,7 +266,12 @@ class SqliteReservationStore:
                     )
 
     def _received(
-        self, uid: str, href: str, etag: str | None, batch: Sequence[ExtractedReservation]
+        self,
+        uid: str,
+        href: str,
+        etag: str | None,
+        batch: Sequence[ExtractedReservation],
+        force: bool,
     ) -> bool:
         keys = [identity(r) for r in batch]
         marks = ",".join("?" * len(keys))
@@ -278,7 +283,7 @@ class SqliteReservationStore:
                     f" WHERE href = ? OR identity IN ({marks})",
                     (href, *keys),
                 ).fetchall()
-                if any(pending and known_uid is not None for _, _, known_uid, pending in mine):
+                if not force and any(p and u is not None for _, _, u, p in mine):
                     return False
                 documents = {key: subject_of for key, subject_of, _, _ in mine}
                 db.execute("DELETE FROM reservations WHERE href = ?", (href,))
@@ -292,14 +297,14 @@ class SqliteReservationStore:
                     )
         return True
 
-    def _removed(self, href: str) -> bool:
+    def _removed(self, href: str, force: bool) -> bool:
         with self._lock:
             db = self._connect()
             with db:
                 pending = db.execute(
                     f"SELECT 1 FROM reservations WHERE href = ? AND {self._PENDING}", (href,)
                 ).fetchone()
-                if pending is not None:
+                if pending is not None and not force:
                     return False
                 db.execute("DELETE FROM reservations WHERE href = ?", (href,))
         return True
@@ -362,12 +367,17 @@ class SqliteReservationStore:
         await asyncio.to_thread(self._sent, batch, uid, href, etag)
 
     async def received(
-        self, uid: str, href: str, etag: str | None, batch: Sequence[ExtractedReservation]
+        self,
+        uid: str,
+        href: str,
+        etag: str | None,
+        batch: Sequence[ExtractedReservation],
+        force: bool = False,
     ) -> bool:
-        return await asyncio.to_thread(self._received, uid, href, etag, batch)
+        return await asyncio.to_thread(self._received, uid, href, etag, batch, force)
 
-    async def removed(self, href: str) -> bool:
-        return await asyncio.to_thread(self._removed, href)
+    async def removed(self, href: str, force: bool = False) -> bool:
+        return await asyncio.to_thread(self._removed, href, force)
 
     async def events(self) -> dict[str, str | None]:
         return await asyncio.to_thread(self._events)

@@ -110,10 +110,13 @@ def test_put_event_creates_then_updates_and_refuses_a_stale_etag(clean: None) ->
     assert second
     with pytest.raises(EventChanged):
         asyncio.run(server.put_event(href, to_ics([entry]), '"stale"'))
-    dav, _ = endpoints(URL, LOGIN)
-    body = DAVClient(url=dav, username=LOGIN, password=PASSWORD).request(href).raw
-    [kept] = entries_in(body)
+    current = asyncio.run(server.get_event(href))
+    assert current is not None and current.etag == second
+    [kept] = entries_in(current.ics)
     assert dict(kept.reservations[0].raw) == dict(hotel.raw)
+    dav, _ = endpoints(URL, LOGIN)
+    DAVClient(url=dav, username=LOGIN, password=PASSWORD).delete(href)
+    assert asyncio.run(server.get_event(href)) is None
 
 
 def test_changes_list_then_follow_the_calendar(clean: None) -> None:

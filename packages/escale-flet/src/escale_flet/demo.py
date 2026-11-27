@@ -24,7 +24,7 @@ from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
 from escale_core.store import InMemoryReservationStore
 from escale_flet.import_sheet import phone_sheet
-from escale_flet.shell import Shell
+from escale_flet.shell import Shell, changed_elsewhere, toast
 
 SAMPLE: dict[str, Any] = {
     "@context": "http://schema.org",
@@ -185,6 +185,7 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/preferences": None,
     "/preferences-refused": None,
     "/preferences-connected": None,
+    "/changed-elsewhere": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
@@ -192,7 +193,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 ``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail,
 ``/stay-detail`` the hotel's,
 ``/stay-editor`` its editor; ``/preferences*`` the preferences, empty, after a refused
-password, and connected to a fake Nextcloud (S006b).
+password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
+the toast of a change that gave way to one made on another device (S008c).
 """
 
 
@@ -212,7 +214,15 @@ async def run(page: ft.Page) -> None:
     route = page.route.rstrip("/")
     store = InMemoryReservationStore()
     clock = None
-    trip_routes = ("/trip", "/ticket", "/trip-jump", "/trip-detail", "/stay-detail", "/stay-editor")
+    trip_routes = (
+        "/trip",
+        "/ticket",
+        "/trip-jump",
+        "/trip-detail",
+        "/stay-detail",
+        "/stay-editor",
+        "/changed-elsewhere",
+    )
     if route in trip_routes:
         found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP_FULL]
         await store.add(Document("demo", "ticket.pdf", "application/pdf"), [r for r in found if r])
@@ -255,6 +265,9 @@ async def run(page: ft.Page) -> None:
     elif route == "/stay-editor" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[1])
         shell.edit_stay()
+    elif route == "/changed-elsewhere":
+        text = changed_elsewhere(["The Hoxton, Holborn"])
+        page.show_dialog(toast(text, page.width, duration=60_000))
     elif route.startswith("/preferences"):
         await shell.open_preferences()
         if route == "/preferences-refused" and shell.preferences is not None:

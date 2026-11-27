@@ -26,8 +26,12 @@ be reached again. A reservation with no date at all stays on the device.
 
 It also takes in what changed on the calendar since: reservations added or edited on
 your other devices, or by KDE Itinerary, appear, and those whose event was deleted
-disappear. A change you made on this device that has not reached the server yet is
-never overwritten.
+disappear.
+
+If a reservation you changed here was also changed elsewhere before your change
+reached the server, the version on the server is kept and a notice says so: "… was
+changed on another device; that version is kept." The same goes for a reservation
+deleted elsewhere while you were editing it.
 
 If the connection fails, nothing is saved and the preferences say why: the server
 refused the login or the app password, the server cannot be reached, or no Nextcloud
