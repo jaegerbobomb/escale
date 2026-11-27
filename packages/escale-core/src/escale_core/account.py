@@ -52,6 +52,12 @@ class Account:
     def host(self) -> str:
         return urlparse(endpoints(self.saved.url, self.saved.login)[0]).netloc
 
+    def target(self) -> tuple[NextcloudServer, str] | None:
+        """The server and the chosen calendar's URL, once both are known (S008a)."""
+        if self._server is None or not self.saved.calendar:
+            return None
+        return self._server, self.saved.calendar
+
     @property
     def can_create_trips(self) -> bool:
         return self.connected and all(c.name != TRIPS for c in self.calendars)

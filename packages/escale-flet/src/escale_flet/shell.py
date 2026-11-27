@@ -194,11 +194,14 @@ class Shell:
         share: Sharer | None = None,
         launch: Callable[[str], Awaitable[None]] | None = None,
         account: Account | None = None,
+        sync: Callable[[], Awaitable[object]] | None = None,
     ) -> None:
         if importer is None:
             importer = Importer(KitineraryCli(), store or InMemoryReservationStore())
         self.importer = importer
         self.account = account
+        self.sync = sync
+        """Sends local changes to the calendar (S008a); run after each of them."""
         self.preferences: Preferences | None = None
         self.store: ReservationStore = store or importer.store
         self.clock: Callable[[], datetime] = clock or (lambda: datetime.now().astimezone())
@@ -386,13 +389,18 @@ class Shell:
             self.highlight = segment_ref(self.detail)
         self._apply()
         self._update()
+        await self._synced()
+
+    async def _synced(self) -> None:
+        if self.sync is not None:
+            await self.sync()
 
     # --- preferences (S006b) ---
 
     async def open_preferences(self) -> None:
         if self.account is None or self._page is None:
             return
-        self.preferences = Preferences(self.account, self._on_close_preferences)
+        self.preferences = Preferences(self.account, self._on_close_preferences, self._synced)
         self._show_preferences()
         if self.account.connected and not self.account.calendars:
             await self.preferences.load()
@@ -618,6 +626,7 @@ class Shell:
             await self.importer.confirm(result)
             await self.refresh()
             self._close_sheet(None)
+            await self._synced()
 
         page.show_dialog(confirmation_sheet(result, confirm, self._close_sheet))
 

@@ -18,6 +18,12 @@ calendars of your account. Choose the one Escale should use, or click **Create a
 calendar** to have Escale create one. The choice is saved at once; there is nothing else
 to confirm. Escale also creates an `Escale` folder in your files, for the tickets.
 
+Once a calendar is chosen, Escale writes each of your reservations there as an event,
+in the format KDE Itinerary uses, so that KDE Itinerary can import them too. It does so
+right away, after each import or edit, when it starts and every 10 minutes while it is
+open. Without network, the changes wait on the device and are sent when the server can
+be reached again. A reservation with no date at all stays on the device.
+
 If the connection fails, nothing is saved and the preferences say why: the server
 refused the login or the app password, the server cannot be reached, or no Nextcloud
 answers at that address.

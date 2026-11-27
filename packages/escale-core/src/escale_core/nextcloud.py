@@ -30,6 +30,7 @@ class Problem(Enum):
     REFUSED = "The server refused the login or the app password."
     UNREACHABLE = "The server cannot be reached."
     NOT_NEXTCLOUD = "No Nextcloud answers at this address."
+    CHANGED = "The event was changed on the server meanwhile."
 
 
 class NextcloudError(Exception):
@@ -48,6 +49,12 @@ class NotNextcloud(NextcloudError):
     problem = Problem.NOT_NEXTCLOUD
 
 
+class EventChanged(NextcloudError):
+    """``412``: the event is not in the state Escale last saw (S008a, S008c)."""
+
+    problem = Problem.CHANGED
+
+
 class NextcloudServer(Protocol):
     """What Escale needs from a Nextcloud; adapters raise ``NextcloudError``."""
 
@@ -59,11 +66,21 @@ class NextcloudServer(Protocol):
 
     async def create_folder(self, name: str) -> None: ...
 
+    async def put_event(self, href: str, ics: bytes, etag: str | None) -> str | None:
+        """Write a calendar object: a new one when ``etag`` is ``None``, else the one
+        with that ETag; ``EventChanged`` otherwise. Returns its new ETag, if given."""
+        ...
+
 
 @dataclass(frozen=True)
 class Connection:
     calendars: tuple[Calendar, ...]
     problem: Problem | None = None
+
+
+def event_href(calendar: str, uid: str) -> str:
+    """Where Escale puts a new event: ``<calendar>/<uid>.ics``."""
+    return f"{calendar.rstrip('/')}/{quote(uid, safe='')}.ics"
 
 
 def endpoints(url: str, login: str) -> tuple[str, str]:

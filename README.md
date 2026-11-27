@@ -125,7 +125,10 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S006a](stories/S006a-nextcloud-connection-core.md) | Nextcloud connection (core) | sync | done |
 | [S006b](stories/S006b-nextcloud-account-preferences.md) | Nextcloud account in the preferences | sync | done |
 | [S007](stories/S007-reservation-event-mapping.md) | Map reservations to calendar events | sync | done |
-| [S008](stories/S008-two-way-calendar-sync.md) | Two-way calendar sync | sync | todo |
+| [S008](stories/S008-two-way-calendar-sync.md) | Two-way calendar sync | sync | split |
+| [S008a](stories/S008a-send-changes-to-calendar.md) | Send local reservations to the calendar | sync | done |
+| [S008b](stories/S008b-receive-changes-from-calendar.md) | Receive changes from the calendar | sync | todo |
+| [S008c](stories/S008c-conflicting-edit.md) | A conflicting edit keeps the server version | sync | todo |
 | [S009](stories/S009-sync-documents.md) | Sync ticket documents | sync | todo |
 | [S010](stories/S010-trip-grouping-and-timeline.md) | Trip grouping and timeline | timeline | split |
 | [S010a](stories/S010a-group-reservations-into-trips.md) | Group reservations into trips | timeline | done |
@@ -185,6 +188,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S060](stories/S060-ios-build.md) | iOS build | packaging | proposed |
 | [S061](stories/S061-detail-and-editor-follow-the-hig.md) | Detail and editor follow the GNOME HIG | timeline | done |
 | [S062](stories/S062-transport-detail-looks-like-the-mockup.md) | Transport detail looks like the mockup | timeline | done |
+| [S063](stories/S063-gnome-online-accounts.md) | Use the Nextcloud account of GNOME Online Accounts | sync | proposed |
 
 </details>
 
