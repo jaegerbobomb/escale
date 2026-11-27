@@ -3,11 +3,12 @@ id: S007
 title: "Map reservations to calendar events"
 epic: sync
 depends_on: [S014]
-status: todo
+status: done
 estimate: S
 bdd: false
 updated: "2026-11-26"
 adr: [4]
+released_in: "0.19.0"
 ---
 
 ## User story
@@ -53,3 +54,16 @@ adr: [4]
   batches exist, one event holds one reservation — the `X-KDE-KITINERARY-RESERVATION`
   array has a single element, which KItinerary reads as a batch of one. Batches come
   back with S005.
+- 2026-11-26, implemented in `escale_core/ical_mapping.py` (`new_entry`, `to_event`,
+  `to_ics`, `from_event`, `entries_in`), after KItinerary's `CalendarHandler` (read in
+  its source, not copied): `SUMMARY` worded as KItinerary does ("Train 5186 from … to …",
+  "Hotel reservation: …"); a stay is an all-day event from the check-in date to the
+  check-out date, `TRANSP:TRANSPARENT`; other reservations keep their time zone
+  (`TZID` and `VTIMEZONE`), a bare UTC offset is written in UTC.
+- The payload is escaped as iCalendar TEXT (`\,`, `\;`), as libical writes it; reading
+  accepts it raw too, as in some of KItinerary's test data.
+- Fixtures: KItinerary's `autotests/calendarhandlerdata/hotel.ics` and `train.ics`
+  (CC0-1.0).
+- Not in S007: KItinerary's `DESCRIPTION` and `GEO`, and the "Canceled:" prefix; the
+  documents (`subjectOf`) come with S009. Escale writes the JSON-LD as stored, without
+  adding `@context`.

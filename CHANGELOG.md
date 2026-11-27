@@ -6,6 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-26
+
+### Added
+- S007: the core writes reservations as calendar events in KDE Itinerary's format
+  (`X-KDE-KITINERARY-RESERVATION`, `KIT-` uid, title, times with their time zone,
+  place) and reads them back, including events written by KDE Itinerary. No sync yet:
+  that is S008.
+
 ## [0.18.0] - 2026-11-26
 
 ### Added
@@ -196,7 +204,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/jaegerbobomb/escale/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/jaegerbobomb/escale/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/jaegerbobomb/escale/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/jaegerbobomb/escale/compare/v0.15.0...v0.16.0
