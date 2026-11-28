@@ -132,3 +132,15 @@ def test_saved_stay_stays_open_and_in_the_trip(world: World) -> None:
     assert world.page.dialog is None
     assert "The Hoxton" in texts(shell.body)
     assert shell.trip is not None and shell.detail in shell.trip.reservations
+
+
+def test_the_check_out_date_can_be_picked(world: World) -> None:
+    world.open_editor()
+    editor = world.page.dialog
+    run(find(editor, "picker", "check_out_date").on_click)
+    picker = world.page.dialog
+    assert isinstance(picker, ft.DatePicker)
+    picker.value = datetime(2026, 7, 7)
+    run(picker.on_change)
+    assert find(editor, "field", "check_out_date").value == "2026-07-07"
+    assert "The check-out must be after the check-in." in texts(editor)

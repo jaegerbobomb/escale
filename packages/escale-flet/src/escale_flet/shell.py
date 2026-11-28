@@ -17,19 +17,21 @@ from typing import Any
 
 import flet as ft
 
+from escale_core import flight_edit, stays
 from escale_core.account import Account
 from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.documents import Documents
 from escale_core.extraction import ExtractedReservation
 from escale_core.flights import follow_link
 from escale_core.importer import Importer
-from escale_core.stays import StayFields, edited
 from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.trips import Trip, TripFilter, active_trip, browse, group
 from escale_flet.detail_view import detail_view
+from escale_flet.editor import EditorKind, action_editor
+from escale_flet.flight_editor import flight_kind
 from escale_flet.import_sheet import confirmation_sheet, headline, phone_sheet
 from escale_flet.preferences import Preferences
-from escale_flet.stay_editor import stay_editor
+from escale_flet.stay_editor import STAY
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
 from escale_flet.ticket_view import MAX_WIDTH as TICKET_WIDTH
 from escale_flet.ticket_view import ticket_view
@@ -107,6 +109,9 @@ TABS: tuple[TabSpec, ...] = (
         "Distances, countries and nights away, once you have travelled.",
     ),
 )
+
+Writer = Callable[[ExtractedReservation, Any], ExtractedReservation]
+"""Writes an editor's fields into a booking (S017b, S029a)."""
 
 IMPORT_ENTRY = "Import a file…"
 ADD_MENU_ENTRIES: tuple[str, ...] = (
@@ -247,6 +252,8 @@ class Shell:
         self.detail: ExtractedReservation | None = None
         self.editing = False
         self._editor: ft.AlertDialog | ft.BottomSheet | None = None
+        self._picker: ft.DialogControl | None = None
+        """A date or time picker opened from the editor, above it."""
         self.highlight: str | None = None
         self.scroll_target: str | None = None
         self.width: float | None = None
@@ -348,9 +355,7 @@ class Shell:
                 self._page.pop_dialog()  # the same preferences, rebuilt for the new width
             self._show_preferences()
         elif self.editing and self._editor is not None and self._sheet() != was_sheet:
-            values = self._editor.data["values"]()  # keep what was typed
-            self._close_editor()
-            self.edit_stay(values)
+            self._fit_editor()
         elif changed:
             self._update()
 
@@ -382,23 +387,66 @@ class Shell:
         self._apply()
         self._update()
 
-    def edit_stay(self, values: StayFields | None = None) -> None:
-        """The stay's editor, as an action dialog (S017b, S061)."""
-        if self.detail is None or self.detail.type != "LodgingReservation" or self._page is None:
+    @staticmethod
+    def _editor_for(r: ExtractedReservation) -> tuple[EditorKind[Any], Writer] | None:
+        """The editor of a booking and what writes its fields back, if it has one."""
+        if r.type == "LodgingReservation":  # S017b
+            return STAY, stays.edited
+        if r.type == "FlightReservation":  # S029a
+            return flight_kind(r), flight_edit.edited
+        return None
+
+    def edit(self, values: Any = None) -> None:
+        """The detail's editor, as an action dialog (S061); ``values``: what was typed
+        before the window crossed 450 px."""
+        found = self._editor_for(self.detail) if self.detail is not None else None
+        if found is None or self.detail is None or self._page is None:
             return
         self.editing = True
         height = getattr(self._page, "height", None)
-        self._editor = stay_editor(
+        self._editor = action_editor(
+            found[0],
             self.detail,
-            self.save_stay,
+            self.save_edit,
             self._on_cancel_edit,
             self._on_editor_dismissed,
             sheet=self._sheet(),
             height=_editor_height(height, self._sheet()),
             initial=values,
+            show=self._show_picker,
         )
         self._page.show_dialog(self._editor)
         self._update()
+
+    def _show_picker(self, picker: ft.DialogControl) -> None:
+        if self._page is not None:
+            self._picker = picker
+            fill: Any = getattr(picker, "on_change", None)
+
+            def picked(e: Any) -> None:  # OK: Flutter sends no dismissal then
+                if fill is not None:
+                    fill(e)
+                self._on_picker_closed(e)
+
+            picker.on_change = picked  # type: ignore[attr-defined]
+            picker.on_dismiss = self._on_picker_closed
+            self._page.show_dialog(picker)
+
+    def _on_picker_closed(self, _: Any) -> None:
+        self._picker = None
+        self._fit_editor()
+
+    def _fit_editor(self) -> None:
+        """Rebuild the editor as a dialog or a bottom sheet if the width asks for the
+        other one; not while a picker is open above it, as Flutter would leave the
+        picker on screen."""
+        editor = self._editor
+        if not self.editing or editor is None or self._picker is not None:
+            return
+        if isinstance(editor, ft.BottomSheet) != self._sheet():
+            values = editor.data["values"]()  # keep what was typed
+            self._close_editor()
+            self.edit(values)
 
     def _close_editor(self) -> None:
         if self.editing and self._page is not None:
@@ -412,12 +460,15 @@ class Shell:
     def _on_editor_dismissed(self, _: Any) -> None:
         self.editing = False  # Esc or a click outside: the dialog is already gone
 
-    async def save_stay(self, values: StayFields) -> None:
-        """Write the edited stay to the store, then show its detail again."""
+    edit_stay = edit
+
+    async def save_edit(self, values: Any) -> None:
+        """Write the edited booking to the store, then show its detail again."""
         old = self.detail
-        if old is None:
+        found = self._editor_for(old) if old is not None else None
+        if old is None or found is None:
             return
-        new = edited(old, values)
+        new = found[1](old, values)
         self._close_editor()
         await self.store.replace(old, new)
         self._regroup(group(await self.store.reservations()))
@@ -429,6 +480,8 @@ class Shell:
         self._apply()
         self._update()
         await self._synced()
+
+    save_stay = save_edit
 
     async def _synced(self) -> None:
         await self.synchronise()
@@ -515,7 +568,7 @@ class Shell:
         ]
 
     def _on_edit(self, _: Any) -> None:
-        self.edit_stay()
+        self.edit()
 
     def _on_cancel_edit(self, _: Any) -> None:
         self.cancel_edit()
@@ -932,7 +985,7 @@ class Shell:
                     data={"edit": True},
                 )
             ]
-            if detail.type == "LodgingReservation"
+            if self._editor_for(detail) is not None
             else []
         )
         self.appbar.actions = [*edit, *self._ticket_action(wide=wide)]
