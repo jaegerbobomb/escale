@@ -4,7 +4,8 @@ For a hotel booked by phone, or on a site whose confirmation Escale cannot read:
 
 1. Open the menu next to **Add** (on a phone, the **+** button) and choose
    **Add manually…**. When an import found nothing in a file, its sheet has the same
-   **Add manually** button.
+   **Add manually** button, and the stay then keeps that file (see
+   [Import a ticket](import-a-ticket.md)).
 2. Choose **Stay**. Kinds of booking Escale cannot edit yet are greyed out; for a coach
    or a ferry, see [Add or correct a coach or ferry trip](add-or-correct-a-bus-or-ferry.md).
 3. Fill in at least the hotel's name, the check-in and the check-out. Dates are written
@@ -13,6 +14,6 @@ For a hotel booked by phone, or on a site whose confirmation Escale cannot read:
 4. Click **Save**.
 
 Escale opens the stay in the trip it belongs to, and sends it to your calendar at the
-next sync, like an imported booking. It has no booking document.
+next sync, like an imported booking. Added from the menu, it has no booking document.
 
 To change it later, see [Correct a stay](correct-a-stay.md).

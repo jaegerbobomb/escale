@@ -196,7 +196,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S061](stories/S061-detail-and-editor-follow-the-hig.md) | Detail and editor follow the GNOME HIG | timeline | done |
 | [S062](stories/S062-transport-detail-looks-like-the-mockup.md) | Transport detail looks like the mockup | timeline | done |
 | [S063](stories/S063-gnome-online-accounts.md) | Use the Nextcloud account of GNOME Online Accounts | sync | proposed |
-| [S064](stories/S064-keep-the-file-of-a-failed-import.md) | Keep the file of a failed import | import | proposed |
+| [S064](stories/S064-keep-the-file-of-a-failed-import.md) | Keep the file of a failed import | import | done |
 
 </details>
 

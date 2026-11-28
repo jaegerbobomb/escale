@@ -118,10 +118,12 @@ def action_editor[F](
     height: float = 640,
     initial: F | None = None,
     show: Callable[[ft.DialogControl], None] | None = None,
+    note: str | None = None,
 ) -> ft.AlertDialog | ft.BottomSheet:
     """A floating dialog, or a bottom sheet on a phone (``sheet``), as libadwaita's
     AdwDialog presents itself. ``data["values"]`` gives the fields as typed so far;
-    ``show`` puts a date or time picker above it (no picker buttons without it)."""
+    ``show`` puts a date or time picker above it (no picker buttons without it);
+    ``note`` is a line above the form (the file a new booking keeps, S064)."""
     inputs: dict[str, ft.TextField] = {}
     save = ft.FilledButton("Save")
     errors = ft.Column(spacing=2, tight=True)
@@ -207,7 +209,18 @@ def action_editor[F](
             save,
         ],
     )
-    form = ft.Column([*groups, errors], spacing=18, scroll=ft.ScrollMode.AUTO, expand=True)
+    above: list[ft.Control] = []
+    if note:
+        above.append(
+            ft.Row(
+                [
+                    ft.Icon(ft.Icons.ATTACH_FILE, size=16, color=ft.Colors.ON_SURFACE_VARIANT),
+                    ft.Text(note, size=13, color=ft.Colors.ON_SURFACE_VARIANT, expand=True),
+                ],
+                spacing=6,
+            )
+        )
+    form = ft.Column([*above, *groups, errors], spacing=18, scroll=ft.ScrollMode.AUTO, expand=True)
     data = {"editor": r.reference, "values": current}
     if sheet:
         return ft.BottomSheet(

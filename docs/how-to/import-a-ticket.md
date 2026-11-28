@@ -13,8 +13,11 @@ On Linux, with the ticket extractor installed
 
 Nothing is saved before step 4.
 
-If Escale finds nothing in the file, or cannot read it, the sheet says so. Adding the
-reservation by hand will come later: the **Add manually** button is not active yet.
+If Escale finds nothing in the file, or cannot read it, the sheet says so. Click
+**Add manually** and choose the kind of booking: its editor opens empty, and says which
+file it keeps ("Attached: coach.pdf"). When you save, the booking keeps that file as an
+imported one does: for a train, a coach or a ferry, **Show Ticket** opens it; for a stay,
+**Booking document**. Cancel, and nothing is kept.
 
 On a phone, importing is not available: import the file on your Linux computer, and the
 reservation reaches the phone through the sync.
