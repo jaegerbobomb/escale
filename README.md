@@ -146,7 +146,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S017](stories/S017-stay-detail-and-editor.md) | Stay detail and editor | timeline | split |
 | [S017a](stories/S017a-stay-detail.md) | Stay detail | timeline | done |
 | [S017b](stories/S017b-stay-editor.md) | Stay editor | timeline | done |
-| [S018](stories/S018-add-a-stay-by-hand.md) | Add a stay by hand | import | todo |
+| [S018](stories/S018-add-a-stay-by-hand.md) | Add a stay by hand | import | done |
 | [S019](stories/S019-import-a-shared-place.md) | Import a shared place (Google Maps, CoMaps, OpenStreetMap) | import | todo |
 | [S020](stories/S020-current-trip-look.md) | Current trip looks like the mockup | timeline | done |
 | [S021](stories/S021-current-ticket-shortcut.md) | Shortcut to the current ticket | timeline | done |

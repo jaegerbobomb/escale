@@ -12,7 +12,8 @@ from escale_core.importer import parse_datetime
 
 def local_moment(day: str, time: str, original: object) -> datetime | None:
     """``day`` at ``time`` in the zone of ``original`` (the stored value), if valid: its
-    ``timezone`` when it has one, else its UTC offset."""
+    ``timezone`` when it has one, else its UTC offset; with no stored value (a booking
+    added by hand, S018), the device's offset on that day."""
     try:
         naive = datetime.strptime(f"{day.strip()} {time.strip()}", "%Y-%m-%d %H:%M")
     except ValueError:
@@ -24,7 +25,9 @@ def local_moment(day: str, time: str, original: object) -> datetime | None:
     except (ZoneInfoNotFoundError, ValueError):
         pass
     before = parse_datetime(original)
-    return naive.replace(tzinfo=before.tzinfo if before else None)
+    if before is None:
+        return naive.astimezone()
+    return naive.replace(tzinfo=before.tzinfo)
 
 
 def with_moment(moment: datetime, original: object) -> object:

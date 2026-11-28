@@ -6,6 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-11-28
+
+### Added
+- S018: a stay can be added by hand. **Add → Add manually…** (and **Add manually** on an
+  import that found nothing) lists the kinds of booking; **Stay** opens the stay editor,
+  empty. The saved stay joins its trip and is sent to the calendar like an imported one.
+  Times of a booking added by hand are in the device's time zone.
+
 ## [0.29.0] - 2026-11-28
 
 ### Added
@@ -309,7 +317,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.30.0...HEAD
+[0.30.0]: https://github.com/jaegerbobomb/escale/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/jaegerbobomb/escale/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/jaegerbobomb/escale/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/jaegerbobomb/escale/compare/v0.26.0...v0.27.0

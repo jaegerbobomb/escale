@@ -177,7 +177,7 @@ def test_light_system_theme_uses_the_light_variant() -> None:
     assert world.page.effective_theme() is LIGHT_THEME
 
 
-def test_add_menu_entries_are_present_and_only_import_is_enabled() -> None:
+def test_add_menu_entries_are_present_and_import_and_manual_entry_are_enabled() -> None:
     world = World(page=FakePage(width=1000))
     world.start()
     [menu] = [c for c in world.shell.add_button.controls if isinstance(c, ft.PopupMenuButton)]
@@ -190,7 +190,8 @@ def test_add_menu_entries_are_present_and_only_import_is_enabled() -> None:
         "New outing…",
         "Add manually…",
     ]
-    assert [bool(item.disabled) for item in menu.items] == [True, False, True, True, True, True]
+    # "Add manually…" since S018
+    assert [bool(item.disabled) for item in menu.items] == [True, False, True, True, True, False]
 
 
 def test_add_is_a_flat_split_button_at_the_start() -> None:

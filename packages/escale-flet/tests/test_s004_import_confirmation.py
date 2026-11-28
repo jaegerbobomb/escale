@@ -142,10 +142,10 @@ def test_the_sheet_shows_what_was_found_before_anything_is_saved() -> None:
     assert world.saved() == ()
 
 
-def test_add_manually_is_disabled_until_manual_entry_exists() -> None:
+def test_add_manually_is_enabled_since_manual_entry_exists() -> None:
     world = World(file=DATA / "no-reservation.pdf")
     asyncio.run(world.start().start_import())
-    assert button(world.page.dialog, "Add manually").disabled
+    assert not button(world.page.dialog, "Add manually").disabled  # S018
 
 
 def test_extractor_error_is_shown_with_manual_entry() -> None:

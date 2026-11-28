@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import tempfile
 from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import Enum, StrEnum
 from pathlib import Path
@@ -24,12 +24,14 @@ from escale_core.documents import Documents
 from escale_core.extraction import ExtractedReservation
 from escale_core.flights import follow_link
 from escale_core.importer import Importer
+from escale_core.stays import new_stay
 from escale_core.store import InMemoryReservationStore, ReservationStore
 from escale_core.trips import Trip, TripFilter, active_trip, browse, group
 from escale_flet.detail_view import detail_view
 from escale_flet.editor import EditorKind, action_editor
 from escale_flet.flight_editor import flight_kind
 from escale_flet.import_sheet import confirmation_sheet, headline, phone_sheet
+from escale_flet.manual_entry import kind_chooser
 from escale_flet.preferences import Preferences
 from escale_flet.stay_editor import STAY
 from escale_flet.theme import DARK_THEME, FONTS, LIGHT_THEME
@@ -114,13 +116,14 @@ Writer = Callable[[ExtractedReservation, Any], ExtractedReservation]
 """Writes an editor's fields into a booking (S017b, S029a)."""
 
 IMPORT_ENTRY = "Import a file…"
+MANUAL_ENTRY = "Add manually…"
 ADD_MENU_ENTRIES: tuple[str, ...] = (
     "Search a train…",
     IMPORT_ENTRY,
     "Scan or paste…",
     "New trip…",
     "New outing…",
-    "Add manually…",
+    MANUAL_ENTRY,
 )
 """The mockup's "Add" menu; entries other than import wait for their stories."""
 
@@ -204,10 +207,13 @@ def _empty_view(spec: TabSpec) -> ft.Control:
     )
 
 
-def _add_menu_items(on_import: Callable[[Any], Awaitable[None]]) -> list[ft.PopupMenuItem]:
+def _add_menu_items(
+    on_import: Callable[[Any], Awaitable[None]], on_manual: Callable[[Any], None]
+) -> list[ft.PopupMenuItem]:
+    actions: dict[str, Callable[[Any], Any]] = {IMPORT_ENTRY: on_import, MANUAL_ENTRY: on_manual}
     return [
-        ft.PopupMenuItem(content=ft.Text(entry), on_click=on_import)
-        if entry == IMPORT_ENTRY
+        ft.PopupMenuItem(content=ft.Text(entry), on_click=actions[entry])
+        if entry in actions
         else ft.PopupMenuItem(content=ft.Text(entry), disabled=True)
         for entry in ADD_MENU_ENTRIES
     ]
@@ -253,6 +259,10 @@ class Shell:
         self.editing = False
         self._editor: ft.AlertDialog | ft.BottomSheet | None = None
         self._picker: ft.DialogControl | None = None
+        self.adding: ExtractedReservation | None = None
+        """A booking added by hand (S018), while its editor is open."""
+        self._chooser: ft.DialogControl | None = None
+        """The kinds of booking to add by hand, while shown."""
         """A date or time picker opened from the editor, above it."""
         self.highlight: str | None = None
         self.scroll_target: str | None = None
@@ -303,14 +313,16 @@ class Shell:
                 ft.PopupMenuButton(
                     icon=ft.Icons.ARROW_DROP_DOWN,
                     tooltip="Add…",
-                    items=_add_menu_items(self._on_import),
+                    items=_add_menu_items(self._on_import, self._on_add_manually),
                 ),
             ],
             spacing=0,
             tight=True,
         )
         self.add_menu_compact = ft.PopupMenuButton(
-            icon=ft.Icons.ADD, tooltip="Add…", items=_add_menu_items(self._on_import)
+            icon=ft.Icons.ADD,
+            tooltip="Add…",
+            items=_add_menu_items(self._on_import, self._on_add_manually),
         )
         self.appbar = ft.AppBar(center_title=True, actions_padding=ft.Padding.only(right=8))
         self.body = ft.Container(
@@ -356,6 +368,9 @@ class Shell:
             self._show_preferences()
         elif self.editing and self._editor is not None and self._sheet() != was_sheet:
             self._fit_editor()
+        elif self._chooser is not None and self._sheet() != was_sheet:
+            self._close_chooser(None)  # the same kinds, as the other presentation
+            self.add_manually()
         elif changed:
             self._update()
 
@@ -399,14 +414,18 @@ class Shell:
     def edit(self, values: Any = None) -> None:
         """The detail's editor, as an action dialog (S061); ``values``: what was typed
         before the window crossed 450 px."""
-        found = self._editor_for(self.detail) if self.detail is not None else None
-        if found is None or self.detail is None or self._page is None:
+        target = self.adding or self.detail
+        found = self._editor_for(target) if target is not None else None
+        if found is None or target is None or self._page is None:
             return
+        kind = found[0]
+        if self.adding is not None:
+            kind = replace(kind, title=kind.title.replace("Edit", "New", 1))
         self.editing = True
         height = getattr(self._page, "height", None)
         self._editor = action_editor(
-            found[0],
-            self.detail,
+            kind,
+            target,
             self.save_edit,
             self._on_cancel_edit,
             self._on_editor_dismissed,
@@ -455,21 +474,77 @@ class Shell:
 
     def cancel_edit(self) -> None:
         self._close_editor()
+        self.adding = None
         self._update()
 
-    def _on_editor_dismissed(self, _: Any) -> None:
-        self.editing = False  # Esc or a click outside: the dialog is already gone
+    def _on_editor_dismissed(self, e: Any) -> None:
+        # Esc or a click outside: the dialog is already gone. Not an editor replaced by
+        # one of the other presentation, whose dismissal arrives after the new one opened.
+        if getattr(e, "control", self._editor) is self._editor:
+            self.editing = False
+            self.adding = None
+
+    # --- adding by hand (S018) ---
+
+    def add_manually(self) -> None:
+        """The kinds of booking to add by hand."""
+        if self._page is not None:
+            chooser = kind_chooser(self._on_manual_kind, self._close_chooser, sheet=self._sheet())
+            chooser.on_dismiss = self._on_chooser_dismissed
+            self._chooser = chooser
+            self._page.show_dialog(chooser)
+
+    def _close_chooser(self, _: Any) -> None:
+        if self._chooser is not None and self._page is not None:
+            self._chooser = None
+            self._page.pop_dialog()
+
+    def _on_chooser_dismissed(self, e: Any) -> None:
+        if getattr(e, "control", self._chooser) is self._chooser:
+            self._chooser = None
+
+    def _on_add_manually(self, _: Any) -> None:
+        self.add_manually()
+
+    def _on_manual_kind(self, key: str) -> None:
+        self._close_chooser(None)
+        if key == "stay":
+            self.new_booking(new_stay())
+
+    def new_booking(self, blank: ExtractedReservation) -> None:
+        """The editor of ``blank``, empty; saving adds it to the store."""
+        self.adding = blank
+        self.edit()
+
+    async def _save_new(self, new: ExtractedReservation) -> None:
+        self.adding = None
+        await self.store.add(None, [new])
+        self._regroup(group(await self.store.reservations()))
+        trip = next((t for t in self.trips if new in t.reservations), None)
+        if trip is not None:
+            if trip is self.trip:
+                self.selected, self.browsed = Tab.CURRENT, None
+            else:
+                self.selected, self.browsed = Tab.TRIPS, trip
+            self.detail = next(r for r in trip.reservations if r == new)
+            self.highlight = segment_ref(self.detail)
+        self._apply()
+        self._update()
+        await self._synced()
 
     edit_stay = edit
 
     async def save_edit(self, values: Any) -> None:
         """Write the edited booking to the store, then show its detail again."""
-        old = self.detail
+        old = self.adding or self.detail
         found = self._editor_for(old) if old is not None else None
         if old is None or found is None:
             return
         new = found[1](old, values)
         self._close_editor()
+        if self.adding is not None:
+            await self._save_new(new)
+            return
         await self.store.replace(old, new)
         self._regroup(group(await self.store.reservations()))
         shown = self._shown()
@@ -813,7 +888,11 @@ class Shell:
             self._close_sheet(None)
             await self._synced()
 
-        page.show_dialog(confirmation_sheet(result, confirm, self._close_sheet))
+        def manual(_: Any) -> None:
+            self._close_sheet(None)
+            self.add_manually()
+
+        page.show_dialog(confirmation_sheet(result, confirm, self._close_sheet, manual))
 
     def _close_sheet(self, _: Any) -> None:
         if self._page is not None:

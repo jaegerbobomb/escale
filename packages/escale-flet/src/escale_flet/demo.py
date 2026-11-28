@@ -26,6 +26,7 @@ from escale_core.extraction import Document
 from escale_core.importer import Importer, reservation_from_jsonld
 from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
+from escale_core.stays import new_stay
 from escale_core.store import InMemoryReservationStore
 from escale_flet.import_sheet import phone_sheet
 from escale_flet.shell import NOT_ON_DEVICE, Shell, Tab, changed_elsewhere, toast
@@ -221,6 +222,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/flight-detail": None,
     "/flight-editor": None,
     "/flight-editor-date": None,
+    "/add-manually": None,
+    "/new-stay": None,
     "/stay-detail": None,
     "/stay-editor": None,
     "/preferences": None,
@@ -238,7 +241,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 ``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail,
 ``/stay-detail`` the hotel's,
 ``/stay-editor`` its editor, ``/flight-editor`` the flight's (S029a) and
-``/flight-editor-date`` with its departure's date picker open;
+``/flight-editor-date`` with its departure's date picker open; ``/add-manually`` the
+kinds of booking to add by hand, ``/new-stay`` the editor of a new stay (S018);
 ``/preferences*`` the preferences, empty, after a refused
 password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
 the toast of a change that gave way to one made on another device (S008c);
@@ -327,7 +331,11 @@ async def run(page: ft.Page) -> None:
     )
     shell.mount(page)
     await shell.refresh()
-    if route == "/import-phone":
+    if route == "/add-manually":
+        shell.add_manually()
+    elif route == "/new-stay":
+        shell.new_booking(new_stay())
+    elif route == "/import-phone":
         page.show_dialog(phone_sheet(shell._close_sheet))
     elif route == "/ticket" and shell.trip is not None:
         await shell.show_ticket(shell.trip.reservations[0])
