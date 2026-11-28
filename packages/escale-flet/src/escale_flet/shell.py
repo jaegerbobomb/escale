@@ -448,6 +448,9 @@ class Shell:
         ):
             self._apply()
             self._update()
+        if self.documents is not None:
+            # then past trips' copies go, over the size limit (S009c)
+            await self.documents.clean(group(await self.store.reservations()), self.clock())
 
     # --- preferences (S006b) ---
 

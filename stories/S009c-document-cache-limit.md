@@ -3,11 +3,12 @@ id: S009c
 title: "Limit the space taken by ticket documents"
 epic: sync
 depends_on: [S009b]
-status: todo
+status: done
 estimate: S
 bdd: true
-updated: "2026-11-27"
+updated: "2026-11-28"
 adr: [4]
+released_in: "0.25.0"
 ---
 
 ## User story
@@ -17,8 +18,8 @@ adr: [4]
 
 ## Technical description
 
-- Child of S009. A size limit for the local documents (default to decide: to ask the
-  maintainer before coding).
+- Child of S009. A size limit for the local documents: 500 MB by default. The cleaning
+  runs after each sync run, once the current trip's documents are downloaded.
 - Over the limit, documents of past trips are removed from the device, oldest trip
   first; they stay on the server and download again when opened (S009b).
 - Documents of current and future trips, and documents not on the server yet, are never
@@ -42,3 +43,7 @@ adr: [4]
 ## Notes
 
 - 2026-11-27: split of S009 validated by the maintainer.
+- 2026-11-28: default limit 500 MB, proposed in the morning recap without a measurement
+  or a source; the maintainer answered "Parfait, merge si vert et continue", taken as
+  accepting it. Not exposed in the preferences in v1.
+- Documents that belong to no trip (a reservation without a date) are left alone.

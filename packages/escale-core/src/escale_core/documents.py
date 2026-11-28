@@ -8,7 +8,8 @@ JSON-LD (``ExtractedReservation.subject_of``); ``jsonld`` puts them back for the
 calendar and ``split`` takes them out again.
 
 A sync run uploads what the server lacks (S009a); ``Documents`` gets the copy a device
-lacks, when it is opened and ahead for the current trip (S009b).
+lacks, when it is opened and ahead for the current trip (S009b), and removes those of
+past trips when the copies take more than ``LIMIT_BYTES`` (S009c).
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterable, Mapping, Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -25,8 +27,11 @@ from escale_core.nextcloud import FOLDER, NextcloudError, NextcloudServer
 if TYPE_CHECKING:
     from escale_core.account import Account
     from escale_core.store import ReservationStore
+    from escale_core.trips import Trip
 
 SUBJECT_OF = "subjectOf"
+LIMIT_BYTES = 500 * 1024 * 1024
+"""How much the local copies of documents may take before past trips' go (S009c)."""
 
 
 def folder(document_id: str) -> str:
@@ -159,3 +164,34 @@ class Documents:
         except NextcloudError:
             pass
         return count
+
+    async def clean(self, trips: Sequence[Trip], now: datetime, limit: int = LIMIT_BYTES) -> int:
+        """Over ``limit``, remove the copies of past trips' documents, oldest trip first,
+        until under it; how many were removed (S009c). Kept: the current and coming
+        trips' documents, those not on the server yet, and all of them without an
+        account to download them again from."""
+        if self._account.server is None:
+            return 0
+        sizes = {
+            d.id: path.stat().st_size
+            for d in await self._store.documents()
+            if (path := self._store.document_path(d.id)) is not None
+        }
+        total = sum(sizes.values())
+        if total <= limit:
+            return 0
+        kept = {d.id for d, _ in await self._store.unsent_documents()}
+        kept |= {
+            d for trip in trips if trip.end >= now for r in trip.reservations for d in r.subject_of
+        }
+        removed = 0
+        for trip in sorted((t for t in trips if t.end < now), key=lambda t: t.end):
+            for document_id in (d for r in trip.reservations for d in r.subject_of):
+                if total <= limit:
+                    return removed
+                if document_id in kept or document_id not in sizes:
+                    continue
+                await self._store.forget_document(document_id)
+                total -= sizes.pop(document_id)
+                removed += 1
+        return removed

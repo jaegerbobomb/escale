@@ -5,11 +5,13 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import cast
 
 import flet as ft
+import pytest
 
 from escale_core.account import Account
 from escale_core.adapters.fake_nextcloud import FakeNextcloud
@@ -20,6 +22,7 @@ from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
 from escale_core.store import InMemoryReservationStore
 from escale_core.sync import SyncReport
+from escale_core.trips import Trip
 from escale_flet.demo import LONDON_TRIP
 from escale_flet.shell import NOT_ON_DEVICE, Shell
 from escale_flet.testing import FakePage, action, click, texts
@@ -111,3 +114,18 @@ def test_a_sync_brings_the_current_trip_documents(tmp_path: Path) -> None:
     asyncio.run(shell.synchronise())
     server.reachable = False
     assert shell.store.document_path(DOC.id) is not None
+
+
+def test_a_sync_cleans_past_documents(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """S009c: after a run, the cleaning gets every trip and the clock's time."""
+    shell, _, _, _ = setting(tmp_path)
+    seen: list[tuple[int, datetime]] = []
+
+    async def clean(trips: Sequence[Trip], now: datetime, limit: int = 0) -> int:
+        seen.append((len(trips), now))
+        return 0
+
+    assert shell.documents is not None
+    monkeypatch.setattr(shell.documents, "clean", clean)
+    asyncio.run(shell.synchronise())
+    assert seen == [(1, CHECK_IN - timedelta(hours=1))]

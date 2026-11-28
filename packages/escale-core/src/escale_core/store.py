@@ -137,6 +137,11 @@ class ReservationStore(Protocol):
         """A copy of a document downloaded from the server (S009b)."""
         ...
 
+    async def forget_document(self, document_id: str) -> None:
+        """Remove the local copy of a document that is on the server (S009c); a file
+        the user imported from is left where it is."""
+        ...
+
 
 @dataclass
 class _Row:
@@ -280,6 +285,11 @@ class InMemoryReservationStore:
         self._documents.setdefault(document.id, document)
         self._files[document.id] = target
         self._uploaded.add(document.id)
+
+    async def forget_document(self, document_id: str) -> None:
+        path = self._files.pop(document_id, None)
+        if path is not None and self._folder is not None and path.is_relative_to(self._folder):
+            path.unlink(missing_ok=True)
 
 
 def _with_documents(r: ExtractedReservation, subject_of: tuple[str, ...]) -> ExtractedReservation:
