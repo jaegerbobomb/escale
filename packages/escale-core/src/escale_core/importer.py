@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import copy
 import hashlib
 import mimetypes
+import tempfile
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
@@ -132,8 +134,20 @@ class Importer:
         return self._store
 
     async def preview(self, path: Path) -> ExtractionResult:
+        if path.suffix.lower() == ".itinerary":  # a KDE Itinerary export (S028)
+            from escale_core.itinerary_file import read_itinerary
+
+            return await asyncio.to_thread(read_itinerary, path)
         return await extract(path, self._extractor)
 
     async def confirm(self, result: ExtractionResult) -> None:
-        if result.document is not None and result.reservations:
-            await self._store.add(result.document, result.reservations, result.source)
+        if not result.reservations:
+            return
+        if result.documents:
+            folder = Path(tempfile.mkdtemp(prefix="escale-import-"))
+            for document, content in result.documents:
+                source = folder / document.id / Path(document.name).name
+                source.parent.mkdir()
+                source.write_bytes(content)
+                await self._store.add(document, (), source)
+        await self._store.add(result.document, result.reservations, result.source)

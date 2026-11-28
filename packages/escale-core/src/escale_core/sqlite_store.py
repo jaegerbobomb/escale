@@ -158,19 +158,20 @@ class SqliteReservationStore:
 
     def _add(
         self,
-        document: Document,
+        document: Document | None,
         reservations: Sequence[ExtractedReservation],
         source: Path | None,
     ) -> None:
         with self._lock:
             db = self._connect()
-            if source is not None and source.is_file():
+            if document is not None and source is not None and source.is_file():
                 self._keep_file(document, source)
             with db:
-                db.execute(
-                    "INSERT OR IGNORE INTO documents (id, name, mime_type) VALUES (?, ?, ?)",
-                    (document.id, document.name, document.mime_type),
-                )
+                if document is not None:
+                    db.execute(
+                        "INSERT OR IGNORE INTO documents (id, name, mime_type) VALUES (?, ?, ?)",
+                        (document.id, document.name, document.mime_type),
+                    )
                 for reservation in reservations:
                     key = identity(reservation)
                     row = db.execute(
@@ -397,7 +398,7 @@ class SqliteReservationStore:
 
     async def add(
         self,
-        document: Document,
+        document: Document | None,
         reservations: Sequence[ExtractedReservation],
         source: Path | None = None,
     ) -> None:

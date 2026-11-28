@@ -156,7 +156,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S025](stories/S025-share-a-file-to-escale.md) | Share a file to Escale | import | todo |
 | [S026](stories/S026-add-a-ticket-barcode.md) | Add a barcode to a reservation | import | proposed |
 | [S027](stories/S027-import-online-train-ticket.md) | Import an online train ticket | import | proposed |
-| [S028](stories/S028-import-a-kde-itinerary-file.md) | Import a KDE Itinerary file | import | todo |
+| [S028](stories/S028-import-a-kde-itinerary-file.md) | Import a KDE Itinerary file | import | done |
 | [S029](stories/S029-flight-segment-editor.md) | Flight segment editor | timeline | todo |
 | [S030](stories/S030-bus-and-ferry-editors.md) | Bus and ferry editors | timeline | todo |
 | [S031](stories/S031-event-restaurant-car-editors.md) | Event, restaurant and car editors | timeline | proposed |

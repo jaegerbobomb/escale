@@ -7,8 +7,11 @@ runs unless the variable is set.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import tempfile
+import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -223,6 +226,7 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/changed-elsewhere": None,
     "/document-not-here": None,
     "/my-trips": None,
+    "/import-itinerary": [],
     "/my-trips-opened": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
@@ -236,8 +240,23 @@ the toast of a change that gave way to one made on another device (S008c);
 ``/document-not-here`` the hotel's detail, offline, after "Booking document" was clicked
 for a document not on the device (S009b); ``/my-trips`` "My trips" with the London trip,
 a flight, an outing and past trips, ``/my-trips-opened`` the London trip opened from it
-(S035).
+(S035); ``/import-itinerary`` the confirmation of a KDE Itinerary export (S028).
 """
+
+
+def demo_export(path: Path) -> Path:
+    """A KDE Itinerary export (S028): two stays and their PDFs, a pass and settings."""
+    with zipfile.ZipFile(path, "w") as z:
+        for n, element in enumerate(MORE_TRIPS[2:4]):
+            content = f"%PDF-1.4 demo {n}".encode()
+            doc_id = hashlib.sha256(content).hexdigest()
+            z.writestr(f"reservations/{n}.json", json.dumps({**element, "subjectOf": [doc_id]}))
+            meta = {"@type": "DigitalDocument", "name": f"booking-{n}.pdf"}
+            z.writestr(f"documents/{doc_id}/meta.json", json.dumps(meta))
+            z.writestr(f"documents/{doc_id}/booking-{n}.pdf", content)
+        z.writestr("passes/pass.org.example.rail/QUJD.pkpass", b"demo")
+        z.writestr("custom/org.kde.itinerary/settings/settings.ini", b"[General]")
+    return path
 
 
 def enabled() -> bool:
@@ -251,6 +270,8 @@ async def run(page: ft.Page) -> None:
     ticket.write_bytes(b"%PDF-1.4 demo")
 
     async def choose_file() -> Path | None:
+        if page.route.rstrip("/") == "/import-itinerary":
+            return demo_export(ticket.parent / "export.itinerary")
         return ticket
 
     route = page.route.rstrip("/")

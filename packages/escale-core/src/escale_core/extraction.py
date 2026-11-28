@@ -49,6 +49,11 @@ class ExtractionResult:
     """Why the file could not be read; ``None`` when extraction ran."""
     source: Path | None = None
     """The file that was read, so that a store can keep a copy of it."""
+    documents: tuple[tuple[Document, bytes], ...] = ()
+    """Documents read with the reservations, and their content: those of a KDE Itinerary
+    export (S028), where ``document`` is ``None``."""
+    not_imported: tuple[str, ...] = ()
+    """What the file holds that Escale leaves out, in words ("2 passes")."""
 
     @property
     def nothing_recognised(self) -> bool:

@@ -59,6 +59,8 @@ VIEWS: dict[str, str] = {
     # "My trips": trips and outings, then one opened as a pushed page (S035).
     "my-trips": "/my-trips",
     "my-trips-opened": "/my-trips-opened",
+    # The confirmation of a KDE Itinerary export (S028).
+    "import-itinerary": "/import-itinerary",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).

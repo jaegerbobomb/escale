@@ -106,6 +106,9 @@ def _sheet(title: str, body: list[ft.Control], actions: list[ft.Control]) -> ft.
                 ],
                 spacing=12,
                 tight=True,
+                # a long export scrolls instead of being cut (S028)
+                scroll=ft.ScrollMode.AUTO,
+                data={"sheet_body": True},
             ),
             padding=24,
         ),
@@ -137,12 +140,15 @@ def confirmation_sheet(
             [cancel, _manual_entry_button()],
         )
     count = len(result.reservations)
+    notes = ["Check before adding: nothing is saved automatically."]
+    if result.documents:  # a KDE Itinerary export (S028)
+        n = len(result.documents)
+        notes.append(f"With {n} document{'s' if n > 1 else ''}.")
+    if result.not_imported:
+        notes.append(f"Not imported: {', '.join(result.not_imported)}.")
     return _sheet(
         "Reservation found" if count == 1 else f"{count} reservations found",
-        [
-            ft.Text("Check before adding: nothing is saved automatically.", opacity=0.7),
-            *(_card(r) for r in result.reservations),
-        ],
+        [*(ft.Text(n, opacity=0.7) for n in notes), *(_card(r) for r in result.reservations)],
         [cancel, ft.FilledButton("Add to trip", on_click=on_confirm)],
     )
 
