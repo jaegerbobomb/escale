@@ -39,6 +39,11 @@ documents of your current trip download after each sync, so that they open witho
 network at the gate. If a document is not on the device yet and the server cannot be
 reached, Escale says so; it downloads at the next try with network.
 
+Copies of documents take at most about 500 MB on a device. Beyond that, after a sync,
+Escale removes those of past trips, the oldest first; they stay in your Nextcloud and
+download again if you open them. Documents of current and coming trips, and those not in
+your Nextcloud yet, always stay.
+
 If a reservation you changed here was also changed elsewhere before your change
 reached the server, the version on the server is kept and a notice says so: "… was
 changed on another device; that version is kept." The same goes for a reservation

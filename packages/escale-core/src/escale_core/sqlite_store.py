@@ -389,6 +389,10 @@ class SqliteReservationStore:
                 )
                 db.execute("UPDATE documents SET uploaded = 1 WHERE id = ?", (document.id,))
 
+    def _forget_document(self, document_id: str) -> None:
+        with self._lock:
+            shutil.rmtree(self._dir / "documents" / document_id, ignore_errors=True)
+
     # --- ReservationStore ---
 
     async def add(
@@ -446,3 +450,6 @@ class SqliteReservationStore:
 
     async def keep_document(self, document: Document, content: bytes) -> None:
         await asyncio.to_thread(self._keep_document, document, content)
+
+    async def forget_document(self, document_id: str) -> None:
+        await asyncio.to_thread(self._forget_document, document_id)
