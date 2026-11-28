@@ -28,6 +28,7 @@ from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
 from escale_core.stays import new_stay
 from escale_core.store import InMemoryReservationStore
+from escale_core.transit_edit import new_boat
 from escale_flet.import_sheet import phone_sheet
 from escale_flet.shell import NOT_ON_DEVICE, Shell, Tab, changed_elsewhere, toast
 from escale_flet.testing import tagged
@@ -177,6 +178,31 @@ FLIGHT: dict[str, Any] = {
 }
 """A synthetic flight for screenshots and tests (S016); no real booking."""
 
+BUS: dict[str, Any] = {
+    "@type": "BusReservation",
+    "reservationNumber": "ESC-B705",
+    "underName": _TRAVELLERS[:1],
+    "reservedTicket": {"@type": "Ticket", "ticketedSeat": {"@type": "Seat", "seatNumber": "12"}},
+    "reservationFor": {
+        "@type": "BusTrip",
+        "busNumber": "N705",
+        "departurePlatform": "B4",
+        "departureBusStop": {
+            "@type": "BusStation",
+            "name": "Paris Bercy Seine",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Paris",
+                "addressCountry": "FR",
+            },
+        },
+        "departureTime": "2026-09-20T08:00:00+02:00",
+        "arrivalBusStop": {"@type": "BusStation", "name": "Lyon Perrache"},
+        "arrivalTime": "2026-09-20T13:00:00+02:00",
+    },
+}
+"""A synthetic coach trip for screenshots (S030); no real booking."""
+
 
 def _stay(ref: str, name: str, town: str, checkin: str, checkout: str) -> dict[str, Any]:
     return {
@@ -224,6 +250,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/flight-editor-date": None,
     "/add-manually": None,
     "/new-stay": None,
+    "/bus-editor": None,
+    "/new-ferry": None,
     "/stay-detail": None,
     "/stay-editor": None,
     "/preferences": None,
@@ -243,6 +271,7 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 ``/stay-editor`` its editor, ``/flight-editor`` the flight's (S029a) and
 ``/flight-editor-date`` with its departure's date picker open; ``/add-manually`` the
 kinds of booking to add by hand, ``/new-stay`` the editor of a new stay (S018);
+``/bus-editor`` a coach trip's editor, ``/new-ferry`` a new ferry crossing's (S030);
 ``/preferences*`` the preferences, empty, after a refused
 password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
 the toast of a change that gave way to one made on another device (S008c);
@@ -307,6 +336,11 @@ async def run(page: ft.Page) -> None:
         # 40 minutes before the first train leaves.
         start = datetime.fromisoformat(LONDON_TRIP[0]["reservationFor"]["departureTime"])
         clock = lambda: start - timedelta(minutes=40)  # noqa: E731
+    elif route == "/bus-editor":
+        [bus] = [r for r in [reservation_from_jsonld(BUS, ("demo",))] if r]
+        await store.add(Document("demo", "coach.pdf", "application/pdf"), [bus])
+        leaves = datetime.fromisoformat(BUS["reservationFor"]["departureTime"])
+        clock = lambda: leaves - timedelta(hours=2)  # noqa: E731
     elif route in ("/flight-detail", "/flight-editor", "/flight-editor-date"):
         [flight] = [r for r in [reservation_from_jsonld(FLIGHT, ("demo",))] if r]
         await store.add(Document("demo", "boarding-pass.pdf", "application/pdf"), [flight])
@@ -335,6 +369,11 @@ async def run(page: ft.Page) -> None:
         shell.add_manually()
     elif route == "/new-stay":
         shell.new_booking(new_stay())
+    elif route == "/new-ferry":
+        shell.new_booking(new_boat())
+    elif route == "/bus-editor" and shell.trip is not None:
+        shell.open_detail(shell.trip.reservations[0])
+        shell.edit()
     elif route == "/import-phone":
         page.show_dialog(phone_sheet(shell._close_sheet))
     elif route == "/ticket" and shell.trip is not None:

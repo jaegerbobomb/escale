@@ -19,8 +19,8 @@ KINDS: tuple[tuple[str, str, ft.IconData, bool], ...] = (
     ("stay", "Stay", ft.Icons.HOTEL_OUTLINED, True),
     ("flight", "Flight", ft.Icons.FLIGHT_OUTLINED, False),  # S029b
     ("train", "Train", ft.Icons.TRAIN_OUTLINED, False),
-    ("bus", "Bus", ft.Icons.DIRECTIONS_BUS_OUTLINED, False),  # S030
-    ("ferry", "Ferry", ft.Icons.DIRECTIONS_BOAT_OUTLINED, False),  # S030
+    ("bus", "Bus", ft.Icons.DIRECTIONS_BUS_OUTLINED, True),  # S030
+    ("ferry", "Ferry", ft.Icons.DIRECTIONS_BOAT_OUTLINED, True),  # S030
     ("event", "Event", ft.Icons.LOCAL_ACTIVITY_OUTLINED, False),
     ("restaurant", "Restaurant", ft.Icons.RESTAURANT_OUTLINED, False),
 )

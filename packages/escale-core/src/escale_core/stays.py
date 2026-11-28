@@ -14,7 +14,16 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
-from escale_core.editing import local_moment, put_text, with_moment
+from escale_core.editing import (
+    coordinates,
+    local_moment,
+    names,
+    place_fields,
+    put_names,
+    put_text,
+    with_moment,
+    write_place,
+)
 from escale_core.extraction import ExtractedReservation
 from escale_core.importer import parse_datetime, reservation_from_jsonld
 
@@ -143,22 +152,7 @@ class StayFields:
     under_name: str = ""
 
 
-_ADDRESS = {
-    "street": "streetAddress",
-    "postal_code": "postalCode",
-    "city": "addressLocality",
-    "region": "addressRegion",
-}
 _CONTACT = {"telephone": "telephone", "email": "email", "website": "url"}
-
-
-def _names(value: object) -> str:
-    people = value if isinstance(value, list) else [value]
-    return ", ".join(n for p in people if (n := _text(_m(p).get("name"))))
-
-
-def _country(value: object) -> str:
-    return (_text(_m(value).get("name")) if isinstance(value, Mapping) else _text(value)) or ""
 
 
 def new_stay() -> ExtractedReservation:
@@ -172,15 +166,10 @@ def new_stay() -> ExtractedReservation:
 
 def fields_of(r: ExtractedReservation) -> StayFields:
     place = _place(r)
-    a = _m(place.get("address"))
-    geo = _m(place.get("geo"))
     start, end = (parse_datetime(r.raw.get(k)) for k in ("checkinTime", "checkoutTime"))
     return StayFields(
         name=_text(place.get("name")) or "",
-        **{field: _text(a.get(key)) or "" for field, key in _ADDRESS.items()},
-        country=_country(a.get("addressCountry")),
-        latitude="" if geo.get("latitude") is None else str(geo["latitude"]),
-        longitude="" if geo.get("longitude") is None else str(geo["longitude"]),
+        **place_fields(place),
         check_in_date=f"{start:%Y-%m-%d}" if start else "",
         check_in_time=f"{start:%H:%M}" if start else "",
         check_out_date=f"{end:%Y-%m-%d}" if end else "",
@@ -188,19 +177,8 @@ def fields_of(r: ExtractedReservation) -> StayFields:
         description=_text(r.raw.get("lodgingUnitDescription")) or "",
         **{field: _text(place.get(key)) or "" for field, key in _CONTACT.items()},
         reference=r.reference or "",
-        under_name=_names(r.raw.get("underName")),
+        under_name=names(r.raw.get("underName")),
     )
-
-
-def _coordinates(f: StayFields) -> tuple[float, float] | bool | None:
-    """The coordinates; ``None`` when both are empty, ``False`` when they are not valid."""
-    if not f.latitude.strip() and not f.longitude.strip():
-        return None
-    try:
-        lat, lon = float(f.latitude), float(f.longitude)
-    except ValueError:
-        return False
-    return (lat, lon) if -90 <= lat <= 90 and -180 <= lon <= 180 else False
 
 
 def problems(f: StayFields, r: ExtractedReservation | None = None) -> list[str]:
@@ -226,7 +204,7 @@ def problems(f: StayFields, r: ExtractedReservation | None = None) -> list[str]:
         )
     if start and end and end <= start:
         found.append("The check-out must be after the check-in.")
-    if _coordinates(f) is False:
+    if coordinates(f.latitude, f.longitude) is False:
         found.append("The coordinates are not valid.")
     return found
 
@@ -237,27 +215,10 @@ def edited(r: ExtractedReservation, f: StayFields) -> ExtractedReservation:
     before = fields_of(r)
     raw = copy.deepcopy(dict(r.raw))
     place = dict(_m(raw.get("reservationFor"))) or {"@type": "LodgingBusiness"}
-    a = dict(_m(place.get("address"))) or {"@type": "PostalAddress"}
     changed = {k for k, v in vars(f).items() if v != getattr(before, k)}
     if "name" in changed:
         put_text(place, "name", f.name)
-    for field, key in _ADDRESS.items():
-        if field in changed:
-            put_text(a, key, getattr(f, field))
-    if "country" in changed:
-        put_text(a, "addressCountry", f.country)
-    if changed & {*_ADDRESS, "country"}:
-        place["address"] = a
-    if changed & {"latitude", "longitude"}:
-        coordinates = _coordinates(f)
-        if isinstance(coordinates, tuple):
-            place["geo"] = {
-                "@type": "GeoCoordinates",
-                "latitude": coordinates[0],
-                "longitude": coordinates[1],
-            }
-        else:
-            place.pop("geo", None)
+    write_place(place, vars(f), changed)
     for field, key in _CONTACT.items():
         if field in changed:
             put_text(place, key, getattr(f, field))
@@ -275,13 +236,7 @@ def edited(r: ExtractedReservation, f: StayFields) -> ExtractedReservation:
     if "reference" in changed:
         put_text(raw, "reservationNumber", f.reference)
     if "under_name" in changed:
-        people = [
-            {"@type": "Person", "name": n.strip()} for n in f.under_name.split(",") if n.strip()
-        ]
-        if people:
-            raw["underName"] = people[0] if len(people) == 1 else people
-        else:
-            raw.pop("underName", None)
+        put_names(raw, f.under_name)
     new = reservation_from_jsonld(raw, r.subject_of)
     assert new is not None
     return new
