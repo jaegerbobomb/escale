@@ -115,6 +115,8 @@ def build_theme(t: Tokens) -> ft.Theme:
             outline=t.border,
             outline_variant=t.border,
             surface_container=t.card_bg,
+            # bottom sheets: lifted off the window, as libadwaita's dialogs
+            surface_container_low=t.headerbar_bg,
             tertiary_container=t.outing,
         ),
         scaffold_bgcolor=t.window_bg,

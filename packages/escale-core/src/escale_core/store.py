@@ -64,11 +64,12 @@ class Outgoing:
 class ReservationStore(Protocol):
     async def add(
         self,
-        document: Document,
+        document: Document | None,
         reservations: Sequence[ExtractedReservation],
         source: Path | None = None,
     ) -> None:
-        """Save ``reservations`` and the document they come from (``source``: its file)."""
+        """Save ``reservations`` and the document they come from (``source``: its file);
+        no document for those of a KDE Itinerary export, whose documents come apart."""
         ...
 
     async def reservations(self) -> tuple[ExtractedReservation, ...]: ...
@@ -172,13 +173,14 @@ class InMemoryReservationStore:
 
     async def add(
         self,
-        document: Document,
+        document: Document | None,
         reservations: Sequence[ExtractedReservation],
         source: Path | None = None,
     ) -> None:
-        self._documents.setdefault(document.id, document)
-        if source is not None and source.is_file():
-            self._files.setdefault(document.id, source)
+        if document is not None:
+            self._documents.setdefault(document.id, document)
+            if source is not None and source.is_file():
+                self._files.setdefault(document.id, source)
         for r in reservations:
             key = identity(r)
             row = self._rows.get(key)

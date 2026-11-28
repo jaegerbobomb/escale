@@ -6,6 +6,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-28
+
+### Added
+- S028: a KDE Itinerary export (`.itinerary`) imports its reservations and documents,
+  without the ticket extractor; the confirmation says how many documents come with them
+  and what is not imported (passes, program memberships, health certificates, settings).
+
+### Fixed
+- The import confirmation scrolls, so that its buttons can be reached when it holds
+  more than fits.
+- Readability in dark: bottom sheets stand out from the window (the header bar's
+  colour), the import confirmation's cards from the sheet, and secondary text uses the
+  theme's dimmed colour instead of transparency.
+
 ## [0.26.0] - 2026-11-28
 
 ### Added
@@ -274,7 +288,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.26.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.27.0...HEAD
+[0.27.0]: https://github.com/jaegerbobomb/escale/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/jaegerbobomb/escale/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/jaegerbobomb/escale/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/jaegerbobomb/escale/compare/v0.23.0...v0.24.0
