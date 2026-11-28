@@ -7,7 +7,7 @@ from typing import Any
 
 from escale_core.extraction import ExtractedReservation
 from escale_core.flight_edit import FlightFields, fields_of, problems
-from escale_flet.editor import EditorKind
+from escale_flet.editor import DATE, TIME, EditorKind
 
 
 def _code(r: ExtractedReservation, key: str) -> str:
@@ -24,9 +24,9 @@ def flight_kind(r: ExtractedReservation) -> EditorKind[FlightFields]:
         (
             "Departure" + _code(r, "departureAirport"),
             (
-                ("departure_date", "Date", "YYYY-MM-DD"),
-                ("departure_time", "Time", "HH:MM"),
-                ("boarding_time", "Boarding time", "HH:MM"),
+                ("departure_date", "Date", DATE),
+                ("departure_time", "Time", TIME),
+                ("boarding_time", "Boarding time", TIME),
                 ("departure_terminal", "Terminal", ""),
                 ("departure_gate", "Gate", ""),
             ),
@@ -34,8 +34,8 @@ def flight_kind(r: ExtractedReservation) -> EditorKind[FlightFields]:
         (
             "Arrival" + _code(r, "arrivalAirport"),
             (
-                ("arrival_date", "Date", "YYYY-MM-DD"),
-                ("arrival_time", "Time", "HH:MM"),
+                ("arrival_date", "Date", DATE),
+                ("arrival_time", "Time", TIME),
                 ("arrival_terminal", "Terminal", ""),
             ),
         ),

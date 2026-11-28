@@ -29,6 +29,7 @@ from escale_core.settings import SettingsFile
 from escale_core.store import InMemoryReservationStore
 from escale_flet.import_sheet import phone_sheet
 from escale_flet.shell import NOT_ON_DEVICE, Shell, Tab, changed_elsewhere, toast
+from escale_flet.testing import tagged
 
 SAMPLE: dict[str, Any] = {
     "@context": "http://schema.org",
@@ -219,6 +220,7 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/trip-detail": None,
     "/flight-detail": None,
     "/flight-editor": None,
+    "/flight-editor-date": None,
     "/stay-detail": None,
     "/stay-editor": None,
     "/preferences": None,
@@ -235,7 +237,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 ``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts;
 ``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail,
 ``/stay-detail`` the hotel's,
-``/stay-editor`` its editor, ``/flight-editor`` the flight's (S029a);
+``/stay-editor`` its editor, ``/flight-editor`` the flight's (S029a) and
+``/flight-editor-date`` with its departure's date picker open;
 ``/preferences*`` the preferences, empty, after a refused
 password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
 the toast of a change that gave way to one made on another device (S008c);
@@ -300,7 +303,7 @@ async def run(page: ft.Page) -> None:
         # 40 minutes before the first train leaves.
         start = datetime.fromisoformat(LONDON_TRIP[0]["reservationFor"]["departureTime"])
         clock = lambda: start - timedelta(minutes=40)  # noqa: E731
-    elif route in ("/flight-detail", "/flight-editor"):
+    elif route in ("/flight-detail", "/flight-editor", "/flight-editor-date"):
         [flight] = [r for r in [reservation_from_jsonld(FLIGHT, ("demo",))] if r]
         await store.add(Document("demo", "boarding-pass.pdf", "application/pdf"), [flight])
         leaves = datetime.fromisoformat(FLIGHT["reservationFor"]["departureTime"])
@@ -355,9 +358,11 @@ async def run(page: ft.Page) -> None:
                 url="cloud.example.org", login="jane", password="demo-app-password"
             )
             shell.preferences.render()
-    elif route in ("/flight-detail", "/flight-editor") and shell.trip is not None:
+    elif route.startswith("/flight-") and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[0])
-        if route == "/flight-editor":
+        if route.startswith("/flight-editor"):
             shell.edit()
+        if route == "/flight-editor-date":
+            tagged(shell._editor, "picker", "departure_date").on_click(None)
     elif elements is not None and route not in trip_routes:
         await shell.start_import()

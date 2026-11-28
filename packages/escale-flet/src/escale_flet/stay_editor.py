@@ -9,7 +9,7 @@ import flet as ft
 
 from escale_core.extraction import ExtractedReservation
 from escale_core.stays import StayFields, fields_of, problems
-from escale_flet.editor import EditorKind, action_editor
+from escale_flet.editor import DATE, TIME, EditorKind, action_editor
 
 OnSave = Callable[[StayFields], Awaitable[None]]
 
@@ -30,10 +30,10 @@ _GROUPS: tuple[tuple[str, tuple[tuple[str, str, str], ...]], ...] = (
     (
         "Stay",
         (
-            ("check_in_date", "Check-in date", "YYYY-MM-DD"),
-            ("check_in_time", "Check-in time", "HH:MM"),
-            ("check_out_date", "Check-out date", "YYYY-MM-DD"),
-            ("check_out_time", "Check-out time", "HH:MM"),
+            ("check_in_date", "Check-in date", DATE),
+            ("check_in_time", "Check-in time", TIME),
+            ("check_out_date", "Check-out date", DATE),
+            ("check_out_time", "Check-out time", TIME),
             ("description", "Room", ""),
         ),
     ),

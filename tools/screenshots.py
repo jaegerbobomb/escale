@@ -59,6 +59,8 @@ VIEWS: dict[str, str] = {
     # "My trips": trips and outings, then one opened as a pushed page (S035).
     # The flight editor (S029a).
     "flight-editor": "/flight-editor",
+    # Its departure's date picker, opened from the calendar button (S029a).
+    "flight-editor-date": "/flight-editor-date",
     "my-trips": "/my-trips",
     "my-trips-opened": "/my-trips-opened",
     # The confirmation of a KDE Itinerary export (S028).

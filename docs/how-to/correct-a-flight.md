@@ -8,7 +8,9 @@ When an import got a flight wrong, or the airline gave you a gate or a new time:
 2. Change what you need: the flight number (`AF 718`), and for the departure its date,
    time, boarding time, terminal and gate; for the arrival its date, time and terminal;
    your seat and the booking reference. Dates are written `2026-09-14`, times `10:25`, in
-   each airport's local time: Escale keeps each airport's time zone.
+   each airport's local time: Escale keeps each airport's time zone. Instead of typing,
+   the calendar button at the end of a date field and the clock button at the end of a
+   time field open a picker.
 3. Click **Save**, or press Return in any field.
 
 **Save** stays greyed out while the flight cannot be saved; the reason is shown under the

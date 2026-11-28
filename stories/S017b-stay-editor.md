@@ -6,7 +6,7 @@ depends_on: [S017a]
 status: done
 estimate: M
 bdd: true
-updated: "2026-11-25"
+updated: "2026-11-28"
 released_in: "0.14.0"
 ---
 
@@ -64,6 +64,8 @@ released_in: "0.14.0"
   "Save" is disabled and the reasons are listed under the form.
 - `ReservationStore.replace(old, new)`, in memory and in SQLite (the row keeps its id;
   its identity follows a changed booking reference).
+- 2026-11-28 (S029a): check-in and check-out dates and times can also be chosen with
+  a date picker and a time picker, from a button at the end of the field.
 - Not done: "the trip it belongs to". Trips are computed by grouping (S010a); choosing
   one by hand comes with managing trips (S036, proposed).
 - Size: about 415 lines of production code, over the ~300-line limit. The maintainer

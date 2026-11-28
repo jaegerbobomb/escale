@@ -29,6 +29,10 @@ released_in: "0.29.0"
 - Rules, as KDE Itinerary: departure date and time required; boarding before departure;
   arrival after departure, compared in UTC; flight number `^[A-Z0-9]{2}[A-Z]? ?\d{1,5}$`.
   "Save" is insensitive while one fails, with the reason below the form.
+- Dates and times can be typed or chosen: a calendar button at the end of each date
+  field opens a date picker, a clock button at the end of each time field a 24-hour
+  time picker; the picked value fills the field, which is checked as if typed. This is
+  in the generic editor, so the stay editor (S017b) has it too.
 - Saving updates the `FlightReservation` JSON-LD: `airline.iataCode`, `flightNumber`,
   `departureTerminal`, `departureGate`, `boardingTime`, `departureTime`,
   `arrivalTerminal`, `arrivalTime`, the seat (`reservedTicket.ticketedSeat.seatNumber`,
@@ -50,6 +54,12 @@ released_in: "0.29.0"
 * **When** the arrival is set before the departure in UTC
 * **Then** "Save" is disabled with the reason
 
+### Scenario: Choose the departure date from a calendar
+
+* **Given** the flight editor
+* **When** the user opens the calendar of the departure date and picks 23 August 2026
+* **Then** the departure date field reads 2026-08-23
+
 ## Notes
 
 - 2026-11-28: split of S029 approved by the maintainer; the airport data investigation is
@@ -59,5 +69,12 @@ released_in: "0.29.0"
   the core's three functions (`fields_of`, `problems`, `edited`).
 - Boarding time is a time of day (KDE Itinerary edits a full date-time); the "day before"
   rule keeps a 23:40 boarding for a 00:15 flight valid and still refuses 10:40 for 10:25.
+- 2026-11-28: date and time pickers asked for by the maintainer on the first screenshots
+  ("the date fields look like plain text"). Flet's pickers are Material's: GNOME has no
+  date-picker dialog (it puts a calendar in a popover), an accepted gap; typing stays.
+  The date picker returns the picked day's local midnight in UTC, read back in the
+  device's zone: right where Python and Flutter share the device (Linux, Android),
+  wrong by a day in web mode when browser and server zones differ (seen, 2026-11-28;
+  web is only used for screenshots).
 - An arrival time that the reservation never had is entered in the departure's offset:
   without the airport table (S029b) Escale does not know the arrival airport's zone.

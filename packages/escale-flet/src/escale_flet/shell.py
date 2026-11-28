@@ -252,6 +252,8 @@ class Shell:
         self.detail: ExtractedReservation | None = None
         self.editing = False
         self._editor: ft.AlertDialog | ft.BottomSheet | None = None
+        self._picker: ft.DialogControl | None = None
+        """A date or time picker opened from the editor, above it."""
         self.highlight: str | None = None
         self.scroll_target: str | None = None
         self.width: float | None = None
@@ -353,9 +355,7 @@ class Shell:
                 self._page.pop_dialog()  # the same preferences, rebuilt for the new width
             self._show_preferences()
         elif self.editing and self._editor is not None and self._sheet() != was_sheet:
-            values = self._editor.data["values"]()  # keep what was typed
-            self._close_editor()
-            self.edit(values)
+            self._fit_editor()
         elif changed:
             self._update()
 
@@ -413,9 +413,40 @@ class Shell:
             sheet=self._sheet(),
             height=_editor_height(height, self._sheet()),
             initial=values,
+            show=self._show_picker,
         )
         self._page.show_dialog(self._editor)
         self._update()
+
+    def _show_picker(self, picker: ft.DialogControl) -> None:
+        if self._page is not None:
+            self._picker = picker
+            fill: Any = getattr(picker, "on_change", None)
+
+            def picked(e: Any) -> None:  # OK: Flutter sends no dismissal then
+                if fill is not None:
+                    fill(e)
+                self._on_picker_closed(e)
+
+            picker.on_change = picked  # type: ignore[attr-defined]
+            picker.on_dismiss = self._on_picker_closed
+            self._page.show_dialog(picker)
+
+    def _on_picker_closed(self, _: Any) -> None:
+        self._picker = None
+        self._fit_editor()
+
+    def _fit_editor(self) -> None:
+        """Rebuild the editor as a dialog or a bottom sheet if the width asks for the
+        other one; not while a picker is open above it, as Flutter would leave the
+        picker on screen."""
+        editor = self._editor
+        if not self.editing or editor is None or self._picker is not None:
+            return
+        if isinstance(editor, ft.BottomSheet) != self._sheet():
+            values = editor.data["values"]()  # keep what was typed
+            self._close_editor()
+            self.edit(values)
 
     def _close_editor(self) -> None:
         if self.editing and self._page is not None:

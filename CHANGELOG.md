@@ -14,6 +14,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   arrival's date, time and terminal, the seat and the booking reference, in each
   airport's local time, with KDE Itinerary's rules. S029 is split into S029a and S029b
   (adding a flight, after choosing an airport table: issue #52).
+- Dates and times in the flight and stay editors can be chosen with a date picker and a
+  24-hour time picker, from a button at the end of the field; typing still works.
 
 ## [0.28.0] - 2026-11-28
 

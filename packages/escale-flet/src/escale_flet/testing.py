@@ -40,10 +40,15 @@ class FakePage:
         self.updates += 1
 
     def show_dialog(self, dialog: ft.DialogControl) -> None:
+        dialog.open = True
         self.dialogs.append(dialog)
 
     def pop_dialog(self) -> ft.DialogControl | None:
-        return self.dialogs.pop() if self.dialogs else None
+        if not self.dialogs:
+            return None
+        dialog = self.dialogs.pop()
+        dialog.open = False
+        return dialog
 
     @property
     def dialog(self) -> ft.DialogControl | None:
@@ -75,7 +80,7 @@ def walk(control: Any) -> Iterator[Any]:
             yield from walk(item)
         return
     yield control
-    for name in ("content", "controls", "actions", "title"):
+    for name in ("content", "controls", "actions", "title", "suffix_icon"):
         child = getattr(control, name, None)
         if isinstance(child, list):
             for item in child:
