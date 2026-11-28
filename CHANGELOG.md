@@ -16,6 +16,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 ### Fixed
 - The import confirmation scrolls, so that its buttons can be reached when it holds
   more than fits.
+- Readability in dark: bottom sheets stand out from the window (the header bar's
+  colour), the import confirmation's cards from the sheet, and secondary text uses the
+  theme's dimmed colour instead of transparency.
 
 ## [0.26.0] - 2026-11-28
 

@@ -72,7 +72,10 @@ def travellers(reservation: ExtractedReservation) -> list[str]:
 
 def _row(label: str, value: str) -> ft.Control:
     return ft.Row(
-        [ft.Text(label, opacity=0.7), ft.Text(value, text_align=ft.TextAlign.RIGHT, expand=True)],
+        [
+            ft.Text(label, color=ft.Colors.ON_SURFACE_VARIANT),
+            ft.Text(value, text_align=ft.TextAlign.RIGHT, expand=True),
+        ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
 
@@ -92,7 +95,15 @@ def _card(reservation: ExtractedReservation) -> ft.Control:
     if names:
         lines.append(_row("Travellers", ", ".join(names)))
     lines.append(_row("Add to", "New trip"))
-    return ft.Card(content=ft.Container(ft.Column(lines, spacing=6), padding=16))
+    # a card that stands out from the sheet in dark as in light (Adwaita's .card)
+    return ft.Container(
+        ft.Column(lines, spacing=6),
+        padding=16,
+        bgcolor=ft.Colors.SURFACE_CONTAINER,
+        border=ft.Border.all(1, ft.Colors.OUTLINE),
+        border_radius=12,
+        data={"found": reservation.reference},
+    )
 
 
 def _sheet(title: str, body: list[ft.Control], actions: list[ft.Control]) -> ft.BottomSheet:
@@ -148,7 +159,10 @@ def confirmation_sheet(
         notes.append(f"Not imported: {', '.join(result.not_imported)}.")
     return _sheet(
         "Reservation found" if count == 1 else f"{count} reservations found",
-        [*(ft.Text(n, opacity=0.7) for n in notes), *(_card(r) for r in result.reservations)],
+        [
+            *(ft.Text(n, color=ft.Colors.ON_SURFACE_VARIANT) for n in notes),
+            *(_card(r) for r in result.reservations),
+        ],
         [cancel, ft.FilledButton("Add to trip", on_click=on_confirm)],
     )
 
