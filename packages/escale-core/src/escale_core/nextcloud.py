@@ -82,6 +82,11 @@ class NextcloudServer(Protocol):
         left as it is (``False``): a document never changes (S009a)."""
         ...
 
+    async def get_file(self, path: str) -> bytes | None:
+        """The content of the file at ``path``, unchanged; ``None`` when it is not there
+        (S009b)."""
+        ...
+
     async def put_event(self, href: str, ics: bytes, etag: str | None) -> str | None:
         """Write a calendar object: a new one when ``etag`` is ``None``, else the one
         with that ETag; ``EventChanged`` otherwise. Returns its new ETag, if given."""

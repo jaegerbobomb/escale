@@ -3,11 +3,12 @@ id: S009b
 title: "Ticket documents on every device"
 epic: sync
 depends_on: [S009a]
-status: todo
+status: done
 estimate: S
 bdd: true
 updated: "2026-11-27"
 adr: [4]
+released_in: "0.24.0"
 ---
 
 ## User story
@@ -43,3 +44,10 @@ adr: [4]
 ## Notes
 
 - 2026-11-27: split of S009 validated by the maintainer.
+- "Current trip" is the one in progress, else the next to start (`active_trip`, S010a).
+- Without a connected account, a document not on the device offers no "Booking
+  document" action, as before: there is nothing to download it from.
+- Downloads bypass `caldav`, whose responses turn CRLF into LF (that breaks a PDF):
+  checked on Nextcloud 31 by `test_get_file_returns_the_bytes_unchanged`.
+- Toast wording to validate on the screenshots: "This document is not on this device
+  yet. It downloads when the server can be reached."

@@ -1,6 +1,6 @@
 [project]
 name = "escale-core"
-version = "0.23.0"
+version = "0.24.0"
 description = "Escale core: domain, services and adapters. Never imports a UI toolkit."
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"

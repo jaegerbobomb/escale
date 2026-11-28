@@ -6,6 +6,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-27
+
+### Added
+- S009b: a ticket's document that is not on this device yet downloads from your
+  Nextcloud when you open it, and the documents of the current trip download after each
+  sync, so that they open offline. A download whose content does not match the
+  document's id is not kept. Offline, a toast says the document is not on this device
+  yet.
+
 ## [0.23.0] - 2026-11-27
 
 ### Added
@@ -250,7 +259,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.23.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/jaegerbobomb/escale/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/jaegerbobomb/escale/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/jaegerbobomb/escale/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/jaegerbobomb/escale/compare/v0.20.0...v0.21.0

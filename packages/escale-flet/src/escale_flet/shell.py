@@ -19,6 +19,7 @@ import flet as ft
 
 from escale_core.account import Account
 from escale_core.adapters.kitinerary_cli import KitineraryCli
+from escale_core.documents import Documents
 from escale_core.extraction import ExtractedReservation
 from escale_core.flights import follow_link
 from escale_core.importer import Importer
@@ -147,6 +148,12 @@ def changed_elsewhere(titles: Sequence[str]) -> str:
     return f"{len(titles)} reservations were changed on another device; those versions are kept."
 
 
+NOT_ON_DEVICE = (
+    "This document is not on this device yet. It downloads when the server can be reached."
+)
+"""The toast when a document cannot be downloaded now (S009b)."""
+
+
 def shares_with_sheet(platform: ft.PagePlatform | None) -> bool:
     """Phones have a share sheet; elsewhere Escale copies the text instead (S016)."""
     return platform in (ft.PagePlatform.ANDROID, ft.PagePlatform.IOS)
@@ -213,6 +220,7 @@ class Shell:
         launch: Callable[[str], Awaitable[None]] | None = None,
         account: Account | None = None,
         sync: Callable[[], Awaitable[object]] | None = None,
+        documents: Documents | None = None,
     ) -> None:
         if importer is None:
             importer = Importer(KitineraryCli(), store or InMemoryReservationStore())
@@ -220,6 +228,8 @@ class Shell:
         self.account = account
         self.sync = sync
         """Sends local changes to the calendar (S008a); run after each of them."""
+        self.documents = documents
+        """Downloads the documents this device lacks (S009b)."""
         self.preferences: Preferences | None = None
         self.store: ReservationStore = store or importer.store
         self.clock: Callable[[], datetime] = clock or (lambda: datetime.now().astimezone())
@@ -418,19 +428,26 @@ class Shell:
         if self.sync is None:
             return
         report = await self.sync()
-        if not getattr(report, "received", 0):
-            return
-        titles = [segment_ref_title(r) for r in getattr(report, "changed_elsewhere", ())]
-        trips = group(await self.store.reservations())
-        self.trip = active_trip(trips, self.clock())
-        if self.detail is not None and (
-            self.trip is None or self.detail not in self.trip.reservations
+        if getattr(report, "received", 0):
+            titles = [segment_ref_title(r) for r in getattr(report, "changed_elsewhere", ())]
+            trips = group(await self.store.reservations())
+            self.trip = active_trip(trips, self.clock())
+            if self.detail is not None and (
+                self.trip is None or self.detail not in self.trip.reservations
+            ):
+                self.detail = None
+            self._apply()
+            if titles and self._page is not None:
+                self._page.show_dialog(toast(changed_elsewhere(titles), self.width))
+            self._update()
+        # the current trip's documents, so that they open offline (S009b)
+        if (
+            self.documents is not None
+            and self.trip is not None
+            and await self.documents.prefetch(self.trip.reservations)
         ):
-            self.detail = None
-        self._apply()
-        if titles and self._page is not None:
-            self._page.show_dialog(toast(changed_elsewhere(titles), self.width))
-        self._update()
+            self._apply()
+            self._update()
 
     # --- preferences (S006b) ---
 
@@ -598,19 +615,30 @@ class Shell:
     def _open_document(
         self, reservation: ExtractedReservation
     ) -> Callable[[Any], Awaitable[None]] | None:
+        """Open the reservation's document: the copy on this device, else downloaded
+        (S009b); ``None`` when there is no way to get one."""
         locate = getattr(self.store, "document_path", None)
-        if locate is None or self._page is None:
+        if locate is None or self._page is None or not reservation.subject_of:
             return None
-        for document_id in reservation.subject_of:
-            path = locate(document_id)
-            if path is not None:
-                url = path.as_uri()
+        local = next((p for d in reservation.subject_of if (p := locate(d))), None)
+        connected = self.account is not None and self.account.connected
+        if local is None and (self.documents is None or not connected):
+            return None
 
-                async def open_it(_: Any, url: str = url) -> None:
-                    await ft.UrlLauncher().launch_url(url)
+        async def open_it(_: Any) -> None:
+            path = local
+            if path is None and self.documents is not None:
+                for document_id in reservation.subject_of:
+                    path = await self.documents.local(document_id)
+                    if path is not None:
+                        break
+            if path is None:
+                if self._page is not None:
+                    self._page.show_dialog(toast(NOT_ON_DEVICE, self.width))
+                return
+            await self.launch(path.as_uri())
 
-                return open_it
-        return None
+        return open_it
 
     def _share_flight(
         self, reservation: ExtractedReservation

@@ -142,12 +142,15 @@ class SqliteReservationStore:
         path = folder / str(name)
         return path if path.is_file() else None
 
-    def _keep_file(self, document: Document, source: Path) -> None:
+    def _keep_file(self, document: Document, source: Path | bytes) -> None:
         folder = self._dir / "documents" / document.id
         folder.mkdir(parents=True, exist_ok=True)
         target = folder / file_name(document)
         if not target.exists():
-            shutil.copyfile(source, target)
+            if isinstance(source, bytes):
+                target.write_bytes(source)
+            else:
+                shutil.copyfile(source, target)
         described = json.dumps(meta(document), indent=2)
         (folder / "meta.json").write_text(described, encoding="utf-8")
 
@@ -375,6 +378,17 @@ class SqliteReservationStore:
             with db:
                 db.execute("UPDATE documents SET uploaded = 1 WHERE id = ?", (document_id,))
 
+    def _keep_document(self, document: Document, content: bytes) -> None:
+        with self._lock:
+            db = self._connect()
+            self._keep_file(document, content)
+            with db:
+                db.execute(
+                    "INSERT OR IGNORE INTO documents (id, name, mime_type) VALUES (?, ?, ?)",
+                    (document.id, document.name, document.mime_type),
+                )
+                db.execute("UPDATE documents SET uploaded = 1 WHERE id = ?", (document.id,))
+
     # --- ReservationStore ---
 
     async def add(
@@ -429,3 +443,6 @@ class SqliteReservationStore:
 
     async def document_sent(self, document_id: str) -> None:
         await asyncio.to_thread(self._document_sent, document_id)
+
+    async def keep_document(self, document: Document, content: bytes) -> None:
+        await asyncio.to_thread(self._keep_document, document, content)
