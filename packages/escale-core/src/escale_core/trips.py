@@ -163,3 +163,46 @@ def active_trip(trips: Sequence[Trip], now: datetime) -> Trip | None:
             return trip
     upcoming = [trip for trip in trips if trip.start > now]
     return min(upcoming, key=lambda trip: trip.start) if upcoming else None
+
+
+# --- "My trips" (S035) ---
+
+TripFilter = Literal["all", "trip", "outing"]
+
+
+def _texts(value: object) -> Iterable[str]:
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, Mapping):
+        for item in value.values():
+            yield from _texts(item)
+    elif isinstance(value, list | tuple):
+        for item in value:
+            yield from _texts(item)
+
+
+def matches(trip: Trip, query: str) -> bool:
+    """Whether ``query`` is in the trip's name or in any text of its reservations:
+    places, names, references (case ignored)."""
+    wanted = query.strip().casefold()
+    if not wanted:
+        return True
+    texts = [trip.name, *(t for r in trip.reservations for t in _texts(r.raw))]
+    return any(wanted in t.casefold() for t in texts)
+
+
+def browse(
+    trips: Iterable[Trip], now: datetime, kind: TripFilter = "all", query: str = ""
+) -> list[tuple[str, list[Trip]]]:
+    """The "My trips" sections: "Upcoming" (in progress or to come, soonest first), then
+    past trips by year, most recent first; empty sections are left out."""
+    shown = [t for t in trips if (kind == "all" or t.kind == kind) and matches(t, query)]
+    upcoming = sorted((t for t in shown if t.end >= now), key=lambda t: t.start)
+    past = sorted((t for t in shown if t.end < now), key=lambda t: t.start, reverse=True)
+    sections: list[tuple[str, list[Trip]]] = [("Upcoming", upcoming)] if upcoming else []
+    for trip in past:
+        year = str(trip.start.year)
+        if not sections or sections[-1][0] != year:
+            sections.append((year, []))
+        sections[-1][1].append(trip)
+    return sections

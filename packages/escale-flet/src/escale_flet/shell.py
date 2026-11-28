@@ -25,7 +25,7 @@ from escale_core.flights import follow_link
 from escale_core.importer import Importer
 from escale_core.stays import StayFields, edited
 from escale_core.store import InMemoryReservationStore, ReservationStore
-from escale_core.trips import Trip, active_trip, group
+from escale_core.trips import Trip, TripFilter, active_trip, browse, group
 from escale_flet.detail_view import detail_view
 from escale_flet.import_sheet import confirmation_sheet, headline, phone_sheet
 from escale_flet.preferences import Preferences
@@ -42,6 +42,7 @@ from escale_flet.timeline import (
     segment_ref,
     trip_view,
 )
+from escale_flet.trips_view import search_field, trips_bar, trips_page, trips_sections
 
 NARROW_BELOW = 550
 """Window width (logical px) under which the tabs move to a bottom bar (ADR-0007)."""
@@ -234,6 +235,14 @@ class Shell:
         self.store: ReservationStore = store or importer.store
         self.clock: Callable[[], datetime] = clock or (lambda: datetime.now().astimezone())
         self.trip: Trip | None = None
+        """The active trip, shown in "Current"."""
+        self.trips: list[Trip] = []
+        self.browsed: Trip | None = None
+        """The trip opened from "My trips", as a pushed page (S035, ADR-0007)."""
+        self.trip_kind: TripFilter = "all"
+        self.trip_query = ""
+        self._trip_search = search_field(self._on_trip_query)
+        self._trip_sections = ft.Container(expand=True)
         self.ticket: ExtractedReservation | None = None
         self.detail: ExtractedReservation | None = None
         self.editing = False
@@ -325,10 +334,12 @@ class Shell:
     # --- state changes ---
 
     def resize(self, width: float | None) -> None:
-        was_compact, was_sheet = self._compact(), self._sheet()
+        was_compact, was_sheet, was_columns = self._compact(), self._sheet(), self._columns()
         self.width = width
         layout = layout_for(width)
         changed = layout != self.layout or self._compact() != was_compact
+        listing = self.selected == Tab.TRIPS and self.browsed is None
+        changed = changed or (listing and self._columns() != was_columns)
         if changed:
             self.layout = layout
             self._apply()
@@ -409,9 +420,9 @@ class Shell:
         new = edited(old, values)
         self._close_editor()
         await self.store.replace(old, new)
-        trips = group(await self.store.reservations())
-        self.trip = active_trip(trips, self.clock())
-        kept = [r for r in self.trip.reservations if r == new] if self.trip else []
+        self._regroup(group(await self.store.reservations()))
+        shown = self._shown()
+        kept = [r for r in shown.reservations if r == new] if shown else []
         self.detail = kept[0] if kept else None
         if self.detail is not None:
             self.highlight = segment_ref(self.detail)
@@ -430,11 +441,9 @@ class Shell:
         report = await self.sync()
         if getattr(report, "received", 0):
             titles = [segment_ref_title(r) for r in getattr(report, "changed_elsewhere", ())]
-            trips = group(await self.store.reservations())
-            self.trip = active_trip(trips, self.clock())
-            if self.detail is not None and (
-                self.trip is None or self.detail not in self.trip.reservations
-            ):
+            self._regroup(group(await self.store.reservations()))
+            shown = self._shown()
+            if self.detail is not None and (shown is None or self.detail not in shown.reservations):
                 self.detail = None
             self._apply()
             if titles and self._page is not None:
@@ -525,7 +534,8 @@ class Shell:
         await self.jump(segment_ref(reservation))
 
     def _open_jump_sheet(self, _: Any) -> None:
-        if self._page is None or self.trip is None:
+        trip = self._shown()
+        if self._page is None or trip is None:
             return
 
         async def jump_from_sheet(reservation: ExtractedReservation) -> None:
@@ -539,7 +549,7 @@ class Shell:
                     ft.Column(
                         [
                             ft.Text("Jump to", size=13, color=ft.Colors.ON_SURFACE_VARIANT),
-                            *jump_entries(self.trip, jump_from_sheet),
+                            *jump_entries(trip, jump_from_sheet),
                         ],
                         tight=True,
                         spacing=2,
@@ -552,7 +562,8 @@ class Shell:
 
     def _jump_control(self) -> ft.Control | None:
         """Medium window: a "Jump to…" menu; narrow: a button opening a bottom sheet."""
-        if self.trip is None or self.layout == Layout.WIDE:
+        trip = self._shown()
+        if trip is None or self.layout == Layout.WIDE:
             return None
         if self._compact():
             return ft.IconButton(
@@ -561,7 +572,6 @@ class Shell:
                 on_click=self._open_jump_sheet,
                 data={"jump_sheet": True},
             )
-        trip = self.trip
         return ft.PopupMenuButton(
             icon=ft.Icons.FORMAT_LIST_BULLETED,
             tooltip="Jump to…",
@@ -585,10 +595,56 @@ class Shell:
 
     async def refresh(self) -> None:
         """Reload the stored reservations and show the active trip in "Current"."""
-        trips = group(await self.store.reservations())
-        self.trip = active_trip(trips, self.clock())
+        self._regroup(group(await self.store.reservations()))
         self._apply()
         self._update()
+
+    def _regroup(self, trips: list[Trip]) -> None:
+        """The trips after a change; an opened trip stays open if it is still there."""
+        self.trips = trips
+        self.trip = active_trip(trips, self.clock())
+        if self.browsed is not None:
+            start = self.browsed.start
+            self.browsed = next((t for t in trips if t.start == start), None)
+
+    def _shown(self) -> Trip | None:
+        """The trip whose timeline the selected tab shows."""
+        if self.selected == Tab.CURRENT:
+            return self.trip
+        return self.browsed if self.selected == Tab.TRIPS else None
+
+    # --- "My trips" (S035) ---
+
+    def open_trip(self, trip: Trip) -> None:
+        self.browsed, self.detail, self.highlight = trip, None, None
+        self._apply()
+        self._update()
+
+    def close_trip(self) -> None:
+        self.browsed, self.detail = None, None
+        self._apply()
+        self._update()
+
+    def _on_close_trip(self, _: Any) -> None:
+        self.close_trip()
+
+    def _on_trip_kind(self, kind: TripFilter) -> None:
+        self.trip_kind = kind
+        self._apply()
+        self._update()
+
+    def _on_trip_query(self, query: str) -> None:
+        self.trip_query = query
+        self._trip_sections.content = self._sections()  # the search entry keeps its focus
+        self._update()
+
+    def _columns(self) -> int:
+        width = self.width or 1000
+        return 1 if width < NARROW_BELOW else 2 if width < 900 else 3
+
+    def _sections(self) -> ft.Control:
+        found = browse(self.trips, self.clock(), self.trip_kind, self.trip_query)
+        return trips_sections(found, self.open_trip, self._columns())
 
     async def show_ticket(self, reservation: ExtractedReservation) -> None:
         """The ticket full screen, screen brightness up while it is shown (S015)."""
@@ -743,7 +799,9 @@ class Shell:
         self.appbar.leading = None
         self.appbar.leading_width = None
         hide_tabs = False
-        if self.selected == Tab.CURRENT and self.trip is not None and self.detail is not None:
+        shown = self._shown()
+        pushed = self.selected == Tab.TRIPS and shown is not None
+        if shown is not None and self.detail is not None:
             self.body.content = ft.Container(
                 detail_view(
                     self.detail,
@@ -757,10 +815,11 @@ class Shell:
                 expand=True,
             )
             self.body.alignment = ft.Alignment.TOP_CENTER
-            hide_tabs = self._compact()
-        elif self.selected == Tab.CURRENT and self.trip is not None:
+            hide_tabs = self._compact() or pushed
+        elif shown is not None:
+            hide_tabs = pushed
             self._timeline = trip_view(
-                self.trip,
+                shown,
                 self.clock(),
                 self._on_ticket,
                 self.open_detail,
@@ -771,7 +830,7 @@ class Shell:
             if self.layout == Layout.WIDE:
                 content = ft.Row(
                     [
-                        jump_panel(self.trip, self._on_jump),
+                        jump_panel(shown, self._on_jump),
                         ft.Container(self._timeline, expand=True),
                     ],
                     vertical_alignment=ft.CrossAxisAlignment.START,
@@ -779,13 +838,18 @@ class Shell:
                 )
             self.body.content = ft.Container(content, max_width=MAX_WIDTH + 260, expand=True)
             self.body.alignment = ft.Alignment.TOP_CENTER
+        elif self.selected == Tab.TRIPS and self.trips:
+            self._trip_sections.content = self._sections()
+            bar = trips_bar(
+                self.trip_kind, self._on_trip_kind, self._trip_search, self._columns() == 1
+            )
+            self.body.content = trips_page(bar, self._trip_sections)
+            self.body.alignment = ft.Alignment.TOP_CENTER
         else:
             self.body.content = _empty_view(_spec(self.selected))
             self.body.alignment = ft.Alignment.CENTER
         wide = self.layout == Layout.WIDE
-        in_detail = (
-            self.selected == Tab.CURRENT and self.trip is not None and self.detail is not None
-        )
+        in_detail = shown is not None and self.detail is not None
         if wide:
             self.appbar.title = self.switcher
             add: ft.Control = self.add_button
@@ -798,10 +862,36 @@ class Shell:
         self.appbar.leading = add
         self.appbar.leading_width = 150 if wide else None
         self.appbar.actions = [*self._ticket_action(wide=wide), *self._primary_menu()]
-        if in_detail and self.trip is not None and self.detail is not None:
-            self._detail_header_bar(self.trip.name, self.detail, wide)
+        if pushed and shown is not None and not in_detail:
+            self._trip_header_bar(shown, wide)
+            navigation_bar = None
+        if in_detail and shown is not None and self.detail is not None:
+            self._detail_header_bar(shown.name, self.detail, wide)
+            if pushed:
+                navigation_bar = None
         if self._page is not None:
             self._page.navigation_bar = navigation_bar
+
+    def _trip_header_bar(self, trip: Trip, wide: bool) -> None:
+        """A trip opened from "My trips": back to the list in place of the tabs (ADR-0007)."""
+        tooltip = "Back to My trips"
+        icon = ft.Icons.ARROW_BACK_IOS_NEW
+        self.appbar.leading = (
+            ft.TextButton(
+                "My trips",
+                icon=icon,
+                tooltip=tooltip,
+                on_click=self._on_close_trip,
+                data={"back": "trips"},
+            )
+            if wide
+            else ft.IconButton(
+                icon, tooltip=tooltip, on_click=self._on_close_trip, data={"back": "trips"}
+            )
+        )
+        self.appbar.leading_width = 180 if wide else None
+        self.appbar.title = ft.Text(trip.name, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS)
+        self.appbar.actions = [*self._ticket_action(wide=wide), *self._primary_menu()]
 
     def _detail_header_bar(self, trip: str, detail: ExtractedReservation, wide: bool) -> None:
         """Back at the start, Edit at the end; Add is hidden (S061, ADR-0008)."""

@@ -115,6 +115,7 @@ def build_theme(t: Tokens) -> ft.Theme:
             outline=t.border,
             outline_variant=t.border,
             surface_container=t.card_bg,
+            tertiary_container=t.outing,
         ),
         scaffold_bgcolor=t.window_bg,
         appbar_theme=ft.AppBarTheme(
@@ -131,6 +132,10 @@ def build_theme(t: Tokens) -> ft.Theme:
         text_theme=_text_theme(t),
     )
 
+
+OUTING = ft.Colors.TERTIARY_CONTAINER
+"""Outings' purple, light or dark with the theme (S035); no Material widget of Escale
+uses the tertiary container otherwise."""
 
 LIGHT_THEME = build_theme(LIGHT)
 DARK_THEME = build_theme(DARK)

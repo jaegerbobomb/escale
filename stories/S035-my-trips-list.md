@@ -3,10 +3,11 @@ id: S035
 title: "My trips list"
 epic: browse
 depends_on: [S010a]
-status: todo
+status: done
 estimate: M
 bdd: true
-updated: "2026-11-26"
+updated: "2026-11-28"
+released_in: "0.26.0"
 ---
 
 ## User story
@@ -36,3 +37,12 @@ updated: "2026-11-26"
 
 - Proposed 2026-11-25 to bring Escale close to KDE Itinerary on Android (gap review against apps.kde.org/itinerary and its release notes).
 - 2026-11-26: validated by the maintainer (`todo`), to follow the sync arc (S006–S009).
+- 2026-11-28: done in one PR of about 430 lines of production code (list view, pushed
+  trip page in the shell, demo data), over the 300-line guideline; the maintainer chose
+  one PR over a split. Screenshots validated by the maintainer.
+- "Past by year": one section per year of the trip's start, most recent first, after
+  "Upcoming" (in progress or to come).
+- The search looks in the trip's name and in every text of its reservations' JSON-LD
+  (names, places, addresses, references), case ignored.
+- Outings' purple is the theme's tertiary container (`#9141ac` light, `#dc8add` dark).
+- No per-card menu ("⋯" in the mockup) yet: nothing to put in it in v1.

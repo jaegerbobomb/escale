@@ -163,7 +163,7 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S032](stories/S032-group-bookings-into-outings.md) | Group bookings into outings | outings | proposed |
 | [S033](stories/S033-create-an-outing-by-hand.md) | Create an outing by hand | outings | proposed |
 | [S034](stories/S034-outing-walks-and-last-ride.md) | Walks and the last ride home | outings | proposed |
-| [S035](stories/S035-my-trips-list.md) | My trips list | browse | todo |
+| [S035](stories/S035-my-trips-list.md) | My trips list | browse | done |
 | [S036](stories/S036-manage-trips.md) | Rename, merge, split, delete trips | browse | proposed |
 | [S037](stories/S037-travel-statistics.md) | Travel statistics | browse | proposed |
 | [S038](stories/S038-segment-tracking-indicator.md) | Show whether a segment is tracked | live | proposed |

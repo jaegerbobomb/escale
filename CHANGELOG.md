@@ -6,6 +6,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-11-28
+
+### Added
+- S035: "My trips" lists trips and outings as cards, upcoming first then past ones by
+  year, with an All / Trips / Outings filter and a search on names, places and booking
+  references. A card opens its trip as a page of its own, with "‹ My trips" to go back.
+
 ## [0.25.0] - 2026-11-28
 
 ### Added
@@ -267,7 +274,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.25.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.26.0...HEAD
+[0.26.0]: https://github.com/jaegerbobomb/escale/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/jaegerbobomb/escale/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/jaegerbobomb/escale/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/jaegerbobomb/escale/compare/v0.22.0...v0.23.0
