@@ -21,6 +21,8 @@ from escale_core.sync import Sync
 from escale_flet import demo
 from escale_flet.shell import Shell
 
+APP_ID = "io.github.jaegerbobomb.Escale"
+"""The application ID: desktop entry, MIME declaration, future Flatpak (ADR-0010)."""
 ASSETS_DIR = Path(__file__).parent / "assets"
 SYNC_EVERY_S = 600
 """While the app is open, the calendar is synced this often (S008a)."""
@@ -38,7 +40,8 @@ async def keep_in_sync(shell: Shell) -> None:
         await asyncio.sleep(SYNC_EVERY_S)
 
 
-async def main(page: ft.Page) -> None:
+async def main(page: ft.Page, opened: Path | None = None) -> None:
+    """The app; ``opened`` is a file given on the command line ("Open with", S025a)."""
     if demo.enabled():
         await demo.run(page)
         return
@@ -57,17 +60,32 @@ async def main(page: ft.Page) -> None:
     shell.mount(page)
     await shell.refresh()
     page.run_task(keep_in_sync, shell)
+    if opened is not None:
+        await shell.open_file(opened)
 
 
-def run(argv: list[str] | None = None) -> None:
-    """Start the app: a desktop window by default, or a local web server with ``--web``."""
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="escale")
     parser.add_argument("--web", action="store_true", help="serve the app over HTTP")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=0)
-    args = parser.parse_args(argv)
+    parser.add_argument(
+        "file", nargs="?", type=Path, help="a ticket or an export to import (S025a)"
+    )
+    return parser.parse_args(argv)
+
+
+def run(argv: list[str] | None = None) -> None:
+    """Start the app: a desktop window by default, or a local web server with ``--web``;
+    with a file, its import confirmation opens first."""
+    args = parse_args(argv)
+    opened: Path | None = args.file.resolve() if args.file else None
+
+    async def start(page: ft.Page) -> None:
+        await main(page, opened)
+
     ft.run(
-        main,
+        start,
         host=args.host if args.web else None,
         port=args.port,
         view=None if args.web else ft.AppView.FLET_APP,

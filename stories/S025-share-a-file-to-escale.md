@@ -3,10 +3,11 @@ id: S025
 title: "Share a file to Escale"
 epic: import
 depends_on: [S003, S004]
-status: todo
+status: split
 estimate: M
 bdd: true
-updated: "2026-11-26"
+updated: "2026-11-28"
+adr: [9]
 ---
 
 ## User story
@@ -39,3 +40,8 @@ updated: "2026-11-26"
 - Blocked by issue #19 for Android.
 - Proposed 2026-11-25 to bring Escale close to KDE Itinerary on Android (gap review against apps.kde.org/itinerary and its release notes).
 - 2026-11-26: validated by the maintainer (`todo`), to follow the sync arc (S006–S009).
+- 2026-11-28: investigation #19 done on paper (ADR-0009, accepted): Flet 1.1.3 declares
+  the intent filters but hands nothing to Python; Escale wraps `receive_sharing_intent`
+  in its own Flet extension. The device check waits for an APK build (S058). Split
+  approved by the maintainer: S025a (Linux, "Open with Escale") now, S025b (Android
+  share target and Inbox) after S058.

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Escale
+GenericName=Travel companion
+Comment=Your trips, tickets and bookings, kept in your own Nextcloud
+Exec=escale %f
+Icon=io.github.jaegerbobomb.Escale
+Terminal=false
+Categories=Office;
+Keywords=travel;trip;ticket;train;flight;hotel;itinerary;
+MimeType=application/pdf;application/vnd.apple.pkpass;text/calendar;application/vnd.kde.itinerary;text/html;message/rfc822;image/png;image/jpeg;
+StartupNotify=true

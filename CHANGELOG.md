@@ -6,6 +6,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-28
+
+### Added
+- S025a: "Open with Escale" on Linux. `escale FILE` opens the import confirmation for
+  that file, and `packaging/linux/` holds a desktop entry with the file types Escale
+  imports, and the `.itinerary` type; see "Open files with Escale" to install them.
+- ADR-0009 (incoming shares through Escale's own Flet extension) and ADR-0010
+  (application ID `io.github.jaegerbobomb.Escale`). S025 is split into S025a (Linux)
+  and S025b (Android, after the APK builds of S058).
+
 ## [0.27.0] - 2026-11-28
 
 ### Added
@@ -288,7 +298,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/jaegerbobomb/escale/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/jaegerbobomb/escale/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/jaegerbobomb/escale/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/jaegerbobomb/escale/compare/v0.24.0...v0.25.0

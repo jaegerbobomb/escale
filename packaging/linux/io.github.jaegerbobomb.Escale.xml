@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- KDE Itinerary's export (S028), declared as KItinerary declares it, for systems
+     without KItinerary: two identical declarations of a type are merged. -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/vnd.kde.itinerary">
+    <comment>KDE Itinerary export</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.itinerary"/>
+  </mime-type>
+</mime-info>

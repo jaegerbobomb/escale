@@ -744,6 +744,14 @@ class Shell:
         path = await self.choose_file()
         if path is None:
             return
+        await self.open_file(path)
+
+    async def open_file(self, path: Path) -> None:
+        """The import confirmation for ``path``: a chosen file, or one opened with
+        Escale (S025a)."""
+        page = self._page
+        if page is None:
+            return
         result = await self.importer.preview(path)
 
         async def confirm(_: Any) -> None:

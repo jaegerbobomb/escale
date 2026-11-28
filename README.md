@@ -153,7 +153,9 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S022](stories/S022-open-place-in-map-app.md) | Open a place in a map app | timeline | todo |
 | [S023](stories/S023-find-a-stay-in-openstreetmap.md) | Find a stay in OpenStreetMap | import | todo |
 | [S024](stories/S024-import-booking-airbnb-stays.md) | Import Booking.com and Airbnb stays | import | proposed |
-| [S025](stories/S025-share-a-file-to-escale.md) | Share a file to Escale | import | todo |
+| [S025](stories/S025-share-a-file-to-escale.md) | Share a file to Escale | import | split |
+| [S025a](stories/S025a-open-with-escale-on-linux.md) | Open a file with Escale on Linux | import | done |
+| [S025b](stories/S025b-share-a-ticket-on-android.md) | Share a ticket to Escale on Android | import | proposed |
 | [S026](stories/S026-add-a-ticket-barcode.md) | Add a barcode to a reservation | import | proposed |
 | [S027](stories/S027-import-online-train-ticket.md) | Import an online train ticket | import | proposed |
 | [S028](stories/S028-import-a-kde-itinerary-file.md) | Import a KDE Itinerary file | import | done |
