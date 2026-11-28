@@ -56,6 +56,9 @@ VIEWS: dict[str, str] = {
     "changed-elsewhere": "/changed-elsewhere",
     # The hotel's document opened offline before it reached the device (S009b).
     "document-not-here": "/document-not-here",
+    # "My trips": trips and outings, then one opened as a pushed page (S035).
+    "my-trips": "/my-trips",
+    "my-trips-opened": "/my-trips-opened",
     # The first train's ticket, full screen (S015).
     "ticket": "/ticket",
     # The "Add" menu, opened by a click (see CLICKS).

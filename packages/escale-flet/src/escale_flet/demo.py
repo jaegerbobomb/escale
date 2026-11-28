@@ -25,7 +25,7 @@ from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
 from escale_core.store import InMemoryReservationStore
 from escale_flet.import_sheet import phone_sheet
-from escale_flet.shell import NOT_ON_DEVICE, Shell, changed_elsewhere, toast
+from escale_flet.shell import NOT_ON_DEVICE, Shell, Tab, changed_elsewhere, toast
 
 SAMPLE: dict[str, Any] = {
     "@context": "http://schema.org",
@@ -172,6 +172,40 @@ FLIGHT: dict[str, Any] = {
 }
 """A synthetic flight for screenshots and tests (S016); no real booking."""
 
+
+def _stay(ref: str, name: str, town: str, checkin: str, checkout: str) -> dict[str, Any]:
+    return {
+        "@type": "LodgingReservation",
+        "reservationNumber": ref,
+        "reservationFor": _place("LodgingBusiness", name, town),
+        "checkinTime": f"{checkin}T15:00:00+01:00",
+        "checkoutTime": f"{checkout}T11:00:00+01:00",
+    }
+
+
+MORE_TRIPS: list[dict[str, Any]] = [
+    {
+        "@type": "EventReservation",
+        "reservationNumber": "QX7RTB",
+        "reservationFor": {
+            "@type": "Event",
+            "name": "Concert at the Philharmonie",
+            "startDate": "2026-07-18T19:30:00+02:00",
+            "location": _place("Place", "Philharmonie de Paris", "Paris"),
+        },
+    },
+    {
+        "@type": "FoodEstablishmentReservation",
+        "reservationNumber": "ESC-F2",
+        "startTime": "2026-07-18T22:30:00+02:00",
+        "reservationFor": _place("FoodEstablishment", "Le Grand Café", "Paris"),
+    },
+    _stay("ESC-L1", "Casa do Bairro", "Lisbon", "2026-08-22", "2026-08-24"),
+    _stay("ESC-G1", "Hôtel des Alpes", "Geneva", "2026-03-06", "2026-03-08"),
+    _stay("ESC-B1", "Hotel Arts", "Barcelona", "2025-01-05", "2025-01-09"),
+]
+"""Other synthetic trips for "My trips" (S035): an outing, a trip to come, two past ones."""
+
 ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/import-found": [SAMPLE],
     "/import-nothing": [],
@@ -188,6 +222,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/preferences-connected": None,
     "/changed-elsewhere": None,
     "/document-not-here": None,
+    "/my-trips": None,
+    "/my-trips-opened": None,
 }
 """Demo route -> what the extractor returns (``None``: no import sheet).
 
@@ -198,7 +234,9 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
 the toast of a change that gave way to one made on another device (S008c);
 ``/document-not-here`` the hotel's detail, offline, after "Booking document" was clicked
-for a document not on the device (S009b).
+for a document not on the device (S009b); ``/my-trips`` "My trips" with the London trip,
+a flight, an outing and past trips, ``/my-trips-opened`` the London trip opened from it
+(S035).
 """
 
 
@@ -227,10 +265,15 @@ async def run(page: ft.Page) -> None:
         "/stay-editor",
         "/changed-elsewhere",
         "/document-not-here",
+        "/my-trips",
+        "/my-trips-opened",
     )
     if route in trip_routes:
         found = [reservation_from_jsonld(e, ("demo",)) for e in LONDON_TRIP_FULL]
         await store.add(Document("demo", "ticket.pdf", "application/pdf"), [r for r in found if r])
+        if route.startswith("/my-trips"):
+            more = [reservation_from_jsonld(e, ()) for e in [*MORE_TRIPS, FLIGHT]]
+            await store.add(Document("more", "more.pdf", "application/pdf"), [r for r in more if r])
         # 40 minutes before the first train leaves.
         start = datetime.fromisoformat(LONDON_TRIP[0]["reservationFor"]["departureTime"])
         clock = lambda: start - timedelta(minutes=40)  # noqa: E731
@@ -275,6 +318,10 @@ async def run(page: ft.Page) -> None:
         server.reachable = False
         shell.open_detail(shell.trip.reservations[1])
         page.show_dialog(toast(NOT_ON_DEVICE, page.width, duration=60_000))
+    elif route.startswith("/my-trips"):
+        shell.select(Tab.TRIPS)
+        if route == "/my-trips-opened" and shell.trip is not None:
+            shell.open_trip(shell.trip)
     elif route == "/changed-elsewhere":
         text = changed_elsewhere(["The Hoxton, Holborn"])
         page.show_dialog(toast(text, page.width, duration=60_000))

@@ -28,6 +28,18 @@ scrolls to the booking and highlights it. Clicking a booking opens its detail;
 **‹ trip name**, at the left of the header bar (an arrow on a narrow window), comes back
 to the same place.
 
+**My trips** lists every trip and outing as cards: **Upcoming** first (in progress or to
+come, soonest first), then past ones under their year, most recent first. Each card
+gives the kind (Trip, or Outing in purple), the name, the dates, the number of segments
+(or places for an outing) and the kinds of bookings. Above the list, **All / Trips /
+Outings** filters it, and **Search** keeps the trips whose name, places, names or
+booking references hold the text typed (case does not matter). The cards are three
+across a wide window, two on a medium one, one under 550 px.
+
+Clicking a card opens that trip's timeline in place of the list: the views give way to
+**‹ My trips** at the left of the header bar (an arrow on a narrow window), which comes
+back to the list. Bookings open their detail as in **Current**.
+
 In a booking's detail, the header bar follows it: its title on a narrow window, **Edit**
 (a pencil) at the right when the booking can be edited, and no "Add". The main action
 ("Show Ticket", or "Manage booking on …" for a stay) is the one blue button; the others
