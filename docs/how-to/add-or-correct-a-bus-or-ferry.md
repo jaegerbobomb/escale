@@ -3,7 +3,9 @@
 ## Add one
 
 1. Open the menu next to **Add** (on a phone, the **+** button) and choose
-   **Add manually…**.
+   **Add manually…**. After an import that found nothing in your ticket, use the
+   sheet's **Add manually** button instead: the trip then keeps the file, and
+   **Show Ticket** opens it.
 2. Choose **Bus** or **Ferry**.
 3. Fill in at least the departure's date, time and stop (or terminal) name, and the
    arrival's stop name. The arrival time is optional; when given, it must be after the
@@ -12,7 +14,7 @@
 4. Click **Save**.
 
 Escale opens it in the trip it belongs to, and sends it to your calendar at the
-next sync. It has no booking document.
+next sync.
 
 ## Correct one
 

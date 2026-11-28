@@ -28,7 +28,7 @@ from escale_core.passwords import MemoryPasswords
 from escale_core.settings import SettingsFile
 from escale_core.stays import new_stay
 from escale_core.store import InMemoryReservationStore
-from escale_core.transit_edit import new_boat
+from escale_core.transit_edit import new_boat, new_bus
 from escale_flet.import_sheet import phone_sheet
 from escale_flet.shell import NOT_ON_DEVICE, Shell, Tab, changed_elsewhere, toast
 from escale_flet.testing import tagged
@@ -252,6 +252,7 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/new-stay": None,
     "/bus-editor": None,
     "/new-ferry": None,
+    "/new-bus-attached": None,
     "/stay-detail": None,
     "/stay-editor": None,
     "/preferences": None,
@@ -272,6 +273,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 ``/flight-editor-date`` with its departure's date picker open; ``/add-manually`` the
 kinds of booking to add by hand, ``/new-stay`` the editor of a new stay (S018);
 ``/bus-editor`` a coach trip's editor, ``/new-ferry`` a new ferry crossing's (S030);
+``/new-bus-attached`` a new coach trip's, keeping the file of an import that found
+nothing (S064);
 ``/preferences*`` the preferences, empty, after a refused
 password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
 the toast of a change that gave way to one made on another device (S008c);
@@ -371,6 +374,9 @@ async def run(page: ft.Page) -> None:
         shell.new_booking(new_stay())
     elif route == "/new-ferry":
         shell.new_booking(new_boat())
+    elif route == "/new-bus-attached":
+        shell.attachment = await shell.importer.preview(ticket)
+        shell.new_booking(new_bus())
     elif route == "/bus-editor" and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[0])
         shell.edit()

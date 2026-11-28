@@ -67,6 +67,8 @@ VIEWS: dict[str, str] = {
     # A coach trip's editor, and a new ferry crossing's (S030).
     "bus-editor": "/bus-editor",
     "new-ferry": "/new-ferry",
+    # A new coach trip keeping the file of an import that found nothing (S064).
+    "new-bus-attached": "/new-bus-attached",
     "my-trips": "/my-trips",
     "my-trips-opened": "/my-trips-opened",
     # The confirmation of a KDE Itinerary export (S028).

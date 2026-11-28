@@ -21,7 +21,7 @@ from escale_core import flight_edit, stays, transit_edit
 from escale_core.account import Account
 from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.documents import Documents
-from escale_core.extraction import ExtractedReservation
+from escale_core.extraction import ExtractedReservation, ExtractionResult
 from escale_core.flights import follow_link
 from escale_core.importer import Importer
 from escale_core.stays import new_stay
@@ -263,6 +263,8 @@ class Shell:
         self._picker: ft.DialogControl | None = None
         self.adding: ExtractedReservation | None = None
         """A booking added by hand (S018), while its editor is open."""
+        self.attachment: ExtractionResult | None = None
+        """The import that found nothing, whose file a booking added by hand keeps (S064)."""
         self._chooser: ft.DialogControl | None = None
         """The kinds of booking to add by hand, while shown."""
         """A date or time picker opened from the editor, above it."""
@@ -437,6 +439,7 @@ class Shell:
             height=_editor_height(height, self._sheet()),
             initial=values,
             show=self._show_picker,
+            note=self._attached(),
         )
         self._page.show_dialog(self._editor)
         self._update()
@@ -478,7 +481,7 @@ class Shell:
 
     def cancel_edit(self) -> None:
         self._close_editor()
-        self.adding = None
+        self.adding = self.attachment = None
         self._update()
 
     def _on_editor_dismissed(self, e: Any) -> None:
@@ -486,14 +489,14 @@ class Shell:
         # one of the other presentation, whose dismissal arrives after the new one opened.
         if getattr(e, "control", self._editor) is self._editor:
             self.editing = False
-            self.adding = None
+            self.adding = self.attachment = None
 
     # --- adding by hand (S018) ---
 
     def add_manually(self) -> None:
         """The kinds of booking to add by hand."""
         if self._page is not None:
-            chooser = kind_chooser(self._on_manual_kind, self._close_chooser, sheet=self._sheet())
+            chooser = kind_chooser(self._on_manual_kind, self._cancel_chooser, sheet=self._sheet())
             chooser.on_dismiss = self._on_chooser_dismissed
             self._chooser = chooser
             self._page.show_dialog(chooser)
@@ -503,12 +506,24 @@ class Shell:
             self._chooser = None
             self._page.pop_dialog()
 
+    def _cancel_chooser(self, e: Any) -> None:
+        self._close_chooser(e)
+        self.attachment = None
+
     def _on_chooser_dismissed(self, e: Any) -> None:
         if getattr(e, "control", self._chooser) is self._chooser:
             self._chooser = None
+            self.attachment = None
 
     def _on_add_manually(self, _: Any) -> None:
+        self.attachment = None  # from the menu: no file to keep
         self.add_manually()
+
+    def _attached(self) -> str | None:
+        found = self.attachment
+        if self.adding is None or found is None or found.document is None:
+            return None
+        return f"Attached: {found.document.name}"
 
     def _on_manual_kind(self, key: str) -> None:
         self._close_chooser(None)
@@ -522,8 +537,12 @@ class Shell:
         self.edit()
 
     async def _save_new(self, new: ExtractedReservation) -> None:
-        self.adding = None
-        await self.store.add(None, [new])
+        kept, self.adding, self.attachment = self.attachment, None, None
+        if kept is not None and kept.document is not None:  # S064
+            new = replace(new, subject_of=(kept.document.id,))
+            await self.store.add(kept.document, [new], kept.source)
+        else:
+            await self.store.add(None, [new])
         self._regroup(group(await self.store.reservations()))
         trip = next((t for t in self.trips if new in t.reservations), None)
         if trip is not None:
@@ -895,6 +914,7 @@ class Shell:
 
         def manual(_: Any) -> None:
             self._close_sheet(None)
+            self.attachment = result if not result.reservations else None
             self.add_manually()
 
         page.show_dialog(confirmation_sheet(result, confirm, self._close_sheet, manual))

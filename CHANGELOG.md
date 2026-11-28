@@ -6,6 +6,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-11-28
+
+### Added
+- S064: after an import that found nothing, the booking added with **Add manually**
+  keeps the imported file, as an imported booking does: copied on the device, sent at
+  the next sync, opened from **Show Ticket** (transport) or **Booking document** (stay).
+  The editor says which file it keeps; cancelling keeps nothing.
+
+### Fixed
+- "Import a ticket" no longer says that **Add manually** is inactive.
+
 ## [0.31.0] - 2026-11-28
 
 ### Added
@@ -326,7 +337,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.31.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.32.0...HEAD
+[0.32.0]: https://github.com/jaegerbobomb/escale/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/jaegerbobomb/escale/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/jaegerbobomb/escale/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/jaegerbobomb/escale/compare/v0.28.0...v0.29.0
