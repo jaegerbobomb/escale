@@ -17,7 +17,7 @@ from typing import Any
 
 import flet as ft
 
-from escale_core import flight_edit, stays
+from escale_core import flight_edit, stays, transit_edit
 from escale_core.account import Account
 from escale_core.adapters.kitinerary_cli import KitineraryCli
 from escale_core.documents import Documents
@@ -26,6 +26,7 @@ from escale_core.flights import follow_link
 from escale_core.importer import Importer
 from escale_core.stays import new_stay
 from escale_core.store import InMemoryReservationStore, ReservationStore
+from escale_core.transit_edit import new_boat, new_bus
 from escale_core.trips import Trip, TripFilter, active_trip, browse, group
 from escale_flet.detail_view import detail_view
 from escale_flet.editor import EditorKind, action_editor
@@ -46,6 +47,7 @@ from escale_flet.timeline import (
     segment_ref,
     trip_view,
 )
+from escale_flet.transit_editor import KINDS as TRANSIT
 from escale_flet.trips_view import search_field, trips_bar, trips_page, trips_sections
 
 NARROW_BELOW = 550
@@ -409,6 +411,8 @@ class Shell:
             return STAY, stays.edited
         if r.type == "FlightReservation":  # S029a
             return flight_kind(r), flight_edit.edited
+        if r.type in TRANSIT:  # S030
+            return TRANSIT[r.type], transit_edit.edited
         return None
 
     def edit(self, values: Any = None) -> None:
@@ -508,8 +512,9 @@ class Shell:
 
     def _on_manual_kind(self, key: str) -> None:
         self._close_chooser(None)
-        if key == "stay":
-            self.new_booking(new_stay())
+        blank = {"stay": new_stay, "bus": new_bus, "ferry": new_boat}.get(key)
+        if blank is not None:
+            self.new_booking(blank())
 
     def new_booking(self, blank: ExtractedReservation) -> None:
         """The editor of ``blank``, empty; saving adds it to the store."""

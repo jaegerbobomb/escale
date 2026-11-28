@@ -6,6 +6,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-28
+
+### Added
+- S030: coach and ferry trips can be added by hand (**Add → Add manually… → Bus** or
+  **Ferry**) and corrected from their detail. The fields are KDE Itinerary's: the bus
+  number, each stop's date, time, name, platform (bus) and address with coordinates,
+  the seat (bus), the booking reference and name; both stop names and the departure are
+  required, and the arrival must be after the departure.
+
 ## [0.30.0] - 2026-11-28
 
 ### Added
@@ -317,7 +326,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.31.0...HEAD
+[0.31.0]: https://github.com/jaegerbobomb/escale/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/jaegerbobomb/escale/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/jaegerbobomb/escale/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/jaegerbobomb/escale/compare/v0.27.0...v0.28.0

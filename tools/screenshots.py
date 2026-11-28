@@ -64,6 +64,9 @@ VIEWS: dict[str, str] = {
     # "Add manually…": the kinds of booking, then a new stay's editor (S018).
     "add-manually": "/add-manually",
     "new-stay": "/new-stay",
+    # A coach trip's editor, and a new ferry crossing's (S030).
+    "bus-editor": "/bus-editor",
+    "new-ferry": "/new-ferry",
     "my-trips": "/my-trips",
     "my-trips-opened": "/my-trips-opened",
     # The confirmation of a KDE Itinerary export (S028).

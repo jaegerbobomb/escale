@@ -149,7 +149,7 @@ def editor_shown(world: World) -> None:
 # --- details ---
 
 
-def test_the_chooser_offers_the_kinds_and_only_stay_for_now(world: World) -> None:
+def test_the_chooser_offers_the_kinds_that_have_an_editor(world: World) -> None:
     click(world.menu_entry("Add manually…"))
     rows = [
         (c.data["manual_kind"], bool(c.disabled))
@@ -160,8 +160,8 @@ def test_the_chooser_offers_the_kinds_and_only_stay_for_now(world: World) -> Non
         ("stay", False),
         ("flight", True),
         ("train", True),
-        ("bus", True),
-        ("ferry", True),
+        ("bus", False),  # S030
+        ("ferry", False),
         ("event", True),
         ("restaurant", True),
     ]
