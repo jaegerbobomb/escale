@@ -161,6 +161,15 @@ def _country(value: object) -> str:
     return (_text(_m(value).get("name")) if isinstance(value, Mapping) else _text(value)) or ""
 
 
+def new_stay() -> ExtractedReservation:
+    """A blank stay for the editor to fill (S018): added by hand, it has no document."""
+    blank = reservation_from_jsonld(
+        {"@type": "LodgingReservation", "reservationFor": {"@type": "LodgingBusiness"}}, ()
+    )
+    assert blank is not None
+    return blank
+
+
 def fields_of(r: ExtractedReservation) -> StayFields:
     place = _place(r)
     a = _m(place.get("address"))

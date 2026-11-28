@@ -62,7 +62,8 @@ adr: [3]
   - **Saving**: a `ReservationStore` port in the core with an in-memory implementation;
     an import is lost when the app closes. Persistence is S014 (SQLite).
   - **Trip**: the sheet shows "Add to: New trip" until trip grouping (S010).
-  - **Add manually**: present and disabled until manual entry exists (S012).
+  - **Add manually**: present and disabled until manual entry exists; enabled by S018
+    (0.30.0), it opens the kinds of booking to add by hand.
 - Look taken from the mockup ("Import PDF & offline ticket", step 2): a bottom sheet
   sized to its content, at most 640 px wide, the reservation in a card, "Cancel" and
   "Add to trip". Texts in English, like the rest of the app.

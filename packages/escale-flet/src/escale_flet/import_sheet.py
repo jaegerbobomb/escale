@@ -128,12 +128,17 @@ def _sheet(title: str, body: list[ft.Control], actions: list[ft.Control]) -> ft.
     )
 
 
-def _manual_entry_button() -> ft.Control:
-    return ft.Button("Add manually", disabled=True, tooltip="Coming with manual entry")
+def _manual_entry_button(on_manual: Action | None) -> ft.Control:
+    if on_manual is None:
+        return ft.Button("Add manually", disabled=True)
+    return ft.Button("Add manually", on_click=on_manual)  # S018
 
 
 def confirmation_sheet(
-    result: ExtractionResult, on_confirm: Action, on_cancel: Action
+    result: ExtractionResult,
+    on_confirm: Action,
+    on_cancel: Action,
+    on_manual: Action | None = None,
 ) -> ft.BottomSheet:
     """What the import found, to confirm or cancel; or why nothing can be added."""
     name = result.document.name if result.document else "the file"
@@ -142,13 +147,13 @@ def confirmation_sheet(
         return _sheet(
             "Cannot read the file",
             [ft.Text(result.error)],
-            [cancel, _manual_entry_button()],
+            [cancel, _manual_entry_button(on_manual)],
         )
     if result.nothing_recognised:
         return _sheet(
             "Nothing recognised",
             [ft.Text(f"Escale found no reservation in {name}.")],
-            [cancel, _manual_entry_button()],
+            [cancel, _manual_entry_button(on_manual)],
         )
     count = len(result.reservations)
     notes = ["Check before adding: nothing is saved automatically."]

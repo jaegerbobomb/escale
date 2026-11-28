@@ -3,10 +3,10 @@ id: S018
 title: "Add a stay by hand"
 epic: import
 depends_on: [S017]
-status: todo
-estimate: S
+status: done
 bdd: true
-updated: "2026-11-24"
+updated: "2026-11-28"
+released_in: "0.30.0"
 ---
 
 ## User story
@@ -48,3 +48,16 @@ updated: "2026-11-24"
 ## Notes
 
 - 2026-11-24: validated by the maintainer (`todo`).
+- Delivered in 0.30.0. "Add manually…" opens an action dialog (a bottom sheet under
+  450 px) listing Stay, Flight, Train, Bus, Ferry, Event and Restaurant; only Stay is
+  sensitive. Flight waits for the airport table (S029b), bus and ferry for S030.
+- The editor is the stay editor (S017b) titled "New Stay". The saved stay has no
+  document; it opens in its trip: in "Current" when that is the active trip, else as the
+  trip opened from "My trips".
+- Time zone: a booking added by hand has no stored zone, so its times take the device's
+  UTC offset on that day (`datetime.astimezone()`, right for summer and winter time).
+  KDE Itinerary works the zone out from the place; Escale has no geocoder yet.
+- "Add manually" after a failed import opens the same chooser; nothing is pre-filled
+  (S004 mentioned the file name and a date: the extraction found neither), and the file
+  is not attached to the stay.
+- The chooser and the editor change presentation when the window crosses 450 px.
