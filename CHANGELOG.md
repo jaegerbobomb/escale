@@ -6,6 +6,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-28
+
+### Added
+- S029a: a flight can be corrected by hand: **Edit** on its detail opens an editor with
+  the flight number, the departure's date, time, boarding time, terminal and gate, the
+  arrival's date, time and terminal, the seat and the booking reference, in each
+  airport's local time, with KDE Itinerary's rules. S029 is split into S029a and S029b
+  (adding a flight, after choosing an airport table: issue #52).
+
 ## [0.28.0] - 2026-11-28
 
 ### Added
@@ -298,7 +307,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `story-lint`, `release-versioning`, `claude-code` and `docs-diataxis` modules.
 - Licence: GPL-3.0-or-later, App Store notice, contribution terms.
 
-[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.28.0...HEAD
+[Unreleased]: https://github.com/jaegerbobomb/escale/compare/v0.29.0...HEAD
+[0.29.0]: https://github.com/jaegerbobomb/escale/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/jaegerbobomb/escale/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/jaegerbobomb/escale/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/jaegerbobomb/escale/compare/v0.25.0...v0.26.0

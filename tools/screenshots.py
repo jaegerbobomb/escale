@@ -57,6 +57,8 @@ VIEWS: dict[str, str] = {
     # The hotel's document opened offline before it reached the device (S009b).
     "document-not-here": "/document-not-here",
     # "My trips": trips and outings, then one opened as a pushed page (S035).
+    # The flight editor (S029a).
+    "flight-editor": "/flight-editor",
     "my-trips": "/my-trips",
     "my-trips-opened": "/my-trips-opened",
     # The confirmation of a KDE Itinerary export (S028).

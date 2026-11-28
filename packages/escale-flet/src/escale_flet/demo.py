@@ -218,6 +218,7 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
     "/trip-jump": None,
     "/trip-detail": None,
     "/flight-detail": None,
+    "/flight-editor": None,
     "/stay-detail": None,
     "/stay-editor": None,
     "/preferences": None,
@@ -234,7 +235,8 @@ ROUTES: dict[str, list[dict[str, Any]] | None] = {
 ``/trip`` shows the synthetic London trip in "Current", 40 minutes before it starts;
 ``/ticket`` opens its first train's ticket; ``/flight-detail`` opens a flight's detail,
 ``/stay-detail`` the hotel's,
-``/stay-editor`` its editor; ``/preferences*`` the preferences, empty, after a refused
+``/stay-editor`` its editor, ``/flight-editor`` the flight's (S029a);
+``/preferences*`` the preferences, empty, after a refused
 password, and connected to a fake Nextcloud (S006b); ``/changed-elsewhere`` the trip with
 the toast of a change that gave way to one made on another device (S008c);
 ``/document-not-here`` the hotel's detail, offline, after "Booking document" was clicked
@@ -298,7 +300,7 @@ async def run(page: ft.Page) -> None:
         # 40 minutes before the first train leaves.
         start = datetime.fromisoformat(LONDON_TRIP[0]["reservationFor"]["departureTime"])
         clock = lambda: start - timedelta(minutes=40)  # noqa: E731
-    elif route == "/flight-detail":
+    elif route in ("/flight-detail", "/flight-editor"):
         [flight] = [r for r in [reservation_from_jsonld(FLIGHT, ("demo",))] if r]
         await store.add(Document("demo", "boarding-pass.pdf", "application/pdf"), [flight])
         leaves = datetime.fromisoformat(FLIGHT["reservationFor"]["departureTime"])
@@ -353,7 +355,9 @@ async def run(page: ft.Page) -> None:
                 url="cloud.example.org", login="jane", password="demo-app-password"
             )
             shell.preferences.render()
-    elif route == "/flight-detail" and shell.trip is not None:
+    elif route in ("/flight-detail", "/flight-editor") and shell.trip is not None:
         shell.open_detail(shell.trip.reservations[0])
+        if route == "/flight-editor":
+            shell.edit()
     elif elements is not None and route not in trip_routes:
         await shell.start_import()

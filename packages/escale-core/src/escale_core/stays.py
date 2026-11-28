@@ -11,11 +11,10 @@ from __future__ import annotations
 import copy
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
 from urllib.parse import urlparse
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from escale_core.editing import local_moment, put_text, with_moment
 from escale_core.extraction import ExtractedReservation
 from escale_core.importer import parse_datetime, reservation_from_jsonld
 
@@ -184,22 +183,6 @@ def fields_of(r: ExtractedReservation) -> StayFields:
     )
 
 
-def _moment(day: str, time: str, original: object) -> datetime | None:
-    """``day`` at ``time`` in the zone of ``original`` (the stored value), if valid."""
-    try:
-        naive = datetime.strptime(f"{day.strip()} {time.strip()}", "%Y-%m-%d %H:%M")
-    except ValueError:
-        return None
-    zone = _m(original).get("timezone")
-    try:
-        if isinstance(zone, str):
-            return naive.replace(tzinfo=ZoneInfo(zone))
-    except (ZoneInfoNotFoundError, ValueError):
-        pass
-    before = parse_datetime(original)
-    return naive.replace(tzinfo=before.tzinfo if before else None)
-
-
 def _coordinates(f: StayFields) -> tuple[float, float] | bool | None:
     """The coordinates; ``None`` when both are empty, ``False`` when they are not valid."""
     if not f.latitude.strip() and not f.longitude.strip():
@@ -220,7 +203,7 @@ def problems(f: StayFields, r: ExtractedReservation | None = None) -> list[str]:
         ("check-in", f.check_in_date, f.check_in_time, "checkinTime"),
         ("check-out", f.check_out_date, f.check_out_time, "checkoutTime"),
     ):
-        when = _moment(day, time, raw.get(key))
+        when = local_moment(day, time, raw.get(key))
         if not day.strip() or not time.strip():
             found.append(f"The {label} is required.")
         elif when is None:
@@ -239,19 +222,6 @@ def problems(f: StayFields, r: ExtractedReservation | None = None) -> list[str]:
     return found
 
 
-def _when(moment: datetime, original: object) -> object:
-    if isinstance(original, Mapping):
-        return {**original, "@value": moment.isoformat()}
-    return moment.isoformat()
-
-
-def _put(target: dict[str, Any], key: str, value: str) -> None:
-    if value.strip():
-        target[key] = value.strip()
-    else:
-        target.pop(key, None)
-
-
 def edited(r: ExtractedReservation, f: StayFields) -> ExtractedReservation:
     """``r`` with the editor's fields written into its JSON-LD; untouched fields stay as
     they were. Call only when ``problems(f, r)`` is empty."""
@@ -261,12 +231,12 @@ def edited(r: ExtractedReservation, f: StayFields) -> ExtractedReservation:
     a = dict(_m(place.get("address"))) or {"@type": "PostalAddress"}
     changed = {k for k, v in vars(f).items() if v != getattr(before, k)}
     if "name" in changed:
-        _put(place, "name", f.name)
+        put_text(place, "name", f.name)
     for field, key in _ADDRESS.items():
         if field in changed:
-            _put(a, key, getattr(f, field))
+            put_text(a, key, getattr(f, field))
     if "country" in changed:
-        _put(a, "addressCountry", f.country)
+        put_text(a, "addressCountry", f.country)
     if changed & {*_ADDRESS, "country"}:
         place["address"] = a
     if changed & {"latitude", "longitude"}:
@@ -281,20 +251,20 @@ def edited(r: ExtractedReservation, f: StayFields) -> ExtractedReservation:
             place.pop("geo", None)
     for field, key in _CONTACT.items():
         if field in changed:
-            _put(place, key, getattr(f, field))
+            put_text(place, key, getattr(f, field))
     raw["reservationFor"] = place
     for key, day, time in (
         ("checkinTime", "check_in_date", "check_in_time"),
         ("checkoutTime", "check_out_date", "check_out_time"),
     ):
         if changed & {day, time}:
-            moment = _moment(getattr(f, day), getattr(f, time), raw.get(key))
+            moment = local_moment(getattr(f, day), getattr(f, time), raw.get(key))
             if moment is not None:
-                raw[key] = _when(moment, raw.get(key))
+                raw[key] = with_moment(moment, raw.get(key))
     if "description" in changed:
-        _put(raw, "lodgingUnitDescription", f.description)
+        put_text(raw, "lodgingUnitDescription", f.description)
     if "reference" in changed:
-        _put(raw, "reservationNumber", f.reference)
+        put_text(raw, "reservationNumber", f.reference)
     if "under_name" in changed:
         people = [
             {"@type": "Person", "name": n.strip()} for n in f.under_name.split(",") if n.strip()

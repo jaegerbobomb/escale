@@ -159,7 +159,9 @@ place to start. Commits are signed off (DCO): see [CONTRIBUTING.md](CONTRIBUTING
 | [S026](stories/S026-add-a-ticket-barcode.md) | Add a barcode to a reservation | import | proposed |
 | [S027](stories/S027-import-online-train-ticket.md) | Import an online train ticket | import | proposed |
 | [S028](stories/S028-import-a-kde-itinerary-file.md) | Import a KDE Itinerary file | import | done |
-| [S029](stories/S029-flight-segment-editor.md) | Flight segment editor | timeline | todo |
+| [S029](stories/S029-flight-segment-editor.md) | Flight segment editor | timeline | split |
+| [S029a](stories/S029a-edit-a-flight.md) | Edit a flight | timeline | done |
+| [S029b](stories/S029b-add-a-flight.md) | Add a flight by hand | timeline | todo |
 | [S030](stories/S030-bus-and-ferry-editors.md) | Bus and ferry editors | timeline | todo |
 | [S031](stories/S031-event-restaurant-car-editors.md) | Event, restaurant and car editors | timeline | proposed |
 | [S032](stories/S032-group-bookings-into-outings.md) | Group bookings into outings | outings | proposed |
